@@ -401,8 +401,95 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                 <div class="fn-card">
                     <h3>🏦 Banco de horas</h3>
                     <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Solicite compensação ou folga acumulada de horas extras.</p>
+                    <div id="bancoSaldoCard" style="background:linear-gradient(135deg,#DCFCE7,#BBF7D0);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">
+                        <div style="font-size:.72rem;font-weight:800;color:#166534;text-transform:uppercase;letter-spacing:.5px">Seu saldo atual</div>
+                        <div style="font-size:2rem;font-weight:900;font-family:'Baloo 2',cursive;color:#16A34A" id="bancoSaldoValor">--</div>
+                        <small style="color:#374151" id="bancoSaldoSub">No mês atual</small>
+                    </div>
                     <button class="fn-btn" onclick="fnAbrirSolicitarBanco()">+ Nova Solicitação</button>
                     <div id="bancoLista" style="margin-top:14px"></div>
+                </div>
+            </div>
+
+            <!-- 📝 SOLICITAR — atestado, ajuste ponto, troca turno, abono falta -->
+            <div class="fn-section" id="sec-solicitar">
+                <div class="fn-card">
+                    <h3>📝 Central de Solicitações</h3>
+                    <p style="font-size:.78rem;color:#6B7280;margin:0 0 12px">Tudo que você precisa pedir pro gerente passa por aqui. Resposta em até 48h.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                        <button class="fn-btn fn-btn-secondary" onclick="fnAbrirSolicitarAtestado()" style="flex-direction:column;height:auto;padding:14px 8px">
+                            <span style="font-size:1.6rem;display:block;margin-bottom:4px">🏥</span>
+                            <span style="font-size:.82rem">Atestado<br>médico</span>
+                        </button>
+                        <button class="fn-btn fn-btn-secondary" onclick="fnAbrirAjustePonto()" style="flex-direction:column;height:auto;padding:14px 8px">
+                            <span style="font-size:1.6rem;display:block;margin-bottom:4px">⏱️</span>
+                            <span style="font-size:.82rem">Ajustar<br>ponto</span>
+                        </button>
+                        <button class="fn-btn fn-btn-secondary" onclick="fnAbrirTrocaTurno()" style="flex-direction:column;height:auto;padding:14px 8px">
+                            <span style="font-size:1.6rem;display:block;margin-bottom:4px">🔄</span>
+                            <span style="font-size:.82rem">Trocar<br>turno</span>
+                        </button>
+                        <button class="fn-btn fn-btn-secondary" onclick="fnAbrirAbonoFalta()" style="flex-direction:column;height:auto;padding:14px 8px">
+                            <span style="font-size:1.6rem;display:block;margin-bottom:4px">📋</span>
+                            <span style="font-size:.82rem">Abonar<br>falta</span>
+                        </button>
+                        <button class="fn-btn fn-btn-secondary" onclick="fnAbrirFerias()" style="flex-direction:column;height:auto;padding:14px 8px">
+                            <span style="font-size:1.6rem;display:block;margin-bottom:4px">🏖️</span>
+                            <span style="font-size:.82rem">Marcar<br>férias</span>
+                        </button>
+                        <button class="fn-btn fn-btn-secondary" onclick="fnAbrirFalarRH()" style="flex-direction:column;height:auto;padding:14px 8px">
+                            <span style="font-size:1.6rem;display:block;margin-bottom:4px">💬</span>
+                            <span style="font-size:.82rem">Falar com<br>gerente</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="fn-card">
+                    <h3>📜 Minhas solicitações</h3>
+                    <div id="solicitacoesLista" style="margin-top:10px"></div>
+                </div>
+            </div>
+
+            <!-- 📣 AVISOS — comunicados, mural, treinamento, ranking -->
+            <div class="fn-section" id="sec-avisos">
+                <!-- Sub-tabs internas -->
+                <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto">
+                    <button class="fn-subtab active" data-subtab="comunicados" onclick="fnAvisosSubtab('comunicados')" style="flex:1;background:#16A34A;color:#fff;border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:.78rem;cursor:pointer">📣 Comunicados</button>
+                    <button class="fn-subtab" data-subtab="mural" onclick="fnAvisosSubtab('mural')" style="flex:1;background:#F3F4F6;color:#374151;border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:.78rem;cursor:pointer">📌 Mural</button>
+                    <button class="fn-subtab" data-subtab="treinamento" onclick="fnAvisosSubtab('treinamento')" style="flex:1;background:#F3F4F6;color:#374151;border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:.78rem;cursor:pointer">🎓 Treino</button>
+                    <button class="fn-subtab" data-subtab="ranking" onclick="fnAvisosSubtab('ranking')" style="flex:1;background:#F3F4F6;color:#374151;border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:.78rem;cursor:pointer">🏆 Ranking</button>
+                </div>
+
+                <div id="subtab-comunicados" class="fn-subtab-content">
+                    <div class="fn-card">
+                        <h3>📣 Comunicados da loja</h3>
+                        <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Avisos importantes do gerente — leia tudo!</p>
+                        <div id="comunicadosLista"></div>
+                    </div>
+                </div>
+
+                <div id="subtab-mural" class="fn-subtab-content" style="display:none">
+                    <div class="fn-card">
+                        <h3>📌 Mural de reconhecimento</h3>
+                        <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Conquistas e elogios da equipe.</p>
+                        <div id="muralListaCompleta"></div>
+                    </div>
+                </div>
+
+                <div id="subtab-treinamento" class="fn-subtab-content" style="display:none">
+                    <div class="fn-card">
+                        <h3>🎓 Treinamento e materiais</h3>
+                        <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Vídeos curtos e guias pra você dominar o trabalho.</p>
+                        <div id="treinamentoLista"></div>
+                    </div>
+                </div>
+
+                <div id="subtab-ranking" class="fn-subtab-content" style="display:none">
+                    <div class="fn-card">
+                        <h3>🏆 Ranking do mês</h3>
+                        <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Top colegas mais pontuais e dedicados. Você está em qual posição?</p>
+                        <div id="rankingLista"></div>
+                    </div>
                 </div>
             </div>
 
@@ -484,9 +571,11 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
         <nav class="fn-tab-bar" style="overflow-x:auto;flex-wrap:nowrap">
             <button class="fn-tab-btn active" data-tab="hoje" onclick="fnSwitchTab('hoje')"><span class="icon">⏰</span>Hoje</button>
             <button class="fn-tab-btn" data-tab="mes" onclick="fnSwitchTab('mes')"><span class="icon">🗓️</span>Mês</button>
+            <button class="fn-tab-btn" data-tab="solicitar" onclick="fnSwitchTab('solicitar')"><span class="icon">📝</span>Pedir</button>
             <button class="fn-tab-btn" data-tab="holerite" onclick="fnSwitchTab('holerite')"><span class="icon">💵</span>Holerite</button>
             <button class="fn-tab-btn" data-tab="banco" onclick="fnSwitchTab('banco')"><span class="icon">🏦</span>Banco</button>
             <button class="fn-tab-btn" data-tab="beneficios" onclick="fnSwitchTab('beneficios')"><span class="icon">🎁</span>Benef.</button>
+            <button class="fn-tab-btn" data-tab="avisos" onclick="fnSwitchTab('avisos')"><span class="icon">📣</span>Avisos</button>
             <button class="fn-tab-btn" data-tab="info" onclick="fnSwitchTab('info')"><span class="icon">👤</span>Dados</button>
         </nav>
     </div>
@@ -1641,7 +1730,373 @@ function fnSwitchTab(tab) {
     document.querySelectorAll('.fn-tab-btn').forEach(function(b) { b.classList.toggle('active', b.dataset.tab === tab); });
     document.querySelectorAll('.fn-section').forEach(function(s) { s.classList.toggle('active', s.id === 'sec-' + tab); });
     if (tab === 'holerite') { fnInitHoleriteControls(); fnCarregarHolerite(); }
-    if (tab === 'banco') fnRenderBanco();
+    if (tab === 'banco') { fnRenderBanco(); fnRenderBancoSaldo(); }
+    if (tab === 'solicitar') fnRenderSolicitacoes();
+    if (tab === 'avisos') fnRenderAvisosAll();
+}
+
+// ============================================
+// 🏦 BANCO HORAS — saldo atual
+// ============================================
+function fnRenderBancoSaldo() {
+    var session = fnGetSession();
+    var el = document.getElementById('bancoSaldoValor');
+    var sub = document.getElementById('bancoSaldoSub');
+    if (!el || !session || typeof OvertimeBank === 'undefined') return;
+    try {
+        var now = new Date();
+        var bal = OvertimeBank.computeBankBalance(session.franchiseId, session.staffId, now.getFullYear(), now.getMonth() + 1);
+        var totalMin = bal.balanceMin || 0;
+        var horas = Math.floor(Math.abs(totalMin) / 60);
+        var mins = Math.abs(totalMin) % 60;
+        el.textContent = (totalMin >= 0 ? '+' : '-') + horas + 'h' + (mins ? mins + 'min' : '');
+        el.style.color = totalMin >= 0 ? '#16A34A' : '#DC2626';
+        if (sub) sub.textContent = totalMin >= 0 ? 'Saldo a usar' : 'Saldo devedor';
+    } catch (e) {
+        el.textContent = '--';
+    }
+}
+
+// ============================================
+// 📝 SOLICITAÇÕES — sistema centralizado
+// ============================================
+// Solicitações vão pra collection 'solicitacoes_<fid>' com {staffId, type, payload, status, createdAt}
+// Tipos: atestado, ajuste_ponto, troca_turno, abono_falta, ferias, conversa_rh
+var SOL_TYPE_LABELS = {
+    atestado: { icon: '🏥', lbl: 'Atestado médico' },
+    ajuste_ponto: { icon: '⏱️', lbl: 'Ajuste de ponto' },
+    troca_turno: { icon: '🔄', lbl: 'Troca de turno' },
+    abono_falta: { icon: '📋', lbl: 'Abono de falta' },
+    ferias: { icon: '🏖️', lbl: 'Marcação de férias' },
+    conversa_rh: { icon: '💬', lbl: 'Conversa com gerente' }
+};
+
+function fnRenderSolicitacoes() {
+    var session = fnGetSession();
+    var el = document.getElementById('solicitacoesLista');
+    if (!el || !session) return;
+    var list = DataStore.getCollection('solicitacoes', session.franchiseId) || [];
+    list = list.filter(function(r) { return r.staffId === session.staffId; })
+               .sort(function(a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+    if (!list.length) {
+        el.innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:14px;font-size:.85rem">Nenhuma solicitação enviada ainda.</p>';
+        return;
+    }
+    el.innerHTML = list.slice(0, 30).map(function(r) {
+        var meta = SOL_TYPE_LABELS[r.type] || { icon: '📋', lbl: r.type };
+        var status = r.status || 'pending';
+        var statusBg = status === 'approved' ? '#DCFCE7' : (status === 'rejected' ? '#FEE2E2' : '#FEF3C7');
+        var statusFg = status === 'approved' ? '#166534' : (status === 'rejected' ? '#991B1B' : '#92400E');
+        var statusLbl = status === 'approved' ? '✓ Aprovada' : (status === 'rejected' ? '✗ Rejeitada' : '⏳ Aguardando');
+        var when = '';
+        try { when = new Date(r.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }); } catch (_) {}
+        return '<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:12px;margin-bottom:8px">'
+            + '<div style="display:flex;justify-content:space-between;align-items:start;gap:8px;margin-bottom:6px">'
+            + '<strong style="font-size:.92rem">' + meta.icon + ' ' + meta.lbl + '</strong>'
+            + '<span style="background:' + statusBg + ';color:' + statusFg + ';padding:2px 10px;border-radius:6px;font-size:.72rem;font-weight:700;white-space:nowrap">' + statusLbl + '</span></div>'
+            + '<div style="font-size:.82rem;color:#374151">' + Utils.escapeHtml(r.descricao || '') + '</div>'
+            + '<small style="color:#9CA3AF;display:block;margin-top:4px">' + Utils.escapeHtml(when) + '</small>'
+            + (r.adminReply ? '<div style="background:#F0F9FF;border-left:3px solid #3B82F6;padding:6px 10px;margin-top:8px;font-size:.78rem;color:#1E40AF"><strong>Resposta:</strong> ' + Utils.escapeHtml(r.adminReply) + '</div>' : '')
+            + '</div>';
+    }).join('');
+}
+
+function fnEnviarSolicitacao(type, descricao, payload) {
+    var session = fnGetSession();
+    if (!session) return false;
+    if (!descricao || descricao.trim().length < 5) {
+        alert('Descreva o pedido com pelo menos 5 caracteres.');
+        return false;
+    }
+    var sol = {
+        id: 'sol_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+        staffId: session.staffId,
+        staffName: session.staffName,
+        franchiseId: session.franchiseId,
+        type: type,
+        descricao: descricao.trim().slice(0, 1000),
+        payload: payload || {},
+        status: 'pending',
+        createdAt: new Date().toISOString()
+    };
+    DataStore.addToCollection('solicitacoes', session.franchiseId, sol);
+    Utils.showToast('Pedido enviado! Resposta em até 48h.', 'success');
+    fnRenderSolicitacoes();
+    return true;
+}
+
+function fnSolModalHTML(title, color, bodyHTML, submitFn) {
+    var html = '<div id="solModal" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10006;display:flex;align-items:center;justify-content:center;padding:20px">'
+        + '<div style="background:#fff;border-radius:14px;width:100%;max-width:400px;overflow:hidden">'
+        + '<div style="padding:18px 22px;background:' + color + ';color:#fff"><h3 style="margin:0">' + title + '</h3></div>'
+        + '<div style="padding:20px 22px">' + bodyHTML + '</div>'
+        + '<div style="padding:12px 22px;border-top:1px solid #E5E7EB;display:flex;gap:8px;justify-content:flex-end">'
+        + '<button onclick="document.getElementById(\'solModal\').remove()" class="fn-btn fn-btn-secondary" style="flex:0 0 auto;padding:9px 16px">Cancelar</button>'
+        + '<button onclick="' + submitFn + '" class="fn-btn" style="flex:0 0 auto;padding:9px 16px">Enviar</button>'
+        + '</div></div></div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function fnAbrirSolicitarAtestado() {
+    fnSolModalHTML('🏥 Atestado médico', 'linear-gradient(135deg,#3B82F6,#1D4ED8)',
+        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Data do atestado</label>'
+        + '<input id="atDate" type="date" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Dias afastado</label>'
+        + '<input id="atDias" type="number" min="1" max="30" value="1" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">CID / Motivo (opcional)</label>'
+        + '<input id="atMotivo" type="text" placeholder="Ex: gripe, consulta de rotina" class="fn-input" style="margin-bottom:10px">'
+        + '<p style="font-size:.75rem;color:#6B7280">📎 Leve o atestado em papel pra loja entregar pro gerente. Esse pedido é só pra registrar no sistema.</p>',
+        'fnConfirmAtestado()');
+}
+function fnConfirmAtestado() {
+    var d = document.getElementById('atDate').value;
+    var dias = document.getElementById('atDias').value;
+    var mot = document.getElementById('atMotivo').value;
+    if (!d || !dias) { alert('Preencha data e dias.'); return; }
+    var desc = 'Atestado de ' + d.split('-').reverse().join('/') + ' • ' + dias + ' dia(s)' + (mot ? ' • ' + mot : '');
+    if (fnEnviarSolicitacao('atestado', desc, { data: d, dias: parseInt(dias, 10), motivo: mot })) {
+        document.getElementById('solModal').remove();
+    }
+}
+
+function fnAbrirAjustePonto() {
+    fnSolModalHTML('⏱️ Ajuste de ponto', 'linear-gradient(135deg,#F59E0B,#D97706)',
+        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Dia da batida</label>'
+        + '<input id="apDate" type="date" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Tipo</label>'
+        + '<select id="apTipo" class="fn-input" style="margin-bottom:10px">'
+        + '<option value="entrada">Entrada</option><option value="almoco_saida">Saída almoço</option>'
+        + '<option value="almoco_volta">Volta almoço</option><option value="saida">Saída</option></select>'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Hora correta (HH:MM)</label>'
+        + '<input id="apHora" type="time" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Motivo do esquecimento</label>'
+        + '<textarea id="apMot" class="fn-input" rows="2" placeholder="Ex: celular ficou em casa, esqueci ao sair correndo"></textarea>',
+        'fnConfirmAjustePonto()');
+}
+function fnConfirmAjustePonto() {
+    var d = document.getElementById('apDate').value;
+    var t = document.getElementById('apTipo').value;
+    var h = document.getElementById('apHora').value;
+    var m = document.getElementById('apMot').value;
+    if (!d || !h || !m || m.trim().length < 5) { alert('Preencha tudo (motivo min 5 chars).'); return; }
+    var desc = 'Ajustar ' + t.replace('_', ' ') + ' em ' + d.split('-').reverse().join('/') + ' pra ' + h + ' • ' + m;
+    if (fnEnviarSolicitacao('ajuste_ponto', desc, { data: d, tipo: t, hora: h, motivo: m })) {
+        document.getElementById('solModal').remove();
+    }
+}
+
+function fnAbrirTrocaTurno() {
+    fnSolModalHTML('🔄 Troca de turno', 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
+        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Dia que você quer folgar</label>'
+        + '<input id="ttDate" type="date" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Colega que vai te cobrir</label>'
+        + '<input id="ttColega" type="text" placeholder="Nome do colega" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Você cobre ele em qual dia?</label>'
+        + '<input id="ttContraData" type="date" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Motivo</label>'
+        + '<textarea id="ttMot" class="fn-input" rows="2" placeholder="Ex: evento familiar"></textarea>',
+        'fnConfirmTroca()');
+}
+function fnConfirmTroca() {
+    var d = document.getElementById('ttDate').value;
+    var c = document.getElementById('ttColega').value;
+    var cd = document.getElementById('ttContraData').value;
+    var m = document.getElementById('ttMot').value;
+    if (!d || !c || !cd) { alert('Preencha dia, colega e data de troca.'); return; }
+    var desc = 'Folgar ' + d.split('-').reverse().join('/') + ', ' + c + ' cobre. Eu cubro em ' + cd.split('-').reverse().join('/') + (m ? ' • ' + m : '');
+    if (fnEnviarSolicitacao('troca_turno', desc, { folgaData: d, colega: c, contraData: cd, motivo: m })) {
+        document.getElementById('solModal').remove();
+    }
+}
+
+function fnAbrirAbonoFalta() {
+    fnSolModalHTML('📋 Abono de falta', 'linear-gradient(135deg,#EF4444,#DC2626)',
+        '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Dia da falta</label>'
+        + '<input id="afDate" type="date" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Motivo</label>'
+        + '<textarea id="afMot" class="fn-input" rows="3" placeholder="Ex: emergência familiar"></textarea>'
+        + '<p style="font-size:.75rem;color:#6B7280">📎 Anexe comprovantes na conversa com o gerente (foto pelo WhatsApp).</p>',
+        'fnConfirmAbono()');
+}
+function fnConfirmAbono() {
+    var d = document.getElementById('afDate').value;
+    var m = document.getElementById('afMot').value;
+    if (!d || !m || m.trim().length < 10) { alert('Preencha data e motivo (min 10 chars).'); return; }
+    var desc = 'Abonar falta de ' + d.split('-').reverse().join('/') + ' • ' + m;
+    if (fnEnviarSolicitacao('abono_falta', desc, { data: d, motivo: m })) {
+        document.getElementById('solModal').remove();
+    }
+}
+
+function fnAbrirFerias() {
+    fnSolModalHTML('🏖️ Marcação de férias', 'linear-gradient(135deg,#06B6D4,#0891B2)',
+        '<p style="font-size:.78rem;color:#6B7280;margin:0 0 12px">CLT art. 134: férias devem ser comunicadas com 30 dias de antecedência.</p>'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Início desejado</label>'
+        + '<input id="frInicio" type="date" class="fn-input" style="margin-bottom:10px">'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Quantos dias</label>'
+        + '<select id="frDias" class="fn-input" style="margin-bottom:10px">'
+        + '<option value="30">30 dias (completo)</option><option value="20">20 dias</option>'
+        + '<option value="15">15 dias</option><option value="10">10 dias</option></select>'
+        + '<label style="display:block;font-size:.82rem;font-weight:700;margin-bottom:4px">Observação (opcional)</label>'
+        + '<textarea id="frObs" class="fn-input" rows="2" placeholder="Ex: viagem família"></textarea>',
+        'fnConfirmFerias()');
+}
+function fnConfirmFerias() {
+    var i = document.getElementById('frInicio').value;
+    var d = document.getElementById('frDias').value;
+    var o = document.getElementById('frObs').value;
+    if (!i || !d) { alert('Preencha início e duração.'); return; }
+    var desc = 'Férias de ' + i.split('-').reverse().join('/') + ' • ' + d + ' dia(s)' + (o ? ' • ' + o : '');
+    if (fnEnviarSolicitacao('ferias', desc, { inicio: i, dias: parseInt(d, 10), obs: o })) {
+        document.getElementById('solModal').remove();
+    }
+}
+
+function fnAbrirFalarRH() {
+    // Direto pro WhatsApp do gerente (número da franquia)
+    var session = fnGetSession();
+    if (!session) return;
+    var franchise = (DataStore.getCollection('franchises', null) || []).find(function(f) { return f.id === session.franchiseId; });
+    var phone = (franchise && franchise.whatsapp) || (franchise && franchise.phone) || '5543999919777';
+    phone = String(phone).replace(/\D/g, '');
+    var msg = encodeURIComponent('Oi! Sou ' + session.staffName + ' (colaborador MilkyPot). Preciso falar com você sobre:');
+    window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
+    // Também registra que ele tentou contato
+    fnEnviarSolicitacao('conversa_rh', 'Iniciou conversa via WhatsApp', { phone: phone });
+}
+
+// ============================================
+// 📣 AVISOS — comunicados + mural + treinamento + ranking
+// ============================================
+function fnAvisosSubtab(tab) {
+    document.querySelectorAll('.fn-subtab').forEach(function(b) {
+        var active = b.dataset.subtab === tab;
+        b.style.background = active ? '#16A34A' : '#F3F4F6';
+        b.style.color = active ? '#fff' : '#374151';
+        b.classList.toggle('active', active);
+    });
+    document.querySelectorAll('.fn-subtab-content').forEach(function(c) {
+        c.style.display = (c.id === 'subtab-' + tab) ? 'block' : 'none';
+    });
+    if (tab === 'comunicados') fnRenderComunicados();
+    if (tab === 'mural') fnRenderMuralCompleto();
+    if (tab === 'treinamento') fnRenderTreinamento();
+    if (tab === 'ranking') fnRenderRanking();
+}
+function fnRenderAvisosAll() {
+    fnRenderComunicados();
+}
+
+function fnRenderComunicados() {
+    var session = fnGetSession();
+    var el = document.getElementById('comunicadosLista');
+    if (!el || !session) return;
+    var lista = DataStore.getCollection('comunicados', session.franchiseId) || [];
+    lista = lista.sort(function(a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+    if (!lista.length) {
+        el.innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:20px;font-size:.85rem">📭 Sem comunicados no momento. Quando o gerente publicar algo, aparece aqui.</p>';
+        return;
+    }
+    el.innerHTML = lista.slice(0, 20).map(function(c) {
+        var when = '';
+        try { when = new Date(c.createdAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + ' ' + new Date(c.createdAt).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' }); } catch (_) {}
+        var pri = c.priority || 'normal';
+        var priBg = pri === 'urgent' ? '#FEE2E2' : (pri === 'high' ? '#FEF3C7' : '#F0F9FF');
+        var priFg = pri === 'urgent' ? '#991B1B' : (pri === 'high' ? '#92400E' : '#1E40AF');
+        var priIcon = pri === 'urgent' ? '🚨' : (pri === 'high' ? '⚠️' : '📣');
+        return '<div style="background:' + priBg + ';border-left:4px solid ' + priFg + ';border-radius:8px;padding:12px 14px;margin-bottom:10px">'
+            + '<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px">'
+            + '<strong style="color:' + priFg + ';font-size:.92rem">' + priIcon + ' ' + Utils.escapeHtml(c.titulo || 'Comunicado') + '</strong>'
+            + '<small style="color:#6B7280;white-space:nowrap">' + Utils.escapeHtml(when) + '</small></div>'
+            + '<div style="color:#374151;font-size:.85rem;line-height:1.5;white-space:pre-wrap">' + Utils.escapeHtml(c.mensagem || '') + '</div>'
+            + (c.autor ? '<small style="color:#6B7280;display:block;margin-top:6px">— ' + Utils.escapeHtml(c.autor) + '</small>' : '')
+            + '</div>';
+    }).join('');
+}
+
+function fnRenderMuralCompleto() {
+    var session = fnGetSession();
+    var el = document.getElementById('muralListaCompleta');
+    if (!el || !session || typeof Gamification === 'undefined') return;
+    try {
+        var wall = Gamification.getRecognitionWall(session.franchiseId) || [];
+        if (!wall.length) {
+            el.innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:20px;font-size:.85rem">🐑 Mural vazio. Quando o gerente reconhecer um colega, aparece aqui.</p>';
+            return;
+        }
+        el.innerHTML = wall.slice(0, 30).map(function(r) {
+            return '<div style="background:#F9FAFB;border-left:3px solid #7C3AED;border-radius:8px;padding:10px 14px;margin-bottom:8px">'
+                + '<strong style="color:#1F2937;font-size:.88rem">⭐ ' + Utils.escapeHtml(r.staffName || '(equipe)') + '</strong>'
+                + '<div style="color:#374151;font-size:.85rem;margin-top:4px;line-height:1.5">' + Utils.escapeHtml(r.message || '') + '</div>'
+                + (r.pinnedAt ? '<small style="color:#9CA3AF;display:block;margin-top:4px">' + new Date(r.pinnedAt).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) + '</small>' : '')
+                + '</div>';
+        }).join('');
+    } catch (e) {
+        el.innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:14px">Mural temporariamente indisponível.</p>';
+    }
+}
+
+function fnRenderTreinamento() {
+    var session = fnGetSession();
+    var el = document.getElementById('treinamentoLista');
+    if (!el || !session) return;
+    // Materiais salvos pelo admin em datastore 'treinamentos_<fid>'
+    var lista = DataStore.getCollection('treinamentos', session.franchiseId) || [];
+    // Conteúdo default sempre disponível (manual MilkyPot)
+    var defaults = [
+        { titulo: '📖 Manual de boas práticas', desc: 'Como receber clientes, montar sundae perfeito, atendimento padrão MilkyPot.', tipo: 'guide' },
+        { titulo: '🍨 Como montar o Monte Seu Sundae', desc: 'Sequência ideal: base → sabor → adicionais → calda → cobertura.', tipo: 'guide' },
+        { titulo: '🧼 Higiene e limpeza diária', desc: 'Checklist de limpeza, troca de panos, sanitização de utensílios.', tipo: 'guide' },
+        { titulo: '💳 Como usar o PDV', desc: 'Login, criar pedido, descontos, pagamentos, fechamento de caixa.', tipo: 'guide' },
+        { titulo: '🤝 Atendimento de reclamação', desc: 'Manter calma, ouvir, oferecer solução. Em último caso escalar pra gerente.', tipo: 'guide' }
+    ];
+    var all = lista.concat(defaults);
+    el.innerHTML = all.slice(0, 20).map(function(t) {
+        var icon = t.tipo === 'video' ? '🎥' : (t.tipo === 'pdf' ? '📄' : '📖');
+        var actionBtn = t.url
+            ? '<a href="' + Utils.escapeHtml(t.url) + '" target="_blank" class="fn-btn" style="margin-top:8px;display:inline-block;text-decoration:none;padding:8px 14px;font-size:.78rem">' + icon + ' Abrir</a>'
+            : '';
+        return '<div style="background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:12px;margin-bottom:8px">'
+            + '<strong style="font-size:.92rem">' + Utils.escapeHtml(t.titulo) + '</strong>'
+            + '<div style="font-size:.82rem;color:#6B7280;margin-top:4px;line-height:1.5">' + Utils.escapeHtml(t.desc || '') + '</div>'
+            + actionBtn + '</div>';
+    }).join('');
+}
+
+function fnRenderRanking() {
+    var session = fnGetSession();
+    var el = document.getElementById('rankingLista');
+    if (!el || !session) return;
+    var staffList = DataStore.getCollection('staff', session.franchiseId) || [];
+    staffList = staffList.filter(function(s) { return s.active !== false; });
+    var now = new Date();
+    var ranked = staffList.map(function(s) {
+        var score = 0;
+        if (typeof StaffConduct !== 'undefined' && StaffConduct.computeScore) {
+            try {
+                var r = StaffConduct.computeScore(session.franchiseId, s.id, now.getFullYear(), now.getMonth() + 1);
+                score = r.score || 0;
+            } catch (_) {}
+        }
+        return { id: s.id, name: s.name, role: s.role, score: score };
+    }).sort(function(a, b) { return b.score - a.score; });
+
+    if (!ranked.length) {
+        el.innerHTML = '<p style="text-align:center;color:#9CA3AF;padding:14px">Sem dados de pontuação ainda.</p>';
+        return;
+    }
+    el.innerHTML = ranked.slice(0, 20).map(function(s, i) {
+        var isMe = s.id === session.staffId;
+        var medal = i === 0 ? '🥇' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : (i + 1) + 'º'));
+        var rowBg = isMe ? 'linear-gradient(90deg,#FEF3C7,#FCD34D)' : '#fff';
+        var border = isMe ? '2px solid #F59E0B' : '1px solid #E5E7EB';
+        return '<div style="background:' + rowBg + ';border:' + border + ';border-radius:10px;padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px">'
+            + '<div style="font-size:1.2rem;font-weight:800;min-width:32px;text-align:center">' + medal + '</div>'
+            + '<div style="flex:1"><strong style="font-size:.88rem">' + Utils.escapeHtml(s.name) + (isMe ? ' (você)' : '') + '</strong>'
+            + '<div style="font-size:.72rem;color:#6B7280">' + Utils.escapeHtml(s.role || '') + '</div></div>'
+            + '<div style="font-family:\'Baloo 2\',cursive;font-size:1.2rem;font-weight:800;color:#7C3AED">' + s.score.toFixed(0) + '</div>'
+            + '</div>';
+    }).join('');
 }
 
 document.getElementById('loginPin').addEventListener('keydown', function(e) {
