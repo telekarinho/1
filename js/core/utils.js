@@ -2,6 +2,34 @@
    MilkyPot - Utilidades Compartilhadas
    ============================================ */
 
+// ============================================
+// TIMEZONE — TODA a operação MilkyPot é America/Sao_Paulo (UTC-3).
+// Nunca confie no timezone do device. Apps TWA (colaborador, funcionario)
+// rodam em Android que pode ter qualquer timezone (alguns vêm com UTC default
+// de fábrica, virtual envs vão pra GMT). Tudo aqui força America/Sao_Paulo.
+// ============================================
+const MP_TZ = 'America/Sao_Paulo';
+
+// Helper: retorna {y,m,d,H,M,S} no fuso de São Paulo, independente do device
+function _spParts(date) {
+    const d = date instanceof Date ? date : new Date(date || Date.now());
+    if (isNaN(d.getTime())) return null;
+    // Intl com timeZone garante valores em SP regardless of device timezone
+    const fmt = new Intl.DateTimeFormat('en-CA', {
+        timeZone: MP_TZ, year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+    const parts = {};
+    for (const p of fmt.formatToParts(d)) {
+        if (p.type !== 'literal') parts[p.type] = p.value;
+    }
+    return {
+        y: parts.year, m: parts.month, d: parts.day,
+        H: parts.hour === '24' ? '00' : parts.hour, // Intl as vezes retorna 24 no hour12:false — normaliza
+        M: parts.minute, S: parts.second
+    };
+}
+
 const Utils = {
     // Gera ID único
     generateId() {
@@ -13,64 +41,75 @@ const Utils = {
         return 'R$ ' + (value || 0).toFixed(2).replace('.', ',');
     },
 
-    // Formata data BR
+    // Formata data BR (sempre America/Sao_Paulo)
     formatDate(dateStr) {
         if (!dateStr) return '-';
         const d = new Date(dateStr);
-        return d.toLocaleDateString('pt-BR');
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('pt-BR', { timeZone: MP_TZ });
     },
 
-    // Formata data e hora BR
+    // Formata data e hora BR (sempre America/Sao_Paulo)
     formatDateTime(dateStr) {
         if (!dateStr) return '-';
         const d = new Date(dateStr);
-        return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleDateString('pt-BR', { timeZone: MP_TZ }) + ' ' +
+               d.toLocaleTimeString('pt-BR', { timeZone: MP_TZ, hour: '2-digit', minute: '2-digit' });
     },
 
-    // Formata hora
+    // Formata hora (sempre America/Sao_Paulo)
     formatTime(dateStr) {
         if (!dateStr) return '-';
         const d = new Date(dateStr);
-        return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleTimeString('pt-BR', { timeZone: MP_TZ, hour: '2-digit', minute: '2-digit' });
     },
 
-    // Data de hoje em formato YYYY-MM-DD (TIMEZONE LOCAL, nao UTC)
-    // Importante: pedidos criados a noite em BRT podem ter timestamp UTC do dia seguinte
+    // Data de hoje YYYY-MM-DD no fuso de São Paulo (não UTC, não device)
+    // Importante: pedidos criados a noite em BRT NÃO viram o dia seguinte
     today() {
-        const d = new Date();
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return yyyy + '-' + mm + '-' + dd;
+        const p = _spParts(new Date());
+        return p ? `${p.y}-${p.m}-${p.d}` : '';
     },
 
-    // Converte timestamp ISO (geralmente UTC) para YYYY-MM-DD em timezone local
+    // Converte timestamp ISO (geralmente UTC) para YYYY-MM-DD em São Paulo
     localDateOf(isoTimestamp) {
         if (!isoTimestamp) return '';
-        const d = new Date(isoTimestamp);
-        if (isNaN(d.getTime())) return '';
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return yyyy + '-' + mm + '-' + dd;
+        const p = _spParts(isoTimestamp);
+        return p ? `${p.y}-${p.m}-${p.d}` : '';
     },
 
     // Alias canonico — use Utils.todayKey() em vez de toISOString().slice(0,10)
-    // (que quebra apos 21h locais virando o dia em UTC).
-    // MEMORY do dono: timezone Brasilia exige getTimezoneOffset compensation.
     todayKey() {
         return this.today();
     },
 
-    // Inicio do mes atual
+    // Hora atual HH:MM em SP (substitui new Date().getHours())
+    nowHourSP() {
+        const p = _spParts(new Date());
+        return p ? parseInt(p.H, 10) : 0;
+    },
+
+    // Componentes da hora atual SP {y,m,d,H,M,S as strings} — útil pra UI
+    nowPartsSP() {
+        return _spParts(new Date());
+    },
+
+    // Dia da semana (0=Dom, 6=Sab) em SP — substitui new Date().getDay()
+    nowDayOfWeekSP() {
+        // Cria date string YYYY-MM-DD em SP e usa o JS Date pra extrair day
+        // (getDay funciona local OK uma vez que parseamos a data certa de SP)
+        const p = _spParts(new Date());
+        if (!p) return 0;
+        // Constrói Date no UTC pra evitar shift de fuso na hora de getDay
+        return new Date(p.y + '-' + p.m + '-' + p.d + 'T12:00:00Z').getUTCDay();
+    },
+
+    // Inicio do mes atual YYYY-MM-01 em SP
     startOfMonth() {
-        const d = new Date();
-        // Usar data local (não UTC) para evitar bug de fuso: Brasília UTC-3 faz
-        // new Date(ano, mes, 1).toISOString() retornar "...T03:00:00Z" que é
-        // lexicograficamente maior que "YYYY-MM-01" e exclui o dia 1 do filtro.
-        const yyyy = d.getFullYear();
-        const mm   = String(d.getMonth() + 1).padStart(2, '0');
-        return yyyy + '-' + mm + '-01';
+        const p = _spParts(new Date());
+        return p ? `${p.y}-${p.m}-01` : '';
     },
 
     // =====================================================================

@@ -189,12 +189,20 @@
         return null; // ja bateu todas
     }
 
-    function getStaffRecordsByDate(franchiseId, staffId, dateStr) {
+    function getStaffRecordsByDate(franchiseId, staffId, dateStr, includeHistorical) {
         var records = (typeof DataStore !== 'undefined')
             ? (DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [])
             : [];
         return records
-            .filter(function (r) { return r.staffId === staffId && r.timestamp.startsWith(dateStr); })
+            .filter(function (r) {
+                if (r.staffId !== staffId || !r.timestamp || !r.timestamp.startsWith(dateStr)) return false;
+                if (includeHistorical) return true;
+                // Default: esconde cancelados E originais que foram ajustados
+                // (mostra só o vigente). Admin pode passar includeHistorical=true.
+                if (r.cancelled) return false;
+                if (r.adjusted) return false;
+                return true;
+            })
             .sort(function (a, b) { return a.timestamp.localeCompare(b.timestamp); });
     }
 
@@ -300,6 +308,84 @@
             timestamp: timestamp,
             nsr: nsr
         };
+    }
+
+    // ----------------------------------------
+    // 🛠 AJUSTE de batida (admin) — Portaria 1510/MTE exige IMUTABILIDADE
+    // dos registros originais. Ajustamos via NOVO registro "ajuste" vinculado
+    // ao original (originalNsr) + motivo + quem ajustou. Trilha 100% auditável.
+    // ----------------------------------------
+    function adjustRecord(franchiseId, originalRecordId, newHHMM, reason) {
+        if (!franchiseId || !originalRecordId) return { success: false, error: 'Dados obrigatorios' };
+        if (!reason || reason.trim().length < 5) return { success: false, error: 'Motivo obrigatorio (min 5 chars)' };
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(newHHMM)) return { success: false, error: 'Hora inválida (HH:MM)' };
+
+        var records = (typeof DataStore !== 'undefined' && DataStore.getCollection)
+            ? DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [] : [];
+        var original = records.find(function (r) { return r.id === originalRecordId; });
+        if (!original) return { success: false, error: 'Registro original nao encontrado' };
+        if (original.adjusted) return { success: false, error: 'Registro ja foi ajustado anteriormente' };
+
+        // Marca o original como ajustado (preservando dados)
+        original.adjusted = true;
+        original.adjustedAt = nowIso();
+        original.adjustedReason = reason.trim().slice(0, 500);
+        if (typeof DataStore !== 'undefined' && DataStore.saveCollection) {
+            DataStore.saveCollection(COLLECTION_RECORDS, franchiseId, records);
+        }
+
+        // Cria NOVO registro de ajuste (mesmo dia, novo timestamp)
+        var dateOnlyStr = dateOnly(original.timestamp);
+        var newTimestampIso = dateOnlyStr + 'T' + newHHMM + ':00';
+        var nsr = nextNSR(franchiseId);
+        var adjustRecord = Object.assign({}, original, {
+            id: 'tc_' + franchiseId.replace(/[^a-z0-9]/gi, '_') + '_' + nsr,
+            nsr: nsr,
+            timestamp: newTimestampIso,
+            originalNsr: original.nsr,
+            originalTimestamp: original.timestamp,
+            adjustedFrom: original.id,
+            adjustedReason: reason.trim().slice(0, 500),
+            isAdjustment: true,
+            channel: 'admin_adjustment',
+            source: 'admin_adjustment',
+            adjusted: false,            // o novo é o "vigente"
+            createdAt: nowIso(),
+            createdBy: (typeof Auth !== 'undefined' && Auth.getSession()) ? Auth.getSession().email : 'admin'
+        });
+        if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
+            DataStore.addToCollection(COLLECTION_RECORDS, franchiseId, adjustRecord);
+        }
+        logAudit(franchiseId, 'record_adjust', {
+            originalNsr: original.nsr, newNsr: nsr,
+            from: original.timestamp, to: newTimestampIso,
+            reason: adjustRecord.adjustedReason, by: adjustRecord.createdBy
+        });
+        return { success: true, original: original, adjusted: adjustRecord };
+    }
+
+    // ----------------------------------------
+    // 🗑 CANCELAR batida (admin) — soft delete com motivo, mantém auditoria
+    // ----------------------------------------
+    function cancelRecord(franchiseId, recordId, reason) {
+        if (!franchiseId || !recordId) return { success: false, error: 'Dados obrigatorios' };
+        if (!reason || reason.trim().length < 5) return { success: false, error: 'Motivo obrigatorio (min 5 chars)' };
+        var records = (typeof DataStore !== 'undefined' && DataStore.getCollection)
+            ? DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [] : [];
+        var rec = records.find(function (r) { return r.id === recordId; });
+        if (!rec) return { success: false, error: 'Registro nao encontrado' };
+        if (rec.cancelled) return { success: false, error: 'Registro ja cancelado' };
+        rec.cancelled = true;
+        rec.cancelledAt = nowIso();
+        rec.cancelledReason = reason.trim().slice(0, 500);
+        rec.cancelledBy = (typeof Auth !== 'undefined' && Auth.getSession()) ? Auth.getSession().email : 'admin';
+        if (typeof DataStore !== 'undefined' && DataStore.saveCollection) {
+            DataStore.saveCollection(COLLECTION_RECORDS, franchiseId, records);
+        }
+        logAudit(franchiseId, 'record_cancel', {
+            nsr: rec.nsr, timestamp: rec.timestamp, reason: rec.cancelledReason, by: rec.cancelledBy
+        });
+        return { success: true, record: rec };
     }
 
     // ----------------------------------------
@@ -672,6 +758,8 @@
         // Operacoes
         recordPunch: recordPunch,
         addJustification: addJustification,
+        adjustRecord: adjustRecord,        // 🛠 admin ajusta hora (mantem auditoria)
+        cancelRecord: cancelRecord,        // 🗑 admin cancela registro (soft delete)
 
         // Consultas
         findStaffByPin: findStaffByPin,
