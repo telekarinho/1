@@ -2935,6 +2935,91 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   animation:promoTick var(--promo-dur,8s) linear forwards;
 }
 @keyframes promoTick{from{width:0}to{width:100%}}
+
+/* RASPADINHA DEMO — simula a raspadinha real do app raspando sozinha
+   em loop, mostrando os 11 premios possiveis. Pra cliente entender
+   visualmente o fluxo: "toda compra ganha algo". */
+.rasp-demo{
+  display:flex; flex-direction:column; align-items:center;
+  gap:clamp(8px, 1.5vh, 18px);
+}
+.rasp-card{
+  position:relative;
+  width:clamp(240px, 36vmin, 360px);
+  aspect-ratio: 16 / 10;
+  background:linear-gradient(135deg,#FFF 0%,#FFE4F0 100%);
+  border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.35), 0 0 0 4px rgba(255,255,255,.4);
+  overflow:hidden;
+}
+.rasp-card-inner{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.rasp-prize{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; padding:14px;
+  opacity:0;
+  animation:raspPrizeIn 11s linear infinite;
+}
+.rasp-prize-emoji{
+  font-size:clamp(38px, 6.5vmin, 70px); line-height:1;
+}
+.rasp-prize-label{
+  font-family:'Baloo 2',cursive; font-weight:900;
+  font-size:clamp(13px, 2.2vmin, 22px);
+  color:#1A1A2E; letter-spacing:.5px; text-align:center;
+}
+.rasp-prize-sub{
+  font-size:clamp(10px, 1.4vmin, 14px); color:#6B7280;
+  font-weight:600; text-align:center;
+}
+/* Cada premio fica visivel ~1s do ciclo de 11s (delay = i*1s da JS).
+   Janela: 0%-1% aparece, 1%-8% visivel, 8%-9% desaparece. */
+@keyframes raspPrizeIn{
+  0%       { opacity:0; transform:scale(.7); }
+  1%       { opacity:1; transform:scale(1); }
+  8%       { opacity:1; transform:scale(1.04); }
+  9%, 100% { opacity:0; transform:scale(1.1); }
+}
+.rasp-overlay{
+  position:absolute; inset:0;
+  background:linear-gradient(135deg,#C0C0C0 0%,#9E9E9E 50%,#C0C0C0 100%);
+  display:flex; align-items:center; justify-content:center;
+  animation:raspOverlay 1s ease-in-out infinite;
+  pointer-events:none;
+}
+.rasp-overlay-text{
+  font-family:'Baloo 2',cursive; font-weight:900;
+  font-size:clamp(16px, 2.6vmin, 26px);
+  color:#fff; letter-spacing:2px;
+  text-shadow:0 2px 6px rgba(0,0,0,.4);
+  animation:raspOverlayShake 1.2s ease-in-out infinite;
+}
+@keyframes raspOverlay{
+  /* Loop 1s: cobre (0%) → raspa rapido (5%-15%) → revelado (15%-85%)
+     → volta cobrir (95%-100%) sincronizado com keyframe do premio. */
+  0%   { clip-path:inset(0 0 0 0); }
+  10%  { clip-path:inset(0 50% 0 0); }
+  15%  { clip-path:inset(0 100% 0 0); }
+  85%  { clip-path:inset(0 100% 0 0); }
+  95%  { clip-path:inset(0 50% 0 0); }
+  100% { clip-path:inset(0 0 0 0); }
+}
+@keyframes raspOverlayShake{
+  0%,100%{ transform:translate(0,0) }
+  25%   { transform:translate(-2px,1px) }
+  50%   { transform:translate(2px,-1px) }
+  75%   { transform:translate(-1px,2px) }
+}
+.rasp-caption{
+  font-size:clamp(11px, 1.6vmin, 16px); font-weight:800;
+  color:rgba(255,255,255,.85); letter-spacing:2px;
+  text-transform:uppercase;
+}
+/* No slide da raspadinha, escondemos o emoji default pra dar lugar ao card */
+.promo-slide-rasp .promo-emoji{ display:none; }
 </style>
 
 <script>
@@ -2970,12 +3055,15 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   // 1 segundo e entende DE PRIMEIRA. Cada slide diz: o que é, qual
   // a regra, o que faz. Sem firula.
   var SLIDES = [
-    { id:'raspadinha', emoji:'🎫', eyebrow:'RASPADINHA NA NOTA',
-      headline:'Toda compra dá raspadinha.',
-      subtext:'Sai um QR na sua nota. Raspa em até 7 dias\ne descobre o que ganhou. Pode ser sorvete grátis.',
-      cta:'Aponta a câmera no QR da nota fiscal',
+    { id:'raspadinha', emoji:'🎫', eyebrow:'TODA COMPRA PREMIA',
+      headline:'Pediu? Já ganhou alguma coisa.',
+      subtext:'Compra acima de R$ 15 sai com QR de raspadinha na nota.\nVocê raspa pelo celular e leva o prêmio. Validade 7 dias.',
+      cta:'Aponta a câmera ou raspa direto no celular',
       qr: qrUrl('/raspinha.html', 'raspadinha'),
-      bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)', dur:9000 },
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)', dur:12000,
+      // Demo visual: simula a raspadinha real raspando sozinha em loop,
+      // mostrando os 11 premios reais que estao ATIVOS no admin agora.
+      raspDemo: true },
     { id:'milkyclube', emoji:'🐑', eyebrow:'PROGRAMA MILKYCLUBE',
       headline:'Gasta agora, ganha desconto depois.',
       subtext:'Cada R$1 que você paga vira moedinha pro próximo sorvete.\nDe graça. Tipo o cashback do banco.',
@@ -3076,14 +3164,58 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     } catch(_) {}
   }
 
+  // Premios REAIS da raspinha (config admin atual da loja Muffato Quintino).
+  // Sem mostrar probabilidades — cliente so precisa saber QUE GANHA.
+  // Atualizado conforme spec do user: 11 premios todos positivos,
+  // nenhum "Quase!" (toda compra acima de R$ 15 sai com premio real).
+  var RASP_DEMO_PRIZES = [
+    { emoji:'⚖️', label:'100g BUFFET',         sub:'na próxima compra acima de R$ 15' },
+    { emoji:'⚖️', label:'100g BUFFET',         sub:'na próxima compra acima de R$ 20' },
+    { emoji:'⚖️', label:'150g BUFFET',         sub:'na próxima compra acima de R$ 25' },
+    { emoji:'⚖️', label:'200g BUFFET',         sub:'na próxima compra acima de R$ 35' },
+    { emoji:'🍦', label:'1 PICOLÉ GRÁTIS',     sub:'qualquer sabor da casa' },
+    { emoji:'🍨', label:'1 CASQUINHA GRÁTIS',  sub:'na próxima compra acima de R$ 10' },
+    { emoji:'🍧', label:'1 COPINHO DE SORVETE', sub:'na próxima compra acima de R$ 20' },
+    { emoji:'🍦', label:'1 SUNDAE P GRÁTIS',   sub:'na próxima compra acima de R$ 30' },
+    { emoji:'⬆️', label:'UPGRADE MILK SHAKE',  sub:'P → M ou M → G de graça' },
+    { emoji:'🎁', label:'COMBO BUFFET + PICOLÉ', sub:'100g buffet + 1 picolé' },
+    { emoji:'👯', label:'VOLTE COM UM AMIGO',  sub:'os dois ganham 100g de buffet' }
+  ];
+
+  function renderRaspadinhaDemo(){
+    // Demo cicla pelos 11 premios reais, cada um aparece por 900ms,
+    // com efeito de "raspa" revelando o premio. Total: ~11s
+    // (alinhado com s.dur=11000 do slide).
+    var demoHtml = '<div class="rasp-demo">' +
+      '<div class="rasp-card">' +
+        '<div class="rasp-card-inner" id="raspCardInner">' +
+          RASP_DEMO_PRIZES.map(function(p, i){
+            return '<div class="rasp-prize" style="animation-delay:'+ (i*0.9) +'s">' +
+                     '<div class="rasp-prize-emoji">'+ p.emoji +'</div>' +
+                     '<div class="rasp-prize-label">'+ p.label +'</div>' +
+                     '<div class="rasp-prize-sub">'+ p.sub +'</div>' +
+                   '</div>';
+          }).join('') +
+        '</div>' +
+        '<div class="rasp-overlay" id="raspOverlay">' +
+          '<div class="rasp-overlay-text">RASPA AQUI 👆</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="rasp-caption">Toda compra acima de R$ 15 ↑</div>' +
+    '</div>';
+    return demoHtml;
+  }
+
   function renderSlide(s){
     rotEl.style.background = s.bg;
     rotEl.style.setProperty('--promo-dur', (s.dur/1000)+'s');
     rotEl.innerHTML =
       '<div class="promo-progress"></div>' +
-      '<div class="promo-slide">' +
+      '<div class="promo-slide' + (s.raspDemo ? ' promo-slide-rasp' : '') + '">' +
         '<div class="promo-eyebrow">'+ s.eyebrow +'</div>' +
-        '<div class="promo-emoji">'+ s.emoji +'</div>' +
+        (s.raspDemo
+          ? renderRaspadinhaDemo()
+          : '<div class="promo-emoji">'+ s.emoji +'</div>') +
         '<h1 class="promo-headline">'+ s.headline +'</h1>' +
         '<p class="promo-subtext">'+ s.subtext.replace(/\n/g,'<br>') +'</p>' +
         '<div class="promo-cta">📱 '+ s.cta +'</div>' +
