@@ -153,6 +153,25 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" id="editId">
+                <input type="hidden" id="inputRefPhotoData">
+
+                <!-- 📸 FOTO REFERÊNCIA pra validação biométrica do ponto -->
+                <div class="form-group" style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:12px 14px;border-radius:8px;margin-bottom:14px">
+                    <label style="display:flex;align-items:center;gap:8px;color:#92400E">📸 Foto de referência (anti-fraude do ponto)</label>
+                    <p style="font-size:.78rem;color:#92400E;margin:4px 0 10px">Tira uma foto do funcionario AGORA. Quando ela bater ponto, o app captura uma selfie e voce compara aqui no painel pra confirmar que e mesmo ela.</p>
+                    <div style="display:flex;gap:12px;align-items:center">
+                        <div id="refPhotoPreview" style="width:80px;height:80px;border-radius:50%;background:#F3F4F6;border:2px dashed #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:30px;color:#9CA3AF;overflow:hidden;flex-shrink:0">
+                            <span id="refPhotoEmpty">👤</span>
+                        </div>
+                        <div style="flex:1;display:flex;gap:8px;flex-wrap:wrap">
+                            <button type="button" onclick="capturarFotoRef()" class="btn-outline" style="padding:8px 14px;font-size:.82rem">📷 Tirar foto agora</button>
+                            <button type="button" onclick="uploadFotoRef()" class="btn-outline" style="padding:8px 14px;font-size:.82rem">📁 Upload arquivo</button>
+                            <input type="file" id="refPhotoFile" accept="image/*" style="display:none" onchange="onRefPhotoFile(event)">
+                            <button type="button" id="removeRefPhotoBtn" onclick="removerFotoRef()" class="btn-outline" style="padding:8px 14px;font-size:.82rem;color:#DC2626;border-color:#DC2626;display:none">🗑 Remover</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label>Nome</label>
                     <input type="text" id="inputName" placeholder="Nome completo" class="form-control">
@@ -664,6 +683,7 @@
         function openAddModal() {
             document.getElementById('modalTitle').textContent = 'Novo Funcionario';
             document.getElementById('editId').value = '';
+            _setRefPhoto('');
             document.getElementById('inputName').value = '';
             document.getElementById('inputRole').value = 'Atendente';
             document.getElementById('inputPhone').value = '';
@@ -685,12 +705,102 @@
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
+        // ============================================
+        // 📸 FOTO DE REFERÊNCIA — captura via câmera ou upload
+        // ============================================
+        function _setRefPhoto(dataUrl) {
+            document.getElementById('inputRefPhotoData').value = dataUrl || '';
+            var preview = document.getElementById('refPhotoPreview');
+            var emptyEl = document.getElementById('refPhotoEmpty');
+            var removeBtn = document.getElementById('removeRefPhotoBtn');
+            if (dataUrl) {
+                preview.innerHTML = '<img src="' + dataUrl + '" style="width:100%;height:100%;object-fit:cover">';
+                if (emptyEl) emptyEl.style.display = 'none';
+                removeBtn.style.display = '';
+            } else {
+                preview.innerHTML = '<span id="refPhotoEmpty">👤</span>';
+                removeBtn.style.display = 'none';
+            }
+        }
+        function removerFotoRef() {
+            if (!confirm('Remover foto de referência? Você precisará bater outra antes do próximo registro de ponto.')) return;
+            _setRefPhoto('');
+        }
+        function uploadFotoRef() { document.getElementById('refPhotoFile').click(); }
+        function onRefPhotoFile(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { alert('Arquivo grande demais (max 5MB)'); return; }
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                // Redimensiona pra 320x320 quadrado (economiza Firestore)
+                var img = new Image();
+                img.onload = function() {
+                    var c = document.createElement('canvas');
+                    c.width = 320; c.height = 320;
+                    var ctx = c.getContext('2d');
+                    // Crop centralizado
+                    var size = Math.min(img.width, img.height);
+                    var sx = (img.width - size) / 2;
+                    var sy = (img.height - size) / 2;
+                    ctx.drawImage(img, sx, sy, size, size, 0, 0, 320, 320);
+                    _setRefPhoto(c.toDataURL('image/jpeg', 0.7));
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        async function capturarFotoRef() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('Câmera não disponível neste navegador. Use Upload arquivo.');
+                return;
+            }
+            var stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 480 } }, audio: false });
+            } catch (e) {
+                alert('Permita acesso à câmera ou use Upload arquivo.');
+                return;
+            }
+            var modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px';
+            modal.innerHTML =
+                '<div style="position:relative;width:min(80vw,360px);height:min(80vw,360px);border-radius:50%;overflow:hidden;border:6px solid rgba(255,255,255,.5)">' +
+                '  <video id="refCamVideo" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;transform:scaleX(-1)"></video>' +
+                '</div>' +
+                '<div style="color:#fff;margin-top:14px;text-align:center;font-size:14px">Centraliza o rosto do funcionário no círculo</div>' +
+                '<div style="display:flex;gap:12px;margin-top:20px">' +
+                '  <button id="refCamCancel" style="padding:12px 20px;border:1.5px solid #fff;background:transparent;color:#fff;border-radius:12px;font-weight:800;cursor:pointer">Cancelar</button>' +
+                '  <button id="refCamCapture" style="padding:12px 24px;border:0;background:#16A34A;color:#fff;border-radius:12px;font-weight:800;cursor:pointer">📷 Capturar</button>' +
+                '</div>';
+            document.body.appendChild(modal);
+            var video = modal.querySelector('#refCamVideo');
+            video.srcObject = stream;
+            function done(dataUrl) {
+                try { stream.getTracks().forEach(function(t) { t.stop(); }); } catch(_){}
+                modal.remove();
+                if (dataUrl) _setRefPhoto(dataUrl);
+            }
+            modal.querySelector('#refCamCancel').onclick = function() { done(null); };
+            modal.querySelector('#refCamCapture').onclick = function() {
+                var c = document.createElement('canvas');
+                c.width = 320; c.height = 320;
+                var ctx = c.getContext('2d');
+                ctx.save();
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, -320, 0, 320, 320);
+                ctx.restore();
+                done(c.toDataURL('image/jpeg', 0.7));
+            };
+        }
+
         function openEditModal(id) {
             var staff = staffList.find(function(s) { return s.id === id; });
             if (!staff) return;
             var j = staff.jornada || {};
             document.getElementById('modalTitle').textContent = 'Editar Funcionario';
             document.getElementById('editId').value = staff.id;
+            _setRefPhoto(staff.referencePhoto || '');
             document.getElementById('inputName').value = staff.name || '';
             document.getElementById('inputRole').value = staff.role || 'Atendente';
             document.getElementById('inputPhone').value = staff.phone || '';
@@ -769,6 +879,9 @@
                 folgas: folgas.length ? folgas : ['domingo']
             };
 
+            // 📸 Foto de referência (anti-fraude ponto). Pode ser '' (não tem) ou dataUrl JPEG 320x320
+            var referencePhoto = document.getElementById('inputRefPhotoData').value || '';
+
             if (editId) {
                 var idx = staffList.findIndex(function(s) { return s.id === editId; });
                 if (idx !== -1) {
@@ -786,6 +899,7 @@
                     staffList[idx].permissions = permissions;
                     staffList[idx].commissionRate = commissionRate;
                     staffList[idx].commissionFixed = commissionFixed;
+                    staffList[idx].referencePhoto = referencePhoto;
                     staffList[idx].updatedAt = new Date().toISOString();
                 }
             } else {
@@ -807,6 +921,7 @@
                     permissions: permissions,
                     commissionRate: commissionRate,
                     commissionFixed: commissionFixed,
+                    referencePhoto: referencePhoto,
                     active: true,
                     createdAt: new Date().toISOString()
                 });
@@ -942,11 +1057,11 @@
 <script src="../js/core/copilot-transport.js" defer></script>
 <script src="../js/pages/lilo-scanner.js" defer></script>
 <<<<<<< HEAD
-<script src="../js/core/belinha-page-scanners.js?v=mp-v279" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v279" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v280" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v280" defer></script>
 =======
-<script src="../js/core/belinha-page-scanners.js?v=mp-v279" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v279" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v280" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v280" defer></script>
 >>>>>>> origin/main
 </body>
 </html>
