@@ -648,9 +648,13 @@
                 else { status = 'Nao marcou ainda'; statusClass = 'gray'; }
 
                 // Hora clicável → modal de ajuste (admin) — mesma UX do Espelho Mensal
+                // CRÍTICO: rec.timestamp é UTC ISO (ex: "2026-05-17T17:20:00Z"). Display
+                // DEVE converter pra São Paulo via Utils.formatTime (timeZone: America/Sao_Paulo).
+                // Antes usava slice(11,16) que mostrava UTC: 17:20 SP virava "17:20" (errado!).
+                // Bug reportado: registro às 14:20 SP exibia "17:20" (UTC).
                 function tdHora(rec) {
                     if (!rec) return '<td style="color:#9CA3AF">-</td>';
-                    var hh = rec.timestamp.slice(11,16);
+                    var hh = (typeof Utils !== 'undefined' && Utils.formatTime) ? Utils.formatTime(rec.timestamp) : rec.timestamp.slice(11,16);
                     return '<td style="cursor:pointer;color:#3B82F6;font-weight:600" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh + '\')">' + hh + ' ✎</td>';
                 }
                 html += '<tr>';
@@ -747,7 +751,8 @@
                         if (!rec) {
                             return '<td style="cursor:pointer;color:#9CA3AF" title="Adicionar batida" onclick="ptAbrirAdicionarPonto(\'' + staffId + '\',\'' + dateStr + '\',\'' + tipo + '\')">+</td>';
                         }
-                        return '<td style="cursor:pointer" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + rec.timestamp.slice(11,16) + '\')">' + rec.timestamp.slice(11,16) + ' ✎</td>';
+                        var hh2 = (typeof Utils !== 'undefined' && Utils.formatTime) ? Utils.formatTime(rec.timestamp) : rec.timestamp.slice(11,16);
+                        return '<td style="cursor:pointer" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh2 + '\')">' + hh2 + ' ✎</td>';
                     }
                     html += tdHora(d.entrada, d.date, 'entrada');
                     html += tdHora(d.almocoSaida, d.date, 'almoco_saida');
