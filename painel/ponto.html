@@ -647,13 +647,19 @@
                 else if (TimeClock.isFolga(s, new Date(today + 'T12:00:00').getDay())) { status = 'Folga'; statusClass = 'blue'; }
                 else { status = 'Nao marcou ainda'; statusClass = 'gray'; }
 
+                // Hora clicável → modal de ajuste (admin) — mesma UX do Espelho Mensal
+                function tdHora(rec) {
+                    if (!rec) return '<td style="color:#9CA3AF">-</td>';
+                    var hh = rec.timestamp.slice(11,16);
+                    return '<td style="cursor:pointer;color:#3B82F6;font-weight:600" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh + '\')">' + hh + ' ✎</td>';
+                }
                 html += '<tr>';
                 html += '<td><strong>' + escapeHtml(s.name) + '</strong>' + (s.pis ? '' : '<br><span class="pt-tag red">SEM PIS</span>') + '</td>';
                 html += '<td>' + escapeHtml(s.role || '-') + '</td>';
-                html += '<td>' + (dia.entrada ? dia.entrada.timestamp.slice(11,16) : '-') + '</td>';
-                html += '<td>' + (dia.almocoSaida ? dia.almocoSaida.timestamp.slice(11,16) : '-') + '</td>';
-                html += '<td>' + (dia.almocoVolta ? dia.almocoVolta.timestamp.slice(11,16) : '-') + '</td>';
-                html += '<td>' + (dia.saida ? dia.saida.timestamp.slice(11,16) : '-') + '</td>';
+                html += tdHora(dia.entrada);
+                html += tdHora(dia.almocoSaida);
+                html += tdHora(dia.almocoVolta);
+                html += tdHora(dia.saida);
                 html += '<td><span class="pt-tag ' + statusClass + '">' + status + '</span></td>';
                 html += '<td>' + (dia.completo ? dia.horasFormatado : '-') + '</td>';
                 html += '</tr>';
