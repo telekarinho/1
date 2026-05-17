@@ -17,6 +17,45 @@
 
     const LOCAL_URL = 'http://localhost:5757';
     const REMOTE_TUNNEL_KEY = 'belinha_tunnel_global';
+    // Timeouts para a chamada real do /copilot (probes têm timeouts próprios menores).
+    // Sem isso o chat trava indefinidamente se o backend pendurar. Configurável via
+    // window.COPILOT_TIMEOUTS = { local: ms, remote: ms, api: ms }.
+    // Local = 5min porque o server faz CASCATA (Claude→Codex→Gemini→Copilot→LMStudio→Ollama),
+    // cada um pode levar 30-60s. Aborto prematuro mata a cascata e cai pra Vercel API à toa.
+    const DEFAULT_TIMEOUTS = { local: 300000, remote: 300000, api: 120000 };
+    function getTimeouts() {
+        const cfg = global.COPILOT_TIMEOUTS || {};
+        return {
+            local:  Number(cfg.local)  > 0 ? Number(cfg.local)  : DEFAULT_TIMEOUTS.local,
+            remote: Number(cfg.remote) > 0 ? Number(cfg.remote) : DEFAULT_TIMEOUTS.remote,
+            api:    Number(cfg.api)    > 0 ? Number(cfg.api)    : DEFAULT_TIMEOUTS.api
+        };
+    }
+    function fetchWithTimeout(url, opts, ms, label) {
+        opts = opts || {};
+        if (typeof AbortController === 'undefined') {
+            return Promise.race([
+                fetch(url, opts),
+                new Promise((_, rej) => setTimeout(() => {
+                    const err = new Error((label||'fetch') + ' timeout ' + ms + 'ms');
+                    err.name = 'AbortError';
+                    rej(err);
+                }, ms))
+            ]);
+        }
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), ms);
+        return fetch(url, Object.assign({}, opts, { signal: ctrl.signal }))
+            .finally(() => clearTimeout(tid))
+            .catch(e => {
+                if (e && e.name === 'AbortError') {
+                    const err = new Error((label||'fetch') + ' timeout ' + ms + 'ms');
+                    err.name = 'AbortError';
+                    throw err;
+                }
+                throw e;
+            });
+    }
     let _localAvailable = null;
     let _remoteAvailable = null;
     let _remoteUrl = null;
@@ -133,7 +172,8 @@
     }
 
     async function sendLocal(payload) {
-        const r = await fetch(LOCAL_URL + '/copilot', {
+        const t = getTimeouts();
+        const r = await fetchWithTimeout(LOCAL_URL + '/copilot', {
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
@@ -144,7 +184,7 @@
                 model: payload.model,
                 images: payload.images || []
             })
-        });
+        }, t.local, 'local');
         if (!r.ok) {
             const body = await r.text().catch(() => '');
             const err = new Error('local ' + r.status);
@@ -152,13 +192,23 @@
             throw err;
         }
         const data = await r.json();
-        return { reply: data.reply, usage: data.usage || { input_tokens: 0, output_tokens: 0 }, source: 'local', memoryUsed: data.memoryUsed };
+        return {
+            reply: data.reply,
+            usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+            source: 'local',
+            backend: data.backend || null,
+            memoryUsed: data.memoryUsed,
+            knowledgeMatch: data.knowledgeMatch || null,
+            triggerCompositeRun: !!data.triggerCompositeRun,
+            triggerExecutorRun: !!data.triggerExecutorRun
+        };
     }
 
     async function sendRemote(payload) {
         const baseUrl = await getRemoteTunnelUrl(false);
         if (!baseUrl) throw new Error('remote_tunnel_missing');
-        const r = await fetch(baseUrl + '/copilot', {
+        const t = getTimeouts();
+        const r = await fetchWithTimeout(baseUrl + '/copilot', {
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'application/json' },
@@ -169,7 +219,7 @@
                 model: payload.model,
                 images: payload.images || []
             })
-        });
+        }, t.remote, 'remote');
         if (!r.ok) {
             const body = await r.text().catch(() => '');
             const err = new Error('remote ' + r.status);
@@ -177,7 +227,16 @@
             throw err;
         }
         const data = await r.json();
-        return { reply: data.reply, usage: data.usage || { input_tokens: 0, output_tokens: 0 }, source: 'tunnel', memoryUsed: data.memoryUsed };
+        return {
+            reply: data.reply,
+            usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+            source: 'tunnel',
+            backend: data.backend || null,
+            memoryUsed: data.memoryUsed,
+            knowledgeMatch: data.knowledgeMatch || null,
+            triggerCompositeRun: !!data.triggerCompositeRun,
+            triggerExecutorRun: !!data.triggerExecutorRun
+        };
     }
 
     async function sendApi(payload) {
@@ -186,7 +245,8 @@
         const apiBase = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
             ? 'https://milkypot.vercel.app'
             : '';
-        const r = await fetch(apiBase + '/api/copilot', {
+        const t = getTimeouts();
+        const r = await fetchWithTimeout(apiBase + '/api/copilot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -196,7 +256,7 @@
                 messages: payload.messages,
                 context: payload.context
             })
-        });
+        }, t.api, 'api');
         if (!r.ok) {
             const body = await r.text().catch(() => '');
             const err = new Error('api ' + r.status);

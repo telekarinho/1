@@ -17,6 +17,14 @@ const EXCLUIR_SABORES = ["cat_bebida", "cat_topping"];
 function _r2(n) { return Math.round(Number(n) * 100) / 100; }
 function _r3(n) { return Math.round(Number(n) * 1000) / 1000; }
 
+function _minActiveVariantNumber(variants, field) {
+    const values = (Array.isArray(variants) ? variants : [])
+        .filter((v) => v && v.active !== false)
+        .map((v) => Number(v[field] || 0))
+        .filter((v) => v > 0);
+    return values.length ? Math.min.apply(null, values) : 0;
+}
+
 /** Conversão simples entre unidades */
 function _convertUnit(qty, fromUnit, toUnit) {
     if (fromUnit === toUnit) return qty;
@@ -121,11 +129,9 @@ function buildCatalogConfigFromV2(v2) {
                 let price = 0;
                 if (hasBuffet && Number(p.buffet.precoPorKg)) price = Number(p.buffet.precoPorKg);
                 else price = Number((p.precos && p.precos.loja && (p.precos.loja.real || p.precos.loja.recomendado)) || 0);
-                if (!price && p.variantes && p.variantes.length) {
-                    const variantePrices = p.variantes.map((v) => Number(v.precoLoja || 0)).filter((v) => v > 0);
-                    if (variantePrices.length) price = Math.min.apply(null, variantePrices);
-                }
-                const cost = Number((p.custos && p.custos.custoTotal) || 0);
+                if (!price) price = _minActiveVariantNumber(p.variantes, "precoLoja");
+                const cost = Number((p.custos && p.custos.custoTotal) || 0)
+                    || _minActiveVariantNumber(p.variantes, "custoExtra");
                 let porcoes = null;
                 if (tipoVenda === "por_peso") {
                     if (p.variantes && p.variantes.length) {
@@ -171,6 +177,8 @@ function buildCatalogConfigFromV2(v2) {
                         variantes: p.variantes,
                         toppingsIds: p.toppingsIds,
                         buffet: p.buffet,
+                        categoriaId: p.categoriaId,
+                        picoleFlavors: p.picoleFlavors || [],
                     },
                 };
             }),

@@ -154,11 +154,12 @@
             <div class="modal-body">
                 <input type="hidden" id="editId">
                 <input type="hidden" id="inputRefPhotoData">
+                <input type="hidden" id="inputRefDescriptor">
 
                 <!-- 📸 FOTO REFERÊNCIA pra validação biométrica do ponto -->
                 <div class="form-group" style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:12px 14px;border-radius:8px;margin-bottom:14px">
-                    <label style="display:flex;align-items:center;gap:8px;color:#92400E">📸 Foto de referência (anti-fraude do ponto)</label>
-                    <p style="font-size:.78rem;color:#92400E;margin:4px 0 10px">Tira uma foto do funcionario AGORA. Quando ela bater ponto, o app captura uma selfie e voce compara aqui no painel pra confirmar que e mesmo ela.</p>
+                    <label style="display:flex;align-items:center;gap:8px;color:#92400E">📸 Foto de referência (anti-fraude + biometria automática)</label>
+                    <p style="font-size:.78rem;color:#92400E;margin:4px 0 10px">Tira uma foto bem iluminada do funcionário AGORA. Quando ela bater ponto, o app reconhece o rosto automaticamente. Se não bater, admin é avisado pra revisar.</p>
                     <div style="display:flex;gap:12px;align-items:center">
                         <div id="refPhotoPreview" style="width:80px;height:80px;border-radius:50%;background:#F3F4F6;border:2px dashed #D1D5DB;display:flex;align-items:center;justify-content:center;font-size:30px;color:#9CA3AF;overflow:hidden;flex-shrink:0">
                             <span id="refPhotoEmpty">👤</span>
@@ -170,6 +171,7 @@
                             <button type="button" id="removeRefPhotoBtn" onclick="removerFotoRef()" class="btn-outline" style="padding:8px 14px;font-size:.82rem;color:#DC2626;border-color:#DC2626;display:none">🗑 Remover</button>
                         </div>
                     </div>
+                    <div id="refPhotoStatus" style="font-size:.78rem;margin-top:8px;display:none"></div>
                 </div>
 
                 <div class="form-group">
@@ -502,6 +504,7 @@
     <script src="../js/core/datastore.js"></script>
     <script src="../js/core/firebase-config.js"></script>
     <script src="../js/core/cloud-functions.js"></script>
+    <script src="../js/core/face-recognition.js"></script>
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/notifications.js"></script>
@@ -708,18 +711,54 @@
         // ============================================
         // 📸 FOTO DE REFERÊNCIA — captura via câmera ou upload
         // ============================================
-        function _setRefPhoto(dataUrl) {
+        // 🤖 PRE-CALCULA descriptor facial (face-api) na hora do cadastro.
+        // Salva em staff.referenceDescriptor (Array 128 floats). Quando funcionária
+        // bater ponto, sistema compara descriptor da selfie com esse pré-calculado.
+        async function _setRefPhoto(dataUrl) {
             document.getElementById('inputRefPhotoData').value = dataUrl || '';
+            var descInput = document.getElementById('inputRefDescriptor');
+            if (descInput) descInput.value = '';
             var preview = document.getElementById('refPhotoPreview');
             var emptyEl = document.getElementById('refPhotoEmpty');
             var removeBtn = document.getElementById('removeRefPhotoBtn');
+            var statusEl = document.getElementById('refPhotoStatus');
             if (dataUrl) {
                 preview.innerHTML = '<img src="' + dataUrl + '" style="width:100%;height:100%;object-fit:cover">';
                 if (emptyEl) emptyEl.style.display = 'none';
                 removeBtn.style.display = '';
+                if (statusEl) {
+                    statusEl.style.display = '';
+                    statusEl.textContent = '🤖 Analisando rosto...';
+                    statusEl.style.color = '#92400E';
+                }
+                try {
+                    if (typeof FaceRecognition !== 'undefined') {
+                        var desc = await FaceRecognition.descriptor(dataUrl);
+                        if (desc) {
+                            if (descInput) descInput.value = JSON.stringify(desc);
+                            if (statusEl) {
+                                statusEl.innerHTML = '✓ Rosto reconhecido — biometria automática ativa pra esse funcionário';
+                                statusEl.style.color = '#16A34A';
+                            }
+                        } else if (statusEl) {
+                            statusEl.innerHTML = '⚠ Rosto não detectado claramente. Use uma foto melhor iluminada com rosto centralizado.<br><small>Salvar mesmo assim funciona — admin compara visualmente, mas sem validação automática.</small>';
+                            statusEl.style.color = '#DC2626';
+                        }
+                    } else if (statusEl) {
+                        statusEl.textContent = '(Reconhecimento facial não disponível — admin compara manualmente)';
+                        statusEl.style.color = '#6B7280';
+                    }
+                } catch (e) {
+                    console.warn('descriptor falhou:', e.message);
+                    if (statusEl) {
+                        statusEl.textContent = '(Biometria automática indisponível — admin compara manualmente)';
+                        statusEl.style.color = '#6B7280';
+                    }
+                }
             } else {
                 preview.innerHTML = '<span id="refPhotoEmpty">👤</span>';
                 removeBtn.style.display = 'none';
+                if (statusEl) statusEl.style.display = 'none';
             }
         }
         function removerFotoRef() {
@@ -881,6 +920,12 @@
 
             // 📸 Foto de referência (anti-fraude ponto). Pode ser '' (não tem) ou dataUrl JPEG 320x320
             var referencePhoto = document.getElementById('inputRefPhotoData').value || '';
+            // 🤖 Descriptor facial pré-calculado (Array 128 floats) — pode ser '' se face-api falhou ou rosto não detectado
+            var refDescRaw = document.getElementById('inputRefDescriptor').value || '';
+            var referenceDescriptor = null;
+            if (refDescRaw) {
+                try { referenceDescriptor = JSON.parse(refDescRaw); } catch (_) { referenceDescriptor = null; }
+            }
 
             if (editId) {
                 var idx = staffList.findIndex(function(s) { return s.id === editId; });
@@ -900,6 +945,7 @@
                     staffList[idx].commissionRate = commissionRate;
                     staffList[idx].commissionFixed = commissionFixed;
                     staffList[idx].referencePhoto = referencePhoto;
+                    staffList[idx].referenceDescriptor = referenceDescriptor;
                     staffList[idx].updatedAt = new Date().toISOString();
                 }
             } else {
@@ -922,6 +968,7 @@
                     commissionRate: commissionRate,
                     commissionFixed: commissionFixed,
                     referencePhoto: referencePhoto,
+                    referenceDescriptor: referenceDescriptor,
                     active: true,
                     createdAt: new Date().toISOString()
                 });
@@ -1058,17 +1105,17 @@
 <script src="../js/pages/lilo-scanner.js" defer></script>
 <<<<<<< HEAD
 <<<<<<< HEAD
-<script src="../js/core/belinha-page-scanners.js?v=mp-v281" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v281" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v283" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v283" defer></script>
 =======
-<script src="../js/core/belinha-page-scanners.js?v=mp-v281" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v281" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v283" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v283" defer></script>
 =======
-<script src="../js/core/belinha-page-scanners.js?v=mp-v281" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v281" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v283" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v283" defer></script>
 =======
-<script src="../js/core/belinha-page-scanners.js?v=mp-v281" defer></script>
-<script src="../js/core/belinha-widget.js?v=mp-v281" defer></script>
+<script src="../js/core/belinha-page-scanners.js?v=mp-v283" defer></script>
+<script src="../js/core/belinha-widget.js?v=mp-v283" defer></script>
 >>>>>>> origin/main
 >>>>>>> origin/main
 </body>

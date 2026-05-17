@@ -57,19 +57,44 @@ if not errorlevel 1 (
 )
 
 echo [3/3] Verificando porta 5757...
-powershell -NoProfile -Command "try { $r = Invoke-WebRequest -UseBasicParsing 'http://localhost:5757/health' -TimeoutSec 2; if ($r.StatusCode -eq 200) { exit 0 } else { exit 1 } } catch { exit 1 }"
-if not errorlevel 1 (
+REM Checa 2 vezes: HTTP /health E porta em LISTENING (cobre server zumbi)
+powershell -NoProfile -Command "$busy = (Get-NetTCPConnection -LocalPort 5757 -State Listen -ErrorAction SilentlyContinue).Count -gt 0; try { Invoke-WebRequest -UseBasicParsing 'http://localhost:5757/health' -TimeoutSec 3 | Out-Null; exit 0 } catch { if ($busy) { exit 2 } else { exit 1 } }"
+set "PORT_STATE=%ERRORLEVEL%"
+if "%PORT_STATE%"=="0" (
+    cls
+    color 0A
     echo.
     echo  ==========================================================
-    echo    JA EXISTE UMA BELINHA RODANDO NA PORTA 5757
+    echo     BELINHA JA ESTA RODANDO ^(auto-start pela ScheduledTask^)
     echo.
-    echo    Health: http://localhost:5757/health
-    echo    Painel: http://localhost:5757/painel/copilot-belinha.html
-    echo    Reaproveitando a instancia atual sem reiniciar.
+    echo     Health: http://localhost:5757/health
+    echo     Painel: http://localhost:5757/painel/copilot-belinha.html
+    echo.
+    echo     Acabei de abrir o painel no seu browser.
+    echo     Essa janela fecha sozinha em 5 segundos.
     echo  ==========================================================
     echo.
     start "" "http://localhost:5757/painel/copilot-belinha.html"
+    timeout /t 5 /nobreak
     exit /b 0
+)
+if "%PORT_STATE%"=="2" (
+    echo.
+    echo  ==========================================================
+    echo    [AVISO] Porta 5757 ocupada por outro processo
+    echo    ^(provavelmente Belinha subindo em background pela
+    echo    ScheduledTask BelinhaServer^). Esperando 8s...
+    echo  ==========================================================
+    timeout /t 8 /nobreak >nul
+    powershell -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing 'http://localhost:5757/health' -TimeoutSec 3 | Out-Null; exit 0 } catch { exit 1 }"
+    if not errorlevel 1 (
+        echo Belinha respondeu apos espera. Abrindo painel.
+        start "" "http://localhost:5757/painel/copilot-belinha.html"
+        exit /b 0
+    )
+    echo Servidor nao respondeu apos 8s. Forcando reinicio:
+    powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 5757 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { try { Stop-Process -Id $_.OwningProcess -Force } catch {} }"
+    timeout /t 2 /nobreak >nul
 )
 
 echo [3/3] Iniciando servidor Node...

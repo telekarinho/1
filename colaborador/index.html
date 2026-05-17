@@ -628,6 +628,7 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 <script src="../js/core/geofence.js"></script>
 <script src="../js/core/payroll.js"></script>
 <script src="../js/core/legal-terms.js"></script>
+<script src="../js/core/face-recognition.js"></script>
 <script src="../js/core/staff-conduct.js"></script>
 <script src="../js/core/gamification.js"></script>
 <script src="../js/core/overtime-bank.js"></script>
@@ -1591,7 +1592,7 @@ async function fnBaterPonto() {
         geoBanner.innerHTML = '⚠️ ' + geoResult.error;
     }
 
-    // 3) Capturar selfie (anti-fraude)
+    // 3) Capturar selfie (anti-fraude visual + biometria)
     btn.innerHTML = '📸 Capturando foto...<small>olhe pra camera</small>';
     var selfie = await fnCaptureSelfie();
     if (!selfie) {
@@ -1602,24 +1603,84 @@ async function fnBaterPonto() {
         }
     }
 
-    // 4) Registrar
+    // 3.5) 🤖 RECONHECIMENTO FACIAL AUTOMATICO (graceful — NUNCA bloqueia)
+    // Compara selfie atual com foto-ref pre-cadastrada. Score < 0.4 = match.
+    // Status possíveis: match / maybe / no_match / no_face / error
+    // - match → registra normal
+    // - maybe / no_match → registra com flagged:true (admin revisa)
+    // - no_face / error → registra normal (admin compara visualmente)
+    // Funcionária NUNCA é bloqueada — só fica flagged pro admin.
+    var faceResult = null;
+    if (selfie && staffData && staffData.referenceDescriptor && typeof FaceRecognition !== 'undefined') {
+        btn.innerHTML = '🤖 Verificando rosto...<small>1 segundo</small>';
+        try {
+            // Carrega face-api se primeira vez (~10MB, leva uns 3-5s na 1a)
+            await FaceRecognition.init();
+            faceResult = await FaceRecognition.checkMatch(
+                null,                              // ref não precisa (usamos descriptor cached)
+                selfie,                            // selfie nova
+                staffData.referenceDescriptor      // descriptor pré-calculado da ref
+            );
+            console.log('[face-match]', faceResult);
+            // Se match falhou (no_match), tenta uma segunda vez antes de flagged
+            if (faceResult.status === 'no_match') {
+                if (confirm('🤔 Não reconheci seu rosto com certeza. Tirar outra foto melhor iluminada?')) {
+                    selfie = await fnCaptureSelfie();
+                    if (selfie) {
+                        faceResult = await FaceRecognition.checkMatch(null, selfie, staffData.referenceDescriptor);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('face-match falhou:', e.message);
+            faceResult = { status: 'error', error: e.message };
+        }
+    }
+
+    // 4) Registrar (com info do face match pra admin)
     btn.innerHTML = '⏳ Registrando...<small>quase la</small>';
+    var faceFlagged = faceResult && (faceResult.status === 'no_match' || faceResult.status === 'maybe');
     var result = await TimeClock.recordPunch(session.franchiseId, staffData.pin, 'pin', {
         channel: 'mobile',
         geolocation: geoResult.coords || null,
-        selfie: selfie
+        selfie: selfie,
+        faceMatch: faceResult ? {
+            status: faceResult.status,
+            distance: faceResult.distance,
+            confidence: faceResult.confidence
+        } : null,
+        flagged: faceFlagged,
+        flaggedReason: faceFlagged ? ('Face match: ' + faceResult.status + ' (distance=' + faceResult.distance + ')') : null
     });
 
     if (result.success) {
-        btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
-        btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + Utils.formatTime(result.timestamp) + ' • NSR ' + result.nsr + '</small>';
+        var faceFeedback = '';
+        if (faceResult) {
+            if (faceResult.status === 'match') {
+                faceFeedback = ' • 🤖✓ rosto OK';
+                btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+            } else if (faceResult.status === 'maybe' || faceResult.status === 'no_match') {
+                faceFeedback = ' • ⚠ admin vai conferir';
+                btn.style.background = 'linear-gradient(135deg,#F59E0B,#D97706)';
+                // Avisa funcionária mas NÃO bloqueia
+                Utils.showToast('Ponto registrado, mas gerente vai conferir o rosto na revisão. ✓', 'warning');
+            } else if (faceResult.status === 'no_face') {
+                faceFeedback = ' • 📸 rosto não detectado';
+                btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+            } else {
+                btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+            }
+        } else {
+            btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+        }
+        btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + Utils.formatTime(result.timestamp) + ' • NSR ' + result.nsr + faceFeedback + '</small>';
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         setTimeout(function() {
             fnRenderHoje(session, staffData);
             fnRenderMes(session);
             btn.style.background = 'linear-gradient(135deg,#16A34A,#10B981)';
             btn.disabled = false;
-        }, 2400);
+        }, 3000);
     } else {
         btn.disabled = false;
         btn.innerHTML = '⏰ Bater Ponto<small>Proximo: --</small>';
