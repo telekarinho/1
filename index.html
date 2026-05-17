@@ -534,7 +534,7 @@
             var textEl = document.getElementById('inaugBannerText');
             var ctaEl  = document.getElementById('inaugBannerCta');
 
-            // Após 25/04 23:59 — fases pós-inauguração (Festa Junina 10/05→29/06 · Caramelado 01/07→31/07)
+            // Após 25/04 23:59 — fases pós-inauguração (Junina 13/06→16/06 teaser · 17/06→29/06 launch · Caramelado 01/07→31/07)
             if(y > 2026 || (y === 2026 && m > 4) || (y === 2026 && m === 4 && day > 25)){
                 // Dia dos Namorados 12/06 — prioridade sobre teaser Junina (11/06 véspera · 12/06 dia H)
                 // Chaves separadas por dia para não suprimir o Dia H se usuário fechou a véspera na mesma sessão
@@ -557,7 +557,20 @@
                     if(banner) banner.style.display = 'flex';
                     return;
                 }
-                var inJuninaTeaser = (y === 2026) && ((m === 5 && day >= 10) || (m === 6 && day <= 16));
+                // Marco 1 mês 17/05–25/05 — drive fidelidade; não revela tema junino
+                if(y === 2026 && m === 5 && day >= 17 && day <= 25 && !sessionStorage.getItem('umMesBannerClosed')){
+                    if(day < 25){
+                        if(textEl) textEl.innerHTML = '🐑 <strong>QUASE 1 MÊS!</strong> &nbsp;·&nbsp; Obrigada Londrina pelo carinho! Cartão fidelidade: 10 carimbos = 1 potinho grátis 🍓';
+                        if(ctaEl){ ctaEl.textContent = 'Quero meu cartão! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Oi!%20Quero%20meu%20cart%C3%A3o%20fidelidade%20MilkyPot%20%F0%9F%90%91'; }
+                    } else {
+                        if(textEl) textEl.innerHTML = '🎂 <strong>1 MÊS DE MILKYPOT EM LONDRINA!</strong> &nbsp;·&nbsp; Obrigada por cada potinho feliz compartilhado! 🐑';
+                        if(ctaEl){ ctaEl.textContent = 'Pedir agora! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Oi!%20Quero%20um%20potinho%20para%20comemorar%20o%201%20m%C3%AAs%20da%20MilkyPot%20%F0%9F%8E%82'; }
+                    }
+                    if(banner) banner.style.display = 'flex';
+                    return;
+                }
+                // Teaser Junina só a partir de 13/06 (03/06–10/06 coberto por Namorados VIP; 11/06–12/06 por véspera/dia-H)
+                var inJuninaTeaser = (y === 2026) && (m === 6 && day >= 13 && day <= 16);
                 var inJuninaLaunch = (y === 2026 && m === 6 && day >= 17 && day <= 29);
                 if((inJuninaTeaser || inJuninaLaunch) && !sessionStorage.getItem('juninaBannerClosed')){
                     if(inJuninaTeaser){
@@ -632,6 +645,7 @@
                 else if(y2 === 2026 && m2 === 6 && day2 === 12){ sessionStorage.setItem('namoradosDiahClosed','1'); }
                 else if(y2 === 2026 && m2 === 6 && day2 === 11){ sessionStorage.setItem('namoradosVespraClosed','1'); }
                 else if(y2 === 2026 && m2 === 6 && day2 >= 3 && day2 <= 10){ sessionStorage.setItem('namoradosVipClosed','1'); }
+                else if(y2 === 2026 && m2 === 5 && day2 >= 17 && day2 <= 25){ sessionStorage.setItem('umMesBannerClosed','1'); }
                 else { sessionStorage.setItem('juninaBannerClosed','1'); }
             }
             applyBannerOffset();
