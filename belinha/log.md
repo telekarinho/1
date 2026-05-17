@@ -2,6 +2,43 @@
 
 ---
 
+## Ciclo #244 — 2026-05-17
+
+**Área:** UX — Banner "1 mês" fidelidade + correção bug teaser junino prematuro
+
+**Contexto:** Hoje (17/05) é o marco "Quase 1 mês" da loja. O site não mostrava nenhum banner entre 25/04 e 02/06 — oportunidade de conversão perdida. Além disso, havia um bug crítico de estratégia: o banner "🎪 EM BREVE: NOVIDADE JUNINA!" estava ativo desde 10/05, revelando o tema junino semanas antes da data planejada (03/06).
+
+**O que pesquisou/analisou:**
+- Leu `belinha/log.md` (ciclos #239–#243, todos UX/Conteúdo/SEO junino)
+- Analisou `index.html` linhas 536–648: banner cascade completo post-inauguração
+- Identificou dois problemas: (1) `inJuninaTeaser = m===5&&day>=10` revelava tema junino desde 10/05; (2) nenhum banner para o período 25/04–02/06 (38 dias de tela em branco!)
+- Verificou `belinha/content/calendario-editorial-14mai-02jun-2026.md` — confirma regra: NÃO revelar Junina antes de 03/06
+- Validou todas as datas-chave com script Node.js antes de commitar
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +16 linhas: banner "QUASE 1 MÊS!" (17/05–24/05) + "1 MÊS!" (25/05) com CTA cartão fidelidade; `inJuninaTeaser` corrigido de `m5&&day>=10` para `m6&&day>=13`; handler `umMesBannerClosed` no `closeBanner()` |
+
+**Destaques:**
+1. **Bug crítico corrigido:** `inJuninaTeaser` começava em 10/05, revelando o tema Junino 24 dias antes do planejado. Nova data: 13/06 (após Namorados véspera 11/06 + dia-H 12/06).
+2. **Banner 1 mês:** Conversão para cartão fidelidade — "10 carimbos = 1 potinho grátis" — exatamente no momento emocional do marco de 1 mês.
+3. **Cobertura completa de datas:** 17/05–24/05 = "Quase 1 mês"; 25/05 = "1 mês!"; 03/06–10/06 = Namorados VIP; 11/06 = véspera; 12/06 = dia-H; 13/06–16/06 = Junina teaser; 17/06–29/06 = Junina launch; Julho = Caramelado.
+
+**Commit:** `96531a2`
+
+**Próximo passo sugerido:**
+- **Ciclo #245 — Conteúdo:** Reel script detalhado "O que muda de potinho pra potinho?" (Quarta 20/05) — educação de produto, diferenciação vs. concorrente genérico; calendário prevê mas não tem script completo
+- **Ciclo #246 — Concorrentes:** Pesquisa atualizada Johnny/Jhoy/TheBest — não foram atualizados desde ciclos anteriores; Namorados 12/06 chega em 26 dias, verificar ações de campanha
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers 03/06 dependem disso
+- **Operador (URGENTE):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #244 | 2026-05-17_
+
+---
+
 ## Ciclo #243 — 2026-05-16
 
 **Área:** UX/Frontend — countdown regressivo em `potinho-junino-londrina.html`
