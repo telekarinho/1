@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #248 — 2026-05-17
+
+**Área:** Conversão — Copy contra-posicionamento "potinho vs. bufê self-service" (janela 06–12/06)
+
+**Contexto:** Prescrito pelos ciclos #246 e #247 como prioridade imediata. The Best Açaí lança "Piscininha" em 06/06 — produto bufê/dip self-service R$6,49/100g. Janela crítica: 20 dias para Namorados (12/06) e concorrente entra com campanha de experiência instagramável. MilkyPot precisa de material pronto que posicione o potinho como oposto emocional do bufê impessoal — sem nomear o concorrente.
+
+**O que pesquisou/analisou:**
+- Leu `diferenciacao-potinho-sem-balanca.md` (ciclo #109) — extraiu ângulo anti-balança/anti-bufê estabelecido
+- Leu `the-best-acai.md` (ciclo #226) — confirmou Piscininha 06/06–06/07 + preço R$6,49/100g + mecânica de uso
+- Leu `feed-contraprogramacao-pistacho-sabores-br.md` (ciclo #236) — extraiu tom implícito (nunca nomear concorrente)
+- Leu `copy-final-namorados-2026.md` — confirmou mecânica Versão A (2 potinhos = 1 topping grátis) ativa para Namorados
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/contra-posicionamento-bufe-self-service.md` | CRIADO — 278 linhas: 4 peças prontas (stories 5 frames, carrossel 4 frames, story enquete, caption Namorados), cronograma 06–12/06, orientações de arte, métricas de sucesso, blockers |
+
+**Destaques das 4 peças:**
+1. **Peça A — Stories "Alguém Fez Por Você?"** (06/06, 18h): Lança no mesmo dia da Piscininha TheBest. 5 frames sequenciais com contraste implícito bufê vs. potinho personalizado. Fecha com link WA.
+2. **Peça C — Enquete "Você Prefere?"** (08/06, 20h): Story interativo — votos geram dados reais de preferência do público Londrina + 2 respostas automáticas direcionando para WA.
+3. **Peça B — Carrossel "Tem Diferença Entre Montar e Receber"** (09/06, 18h): 4 frames de conversão, gancho de Namorados implícito, caption longa com hashtags + CTA WA.
+4. **Peça D — Caption Namorados** (11/06, 18h30): CTA final integrando mecânica Versão A (2 potinhos = 1 topping grátis) com diferencial personalização. Versão longa (IG) + curta (TikTok/Reels).
+
+**Commit:** `70d2bf4`
+
+**Próximo passo sugerido:**
+- **Ciclo #249 — UX:** Auditar `cardapio.html` — verificar se card Potinho Junino está visível com link para `potinho-junino-londrina.html`; verificar se topping pistacho aparece ou há placeholder (decisão do operador até 30/05)
+- **Ciclo #250 — Conteúdo:** Script Reel #3 "Linha Zero/Fit" (03/06) OU ajustar para tema junino — publicação 03/06 é o 1º dia de teaser Junina, decisão binária depende do operador (prazo 30/05)
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — impacta Reel 3 (03/06) e estratégia junina inteira
+- **Operador (URGENTE — 17 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️ — Peça D do ciclo #248 depende disso
+- **Operador (06/06):** Publicar Peça A (stories) às 18h seguindo `contra-posicionamento-bufe-self-service.md`
+- **Operador (08/06):** Publicar Peça C (enquete) às 20h
+- **Operador (09/06):** Publicar Peça B (carrossel) às 18h
+- **Operador (11/06):** Publicar Peça D (caption Namorados) às 18h30
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #248 | 2026-05-17_
+
+---
+
 ## Ciclo #247 — 2026-05-17
 
 **Área:** Conteúdo — Script completo reel 27/05 "Os toppings infinitos" (Série educativa #2/4)
