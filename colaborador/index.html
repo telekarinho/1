@@ -2125,6 +2125,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 })();
+
+// ============================================
+// 🔄 AUTO-RERENDER quando time_clock_records_ recebe update do Firestore
+// ============================================
+// Garante que a aba "Hoje" do colaborador atualize EM TEMPO REAL quando:
+// - Admin ajusta hora pelo painel (TimeClock.adjustRecord cria novo registro)
+// - Outra sessão do mesmo funcionário (PC + celular) bate ponto
+// - Sync inicial completa
+// Debounce 300ms agrupa múltiplos updates rapidos sem rerender excessivo.
+(function() {
+    var _fnRerenderTimer = null;
+    function _fnScheduleRerender() {
+        if (_fnRerenderTimer) clearTimeout(_fnRerenderTimer);
+        _fnRerenderTimer = setTimeout(function() {
+            _fnRerenderTimer = null;
+            try {
+                var session = fnGetSession();
+                if (!session) return;
+                var staff = (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
+                if (typeof fnRenderHoje === 'function') fnRenderHoje(session, staff);
+                // Tab Mês atualiza se estiver visível
+                var mesActive = document.getElementById('sec-mes');
+                if (mesActive && mesActive.classList.contains('active') && typeof fnRenderMes === 'function') {
+                    fnRenderMes(session);
+                }
+                console.log('🔄 colaborador auto-rerender');
+            } catch (e) { /* ignora */ }
+        }, 300);
+    }
+    window.addEventListener('mp_remote_update', function(e) {
+        if (!e || !e.detail || !e.detail.key) return;
+        var k = e.detail.key;
+        if (k.indexOf('time_clock_records_') === 0 ||
+            k.indexOf('time_clock_justifications_') === 0 ||
+            k.indexOf('staff_') === 0 ||
+            k.indexOf('solicitacoes_') === 0 ||
+            k.indexOf('comunicados_') === 0) {
+            _fnScheduleRerender();
+        }
+    });
+    window.addEventListener('mp_synced', function() { _fnScheduleRerender(); });
+})();
 </script>
 </body>
 </html>
