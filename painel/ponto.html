@@ -749,7 +749,14 @@
 
         // ========== TAB HOJE ==========
         function ptLoadHoje() {
-            var today = new Date().toISOString().slice(0, 10);
+            // CRÍTICO: usa data SÃO PAULO (não UTC). toISOString() retorna UTC
+            // e bugava quando funcionária batia ponto perto da meia-noite SP.
+            var today = (typeof Utils !== 'undefined' && Utils.todayKey)
+                ? Utils.todayKey()
+                : new Intl.DateTimeFormat('en-CA', {
+                      timeZone: 'America/Sao_Paulo',
+                      year: 'numeric', month: '2-digit', day: '2-digit'
+                  }).format(new Date());
             var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
             var totalMarcacoes = 0;
             var presentes = 0;

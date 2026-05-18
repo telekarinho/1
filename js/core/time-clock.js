@@ -189,13 +189,36 @@
         return null; // ja bateu todas
     }
 
+    /**
+     * Filtra registros por data — usando data SÃO PAULO (não UTC).
+     * Bug corrigido: antes filtrava com r.timestamp.startsWith(dateStr) que casa
+     * com data UTC. Se funcionária bate ponto às 22h SP (= 01h UTC dia seguinte),
+     * o registro tinha data UTC do dia seguinte e admin não achava ela hoje.
+     * Agora converte timestamp UTC → data SP via Intl.DateTimeFormat antes de
+     * comparar com dateStr (que sempre representa data calendário SP).
+     */
+    function getRecordDateInSP(timestamp) {
+        try {
+            var fmt = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'America/Sao_Paulo',
+                year: 'numeric', month: '2-digit', day: '2-digit'
+            });
+            return fmt.format(new Date(timestamp));  // YYYY-MM-DD em SP
+        } catch (e) {
+            return String(timestamp || '').slice(0, 10);  // fallback UTC
+        }
+    }
+
     function getStaffRecordsByDate(franchiseId, staffId, dateStr, includeHistorical) {
         var records = (typeof DataStore !== 'undefined')
             ? (DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [])
             : [];
         return records
             .filter(function (r) {
-                if (r.staffId !== staffId || !r.timestamp || !r.timestamp.startsWith(dateStr)) return false;
+                if (r.staffId !== staffId || !r.timestamp) return false;
+                // Compara data SÃO PAULO do registro com dateStr (que é calendário SP)
+                var recDateSP = getRecordDateInSP(r.timestamp);
+                if (recDateSP !== dateStr) return false;
                 if (includeHistorical) return true;
                 // Default: esconde cancelados E originais que foram ajustados
                 // (mostra só o vigente). Admin pode passar includeHistorical=true.
