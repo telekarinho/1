@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #253 — 2026-05-18
+
+**Área:** Conversão — Kit de Ativação UGC DUO Namorados 12/06 (contra-posicionamento JohnnyJoy "Dois Amores")
+
+**Contexto:** Prescrito desde ciclo #226 (26 ciclos pendente). Ciclo #252 confirmou intel crítica: JohnnyJoy "Dois Amores" tem 3 sabores pré-definidos de brigadeiro e copy "Jogue cupido com os sabores e faça o seu match perfeito" — mas **ZERO mecânica de foto/UGC**. `whatsapp-ugc-foto-reward.md` (ciclo #235) tinha brief geral, mas faltava ativação específica 09–12/06 aproveitando o diferencial estrutural do nome na etiqueta do potinho.
+
+**O que pesquisou/analisou:**
+- Leu `whatsapp-ugc-foto-reward.md` integralmente — identificou Variante Namorados genérica (template WA DUO +10 pts) sem ativação calendário, sem scripts PDV específicos, sem Stories roteirizados
+- Leu `belinha/competitors/johnnyjoy.md` (CICLO #252) — extraiu tabela de contra-posicionamento Duo vs. Dois Amores: MilkyPot único com UGC mechanic + nome na etiqueta + toppings livres
+- Leu `ugc-compartilhe-potinho.md` — confirmou padrão de repost existente para reaproveitar
+- Cruzou com `contra-posicionamento-bufe-self-service.md` (ciclo #248), `reel-10jun-montagem-ao-vivo-bastidores.md` (ciclo #251), `whatsapp-namorados-2026.md` (ciclo #228) para integração
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/ugc-duo-namorados-ativacao-12jun.md` | CRIADO — 282 linhas: brief operacional, 3 Stories roteirizados (09/06 anúncio + 11/06 antecipação + 12/06 ativação), 3 templates WA prontos (convite delivery, confirmação +10pts, pedido de repost), scripts PDV presencial + delivery, protocolo de repost com prioridade de seleção, integração com 4 materiais existentes, métricas de sucesso, checklist de ativação 09–13/06 |
+
+**Destaques:**
+1. **JohnnyJoy tem Dois Amores, MilkyPot tem nome no potinho.** A foto de dois potinhos com "MARIA" e "JOÃO" nas etiquetas é prova visual que nenhum concorrente pode replicar — e não custa R$0.
+2. **+10 pts para o parceiro** (se mandar o contato) = cada DUO UGC gera 2 novos contatos WA = base para remarketing Festa Junina 17/06.
+3. **Integração 3 materiais:** Reel 10/06 (montagem ao vivo) → Stories UGC 12/06 (resultado real) → Galeria 12/06 noite (prova social fechando o ciclo).
+4. **Meta mínima 5 DUOs** — qualquer resultado acima é ganho estrutural vs. JohnnyJoy que não tem nenhuma foto gerada por clientes.
+
+**Commit:** `31206f9`
+
+**Próximo passo sugerido:**
+- **Ciclo #254 — UX:** Auditar `index.html` — verificar coexistência visual banner Namorados e teaser Junina (15/05–11/06); ajustar lógica date-gate se necessário
+- **Ciclo #255 — Conteúdo:** Stories comparação implícita "dois amores num copo vs. potinho feito para você" (sem citar JohnnyJoy) — copy sugerida já no `johnnyjoy.md` ciclo #252
+- **Ciclo #256 — Concorrentes:** TheBest Açaí — atualizar ação Piscininha (lança 06/06); verificar promoções especiais Namorados
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (09/06 18h):** Publicar Story anúncio UGC DUO (`ugc-duo-namorados-ativacao-12jun.md`)
+- **Operador (11/06 18h):** Publicar 2 Stories de antecipação
+- **Operador (12/06):** Monitorar menções IG a cada 1–2h (não 3x/dia — pico de pedidos)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #253 | 2026-05-18_
+
+---
+
 ## Ciclo #252 — 2026-05-18
 
 **Área:** Concorrentes — JohnnyJoy "Dois Amores" sabores confirmados + JAH FeliciJAH 2026 + pistache receita própria
