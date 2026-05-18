@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>MilkyPot — Slides TV Desafio</title>
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<style>
+body{font-family:'Nunito',sans-serif;background:#FAF9FC;margin:0}
+.page{padding:20px 24px;max-width:1100px;margin:0 auto}
+h1{font-family:'Baloo 2',cursive;color:#2D1747;font-size:26px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+.sub{color:#6B7280;font-size:14px;margin:0 0 22px;line-height:1.5}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.btn{padding:9px 16px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.btn.primary{background:#7E57C2;color:#fff;border-color:#7E57C2}
+.btn.success{background:#16A34A;color:#fff;border-color:#16A34A}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+
+.slides{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.card{background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;transition:all .15s}
+.card.off{opacity:.55;background:#FAFAFA}
+.card .head{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.card .icon{font-size:34px;line-height:1}
+.card .meta{flex:1}
+.card .title{font-family:'Baloo 2',cursive;font-weight:900;color:#1F2937;font-size:15px;line-height:1.1}
+.card .id{font-size:11px;color:#9CA3AF;letter-spacing:.5px;text-transform:uppercase;font-weight:700;margin-top:2px}
+.card .copy{font-size:12px;color:#6B7280;line-height:1.4;margin-top:4px}
+.card .qr-tag{font-size:10px;font-weight:800;color:#7E57C2;background:#F3F0FF;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:6px;letter-spacing:.5px}
+.card .qr-tag.no-qr{color:#9CA3AF;background:#F3F4F6}
+
+.switch{position:relative;width:48px;height:26px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .slider{position:absolute;inset:0;background:#D1D5DB;border-radius:26px;cursor:pointer;transition:.2s}
+.switch .slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 4px rgba(0,0,0,.15)}
+.switch input:checked + .slider{background:#7E57C2}
+.switch input:checked + .slider::before{transform:translateX(22px)}
+
+.summary{background:linear-gradient(135deg,#FFF5F7,#F5F0FF);border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.summary .num{font-family:'Baloo 2',cursive;font-size:28px;color:#7E57C2;font-weight:900}
+.summary .lbl{font-size:12px;color:#6B7280;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1F2937;color:#fff;padding:12px 22px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 14px 40px rgba(0,0,0,.3);z-index:9999;display:none}
+.toast.show{display:block;animation:toastIn .3s ease-out}
+.toast.success{background:#16A34A}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>📺 Slides TV Desafio</h1>
+  <p class="sub">
+    Liga/desliga cada slide individualmente na rotação da TV do desafio.<br>
+    URL da TV: <code>milkypot.com/desafio.html?tv=1&franchise=&lt;sua-loja&gt;</code>
+  </p>
+
+  <div class="bar">
+    <select id="franchiseSelect" class="btn" style="min-width:220px">
+      <option value="muffato-quintino">Muffato Quintino (padrão)</option>
+    </select>
+    <button class="btn" onclick="toggleAll(true)">✅ Ativar todos</button>
+    <button class="btn" onclick="toggleAll(false)">⛔ Desativar todos</button>
+    <button class="btn success" onclick="save()">💾 Salvar</button>
+    <button class="btn" onclick="window.location.href='configuracoes.html'">⚙️ Voltar</button>
+  </div>
+
+  <div class="summary">
+    <div><div class="num" id="kpiOn">—</div><div class="lbl">Slides ativos</div></div>
+    <div><div class="num" id="kpiOff">—</div><div class="lbl">Desativados</div></div>
+    <div><div class="num" id="kpiTotal">12</div><div class="lbl">Total</div></div>
+  </div>
+
+  <div class="slides" id="slidesGrid"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  if (typeof Auth !== 'undefined' && !Auth.requireAuth('franchisee')) return;
+
+  // Sincronizado com SLIDES em desafio.html (mesmo IDs, mesmas copies).
+  // Cada slide aqui controla 1 entry do array de slides do TV.
+  var SLIDES = [
+    { id:'raspadinha',  emoji:'🎫', title:'Raspadinha',           qr:false,
+      copy:'Cliente recebe QR único na nota — toda compra premia' },
+    { id:'milkyclube',  emoji:'🐑', title:'MilkyClube',           qr:true,
+      copy:'Cashback de 1% — cadastra pelo email' },
+    { id:'roleta',      emoji:'🎰', title:'Roleta da Sorte',      qr:false,
+      copy:'Aparece automática no checkout (pós-pagamento)' },
+    { id:'desafio10s',  emoji:'⏱️', title:'Desafio 10 segundos',  qr:true,
+      copy:'Joga pela TV ou escaneando QR no celular' },
+    { id:'acerta300',   emoji:'⚖️', title:'Acertou 300g, não paga', qr:false,
+      copy:'Desafio físico no buffet da loja' },
+    { id:'googlereview',emoji:'⭐', title:'Avaliação Google',     qr:true,
+      copy:'5 estrelas = raspinha PREMIUM + 50 coins' },
+    { id:'instagram',   emoji:'📸', title:'Instagram @milkypotbr', qr:true,
+      copy:'Posta marcando ganha 150 coins' },
+    { id:'influencer',  emoji:'💸', title:'Programa Influencer',  qr:true,
+      copy:'Indica amigo, ganha cada vez que ele vem' },
+    { id:'streak',      emoji:'🔥', title:'Streak diário',         qr:false,
+      copy:'Automático pra cliente fiel do MilkyClube' },
+    { id:'milkypass',   emoji:'📱', title:'MilkyPass (Wallet)',   qr:true,
+      copy:'Cartão do clube no Apple/Google Wallet' },
+    { id:'ganhadores',  emoji:'🏆', title:'Hall da Fama',         qr:true,
+      copy:'Fotos dos ganhadores no Instagram highlight' },
+    { id:'compartilha', emoji:'📲', title:'Chama um amigo',       qr:true,
+      copy:'Compartilha cardápio no WhatsApp' }
+  ];
+
+  var fid = 'muffato-quintino';
+  var config = {}; // { raspadinha: true/false, ... }
+
+  function toast(msg, type){
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + (type || '');
+    setTimeout(function(){ el.classList.remove('show'); }, 2500);
+  }
+
+  function loadFranchises(){
+    if (!firebase || !firebase.firestore) return;
+    firebase.firestore().collection('datastore').doc('franchises').get().then(function(snap){
+      if (!snap.exists) return;
+      var raw = snap.data().value || '[]';
+      var list = JSON.parse(raw);
+      if (!Array.isArray(list)) list = list.franchises || [];
+      var sel = document.getElementById('franchiseSelect');
+      sel.innerHTML = '';
+      list.forEach(function(f){
+        var opt = document.createElement('option');
+        opt.value = f.id;
+        opt.textContent = f.name || f.id;
+        if (f.id === fid) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.onchange = function(){ fid = sel.value; reload(); };
+    }).catch(function(){});
+  }
+
+  async function reload(){
+    if (!firebase || !firebase.firestore) return;
+    try {
+      var snap = await firebase.firestore().collection('datastore')
+        .doc('tv_desafio_slides_' + fid).get();
+      if (snap.exists) {
+        var raw = snap.data().value || '{}';
+        config = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      } else {
+        config = {}; // default: todos ativos (undefined === true via !== false)
+      }
+    } catch (e) { console.warn(e); config = {}; }
+    render();
+  }
+  window.reload = reload;
+
+  function isOn(id){ return config[id] !== false; }
+
+  function render(){
+    var grid = document.getElementById('slidesGrid');
+    grid.innerHTML = SLIDES.map(function(s){
+      var on = isOn(s.id);
+      var qrTag = s.qr
+        ? '<span class="qr-tag">📱 com QR</span>'
+        : '<span class="qr-tag no-qr">sem QR</span>';
+      return '<div class="card' + (on ? '' : ' off') + '" data-id="'+ s.id +'">'
+        + '<div class="head">'
+          + '<div class="icon">'+ s.emoji +'</div>'
+          + '<div class="meta">'
+            + '<div class="title">'+ s.title +'</div>'
+            + '<div class="id">id: '+ s.id +'</div>'
+          + '</div>'
+          + '<label class="switch"><input type="checkbox" '+ (on?'checked':'') +' onchange="toggleSlide(\''+ s.id +'\', this.checked)"><span class="slider"></span></label>'
+        + '</div>'
+        + '<div class="copy">'+ s.copy +'</div>'
+        + qrTag
+      + '</div>';
+    }).join('');
+    updateKpis();
+  }
+
+  function updateKpis(){
+    var on = SLIDES.filter(function(s){ return isOn(s.id); }).length;
+    document.getElementById('kpiOn').textContent = on;
+    document.getElementById('kpiOff').textContent = SLIDES.length - on;
+  }
+
+  window.toggleSlide = function(id, on){
+    config[id] = !!on;
+    render();
+  };
+
+  window.toggleAll = function(on){
+    SLIDES.forEach(function(s){ config[s.id] = !!on; });
+    render();
+    toast(on ? 'Todos ativados' : 'Todos desativados — não esqueça de salvar');
+  };
+
+  window.save = async function(){
+    var on = SLIDES.filter(function(s){ return isOn(s.id); }).length;
+    if (on === 0) {
+      if (!confirm('TODOS os slides estão desativados — a TV vai ficar sem rotação. Continuar?')) return;
+    }
+    try {
+      await firebase.firestore().collection('datastore')
+        .doc('tv_desafio_slides_' + fid).set({
+          value: JSON.stringify(config),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          _updatedBy: 'painel/tv-desafio-slides.html'
+        });
+      toast('✅ Salvo! TVs atualizam em ~30s', 'success');
+    } catch (e) {
+      console.error(e);
+      toast('Erro ao salvar: ' + e.message);
+    }
+  };
+
+  loadFranchises();
+  reload();
+})();
+</script>
+</body>
+</html>

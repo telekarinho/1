@@ -1819,6 +1819,22 @@ if(gameConfig.streak) updateStreak();
 
 /* Show result */
 showStep(3);
+/* MODO TV: depois de 14s mostrando o resultado, volta automaticamente
+   pro attract pra liberar a TV pro proximo cliente. Sem isso, a TV ficava
+   travada na tela de resultado ate o idleTimer de 60s. */
+if(isStoreTvMode){
+clearTimeout(window._tvResultAutoBack);
+window._tvResultAutoBack=setTimeout(function(){
+if(document.getElementById('step3').classList.contains('active')){
+document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+var att=document.getElementById('stepAttract');
+if(att) att.classList.add('active');
+if(typeof startAttract==='function') startAttract();
+if(typeof setTvReleaseStatus==='function') setTvReleaseStatus('Aguardando liberacao do PDV...');
+activeVoucher=null;activeVoucherCode=null;gameState='idle';
+}
+},14000);
+}
 document.getElementById('resultName').textContent=playerN;
 var rv=document.getElementById('resultValue');
 var dbg=document.getElementById('resultDiffBadge');
@@ -3382,6 +3398,105 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   }
   subscribeHallFama();
 
+  // Toggle por slide — admin gerencia em painel/tv-desafio-slides.html
+  // Doc: tv_desafio_slides_<fid> { value: JSON.stringify({ raspadinha: true, ... }) }
+  // Default (sem config): TODOS slides ativos (undefined !== false).
+  var slidesEnabledConfig = {};
+  var slidesUnsub = null;
+  function subscribeSlideToggles(){
+    if (slidesUnsub) return;
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      slidesUnsub = firebase.firestore().collection('datastore')
+        .doc('tv_desafio_slides_' + fidParam)
+        .onSnapshot(function(snap){
+          try {
+            if (!snap.exists) { slidesEnabledConfig = {}; return; }
+            var raw = snap.data().value || '{}';
+            slidesEnabledConfig = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            console.log('[slides toggle] config atualizado:', slidesEnabledConfig);
+          } catch (e) { console.warn('slidesToggle parse:', e); }
+        }, function(err){ console.warn('slidesToggle err:', err); });
+    } catch (e) { console.warn('subscribeSlideToggles:', e); }
+  }
+  subscribeSlideToggles();
+
+  // ===== CONTADOR AO VIVO (prova social) =====
+  // Conta eventos do dia em tv_promo_events + desafio_results + scratches
+  // pra mostrar em overlay no canto da TV: 'Hoje: 47 rasparam · 3 ganharam
+  // sundae grátis'. Atualiza a cada 90s.
+  var liveStats = { rasparam: 0, ganharam: 0, jogaram: 0 };
+  var liveStatsUnsub = null;
+  function todayKeyTV(){
+    var d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,10);
+  }
+  async function refreshLiveStats(){
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      var db = firebase.firestore();
+      var dayKey = todayKeyTV();
+      // Quantos scans em raspinha hoje?
+      var scratchesSnap = await db.collection('scratches')
+        .where('franchiseId', '==', fidParam)
+        .where('scratchedAt', '>=', dayKey)
+        .limit(500).get().catch(function(){return null});
+      if (scratchesSnap) {
+        liveStats.rasparam = scratchesSnap.size;
+        liveStats.ganharam = scratchesSnap.docs.filter(function(d){
+          var data = d.data() || {};
+          return data.prizeTier && data.prizeTier !== 'none';
+        }).length;
+      }
+      // Quantos jogaram desafio hoje?
+      var desafioSnap = await db.collection('desafio_results')
+        .where('franchiseId', '==', fidParam)
+        .where('date', '==', dayKey)
+        .limit(500).get().catch(function(){return null});
+      if (desafioSnap) liveStats.jogaram = desafioSnap.size;
+      renderLiveStatsOverlay();
+    } catch (e) { console.warn('liveStats:', e); }
+  }
+  function renderLiveStatsOverlay(){
+    if (!isTvMode) return;
+    var existing = document.getElementById('liveStatsOverlay');
+    // Sem dados? esconde
+    if (liveStats.rasparam === 0 && liveStats.jogaram === 0) {
+      if (existing) existing.remove();
+      return;
+    }
+    var html =
+      '<div style="display:flex;gap:14px;align-items:center">' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#fff">'+ liveStats.rasparam +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">rasparam hoje</div></div>' +
+        '<div style="width:1px;height:30px;background:rgba(255,255,255,.2)"></div>' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#FFD700">'+ liveStats.ganharam +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">ganharam</div></div>' +
+        '<div style="width:1px;height:30px;background:rgba(255,255,255,.2)"></div>' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#FF4F8A">'+ liveStats.jogaram +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">jogaram desafio</div></div>' +
+      '</div>';
+    if (existing) { existing.innerHTML = html; return; }
+    var div = document.createElement('div');
+    div.id = 'liveStatsOverlay';
+    div.style.cssText = 'position:fixed;top:14px;left:14px;z-index:60;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);padding:10px 16px;border-radius:14px;pointer-events:none;animation:lsFadeIn .6s ease-out;font-family:Nunito,sans-serif';
+    div.innerHTML = html;
+    document.body.appendChild(div);
+    var css = document.createElement('style');
+    css.textContent = '@keyframes lsFadeIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}';
+    document.head.appendChild(css);
+  }
+  if (isTvMode) {
+    setTimeout(refreshLiveStats, 4000);
+    setInterval(refreshLiveStats, 90000);
+  }
+
+  // Filtra os SLIDES baseado no config admin. Chamado em cada nextPromo
+  // pra refletir mudancas ao vivo sem precisar recarregar a TV.
+  function getEnabledSlides(){
+    return SLIDES.filter(function(s){
+      return slidesEnabledConfig[s.id] !== false;
+    });
+  }
+
   function renderHallFamaLive(slide){
     // Se admin desativou OU nao tem fotos, fallback elegante
     if (hallConfig.enabled === false || !hallPhotos.length) {
@@ -3459,8 +3574,13 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   }
 
   function nextPromo(){
-    promoIdx = (promoIdx + 1) % SLIDES.length;
-    var s = SLIDES[promoIdx];
+    // Le slides filtrados pelo toggle do admin (painel/tv-desafio-slides.html).
+    // Se TODOS desativados (admin pode ter feito por engano), cai pro array
+    // original como fallback pra TV nao ficar preta.
+    var active = getEnabledSlides();
+    if (!active.length) active = SLIDES;
+    promoIdx = (promoIdx + 1) % active.length;
+    var s = active[promoIdx];
     renderSlide(s);
     promoTimer = setTimeout(nextPromo, s.dur);
   }
@@ -3487,9 +3607,25 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   };
 
   // ROBUSTO: observa mudancas no DOM em vez de hookar funcoes privadas (IIFE).
-  // Regra: rotator aparece em TODAS as telas EXCETO quando o jogo ta rodando.
-  // Sintoma de "jogo rodando": step2 ativo OU botao gameBtn com classe btn-stop.
+  //
+  // MODO TV (?tv=1):
+  //   Rotator so aparece quando stepAttract ESTA ATIVO.
+  //   Voucher liberado pelo PDV → processVoucherResult muda pra step0/step1/
+  //   stepDiff/step2/step3. Em qualquer um deles = desafio em curso → rotator
+  //   FORA. So volta quando o idleTimer chuta de volta pra stepAttract apos
+  //   o desafio terminar.
+  //
+  // MODO CLIENTE/DESKTOP (sem ?tv=1):
+  //   Rotator nao aparece (isTvMode === false fez early-return no IIFE).
+  //   Sintoma legado mantido: step2 + btn-stop = "running" pro caso de
+  //   alguem acessar /desafio.html em desktop e jogar.
   function isGameRunning(){
+    if (isTvMode) {
+      var attract = document.getElementById('stepAttract');
+      var attractActive = attract && attract.classList.contains('active');
+      // Em TV, QUALQUER tela diferente de attract = desafio em curso
+      return !attractActive;
+    }
     var btn = document.getElementById('gameBtn');
     var s2 = document.getElementById('step2');
     var step2Active = s2 && s2.classList.contains('active');
