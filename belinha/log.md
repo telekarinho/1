@@ -9913,3 +9913,51 @@ _Belinha — Ciclo #228 | 2026-05-15_
 _Belinha — Ciclo #233 | 2026-05-15_
 
 ---
+
+---
+
+## Ciclo #254 — 2026-05-18
+
+**Área:** UX — Preencher gap de banner 26/05–02/06 (pré-Namorados awareness)
+
+**Contexto:** Prescrito no ciclo #253 como próximo passo urgente. Auditoria de `index.html` revelou janela morta de 8 dias (26/05–02/06) onde o banner de topo ficava completamente oculto (`display:none`). O marco "1 mês" termina em 25/05 e o kick-off VIP `NAMORADOS26` começa em 03/06 — exatamente quando o público começa a cogitar presente de Namorados.
+
+**O que pesquisou/analisou:**
+- Leu função `configureBanner()` completa em `index.html` (linhas 531–607)
+- Mapeou todas as fases de banner existentes:
+  - 17–25/05: "Quase 1 mês" / "1 mês!" (umMesBannerClosed)
+  - 03–10/06: Namorados VIP teaser (namoradosVipClosed)
+  - 11/06: Véspera Namorados (namoradosVespraClosed)
+  - 12/06: Dia H Namorados (namoradosDiahClosed)
+  - 13–16/06: Teaser Junina (juninaBannerClosed)
+  - 17–29/06: Launch Junina (juninaBannerClosed)
+  - Julho: Caramelado · Agosto: Pais
+- **GAP identificado: 26/05–02/06 (8 dias) = banner completamente dark**
+- Confirmou que chaves de sessionStorage são independentes — nova chave `namoradosPreviewClosed` não interfere com `namoradosVipClosed`
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +8 linhas: bloco pré-Namorados 26/05–02/06 em `configureBanner()` + chave `namoradosPreviewClosed` no handler `closeBanner()` |
+
+**Detalhes da implementação:**
+- Inserido antes do bloco Junina (linha ~572)
+- Condição: `(m === 5 && day >= 26) || (m === 6 && day <= 2)`
+- Texto: `💕 12/06: DIA DOS NAMORADOS · Potinho feito pra dois · Surpreenda com o presente mais gostoso de Londrina 🐑`
+- CTA: "Me avisa! →" → `wa.me/...?text=Oi!%20Quero%20saber%20da%20novidade%20do%20Dia%20dos%20Namorados%20na%20MilkyPot%20🐑`
+- Sessão isolada: fechar o preview não suprime o VIP NAMORADOS26 em 03/06
+
+**Commit:** `def07dc`
+
+**Próximo passo sugerido:**
+- **Ciclo #255 — Conteúdo:** Stories comparação implícita "dois sabores num copo vs. potinho feito para você" (sem citar JohnnyJoy) — copy já prescrita no `johnnyjoy.md` ciclo #252
+- **Ciclo #256 — Concorrentes:** TheBest Açaí — atualizar ação Piscininha (lança 06/06); verificar promoções especiais Namorados
+- **Ciclo #257 — Conversão:** Mecânica "foto com potinho = reward" (UGC + fidelidade) — prescrita ciclo #226, ainda pendente
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 13/06 dependem disso
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (09/06 18h):** Publicar Story anúncio UGC DUO (`ugc-duo-namorados-ativacao-12jun.md`)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #254 | 2026-05-18_
+
