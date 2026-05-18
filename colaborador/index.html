@@ -81,6 +81,13 @@ h1, h2, h3 { font-family: 'Baloo 2', cursive; margin: 0; }
 .fn-btn:hover { background: #15803D; }
 .fn-btn:disabled { opacity: .6; cursor: wait; }
 .fn-btn-secondary { background: #fff; color: #16A34A; border: 2px solid #16A34A; }
+/* 🔧 Anti-explosão: dentro de flex/grid o width:100% do .fn-btn deve relaxar
+   pra nao estourar do container. Pais com display:flex/grid + .fn-btn auto-cap. */
+.fn-row > .fn-btn,
+[style*="display:flex"] > .fn-btn,
+[style*="display: flex"] > .fn-btn,
+[style*="display:grid"] > .fn-btn,
+[style*="display: grid"] > .fn-btn { width: auto; max-width: 100%; }
 .fn-error {
     background: #FEE2E2;
     color: #991B1B;
@@ -408,10 +415,10 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                 <div class="fn-card">
                     <h3>💵 Holerite simplificado</h3>
                     <p style="font-size:.78rem;color:#6B7280;margin:0 0 10px">Documento informativo. Holerite oficial vem da contabilidade.</p>
-                    <div style="display:flex;gap:8px;margin-bottom:12px">
-                        <select id="holMes" style="flex:1;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit"></select>
-                        <select id="holAno" style="flex:1;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit"></select>
-                        <button class="fn-btn" onclick="fnCarregarHolerite()" style="flex:0 0 auto;padding:9px 16px">Ver</button>
+                    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+                        <select id="holMes" style="flex:1 1 100px;min-width:0;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit"></select>
+                        <select id="holAno" style="flex:1 1 80px;min-width:0;padding:9px;border:1px solid #D1D5DB;border-radius:8px;font-family:inherit"></select>
+                        <button class="fn-btn" onclick="fnCarregarHolerite()" style="flex:0 0 auto;width:auto;padding:9px 18px;font-size:.95rem">Ver</button>
                     </div>
                     <div id="holConteudo"></div>
                 </div>

@@ -112,7 +112,27 @@ Belinha é treinada pra agir como humana (vendedora real). Nunca diga "sou IA" o
 
 `time-clock.js` jamais edita registros — qualquer "ajuste" cria NOVO registro com link ao original (`r.adjustedFrom`). O original ganha flag `r.adjusted = true` e é escondido da UI mas mantido em audit. NSR sequencial sem lacuna. Hash SHA-256 imutável. Não burle.
 
-### 7. 🎯 FORÇAR LIMITES LEGAIS
+### 7. 📱 CSS: `.fn-btn` tem `width:100%` default
+
+Botões `.fn-btn` no app colaborador são fullwidth por padrão. Se você usar dentro de `display:flex/grid`, **explode pra fora da viewport mobile**.
+
+❌ **EVITA:**
+```html
+<div style="display:flex">
+  <button class="fn-btn">Ver</button>  <!-- estoura -->
+</div>
+```
+
+✅ **FAZ ASSIM:**
+```html
+<div style="display:flex">
+  <button class="fn-btn" style="width:auto;flex:0 0 auto">Ver</button>
+</div>
+```
+
+Já tem CSS global que auto-fixa, mas é bom saber.
+
+### 8. 🎯 FORÇAR LIMITES LEGAIS
 
 `overtime-bank.js → getConfig()` força (mesmo se admin tentar mudar):
 - `maxOvertimePerDay ≤ 2` (CLT art. 59)

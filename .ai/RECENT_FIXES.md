@@ -10,6 +10,28 @@ Formato: `[data] BUG → FIX → LIÇÃO`
 
 ### 2026-05-18
 
+#### 🐛 Botão "Ver" do holerite no app colaborador estourava pra fora da tela
+- **PR:** #689
+- **Cause:** `.fn-btn` tem `width: 100%` por padrão no CSS. Quando colocado dentro de `<div style="display:flex">` junto com selects `flex:1`, o `width:100%` força largura cheia do container interno fazendo o botão estourar pra fora da viewport mobile.
+- **Fix:**
+  1. Inline override: `width:auto` + `flex:0 0 auto` no botão Ver
+  2. Selects ganham `min-width:0` pra permitir shrink abaixo do conteúdo
+  3. Container ganha `flex-wrap:wrap` como safety net
+  4. CSS global: `.fn-btn` dentro de containers flex/grid auto-recebe `width:auto`
+- **Lição:** ⚠ NUNCA misture `width:100%` com `flex:0 0 auto` num mesmo botão. CSS global do projeto deve ter regra "se .btn está dentro de flex/grid, width:auto automático". Em mobile-first, sempre testar com viewport 360-380px.
+- **Arquivos:** `colaborador/index.html` (CSS + estrutura)
+
+#### 🐛 Race condition: Amanda apagou registro do teste V2
+- **PR:** #687
+- **Cause:** Fix V1 (PR #666) fazia `setCollection` (write local+cloud) ANTES do merge async. Janela de race: cloud era sobrescrito com dados parciais antes do merge corrigir. Quando o `.get()` do merge rodava, ele lia o lixo que tinha acabado de escrever.
+- **Fix V2:**
+  - `addToCollection` agora: write LOCAL → fetch cloud (sem ter sobrescrito ainda) → merge cloud+local → write merged pro cloud
+  - Cloud NUNCA é sobrescrito com dados parciais
+  - Mantém atomicidade local-first pra UX feedback
+  - Catch offline: fallback `_writeToCloud(col)` na queue
+- **Lição:** ⚠ Pra merge atômico em sistema distribuído sem transação real, a ordem TEM que ser: read remoto → merge → write único. Nunca write-then-merge — sempre tem race window.
+- **Arquivos:** `js/core/datastore.js`
+
 #### 🐛 Amanda mostrava "Folga" mesmo após admin ajustar ponto
 - **PR:** #684
 - **Cause:** Bug timezone em 2 lugares:

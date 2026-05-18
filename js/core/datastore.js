@@ -172,35 +172,75 @@ const DataStore = {
     },
 
     addToCollection(name, franchiseId, item) {
-        const col = this.getCollection(name, franchiseId);
         item.id = item.id || Utils.generateId();
         item.createdAt = item.createdAt || new Date().toISOString();
+        const key = this._collectionKey(name, franchiseId);
+        const col = this.getCollection(name, franchiseId);
         // Guard contra duplicado (replay) — se id já existe, não duplica
         if (!col.find(x => x && x.id === item.id)) {
             col.push(item);
         }
-        this.setCollection(name, franchiseId, col);
 
-        // 🔄 RACE-FIX: pra collections mergeable (time_clock_*, orders_, etc),
-        // dispara um pull-then-merge IMEDIATAMENTE em background. Isso garante
-        // que se outro device escreveu mais cedo no Firestore (ex: Amanda bateu
-        // ponto no celular dela há 1h), o nosso write local NÃO sobrescreva os
-        // registros dela. _mergeListDoc faz union por id, mantendo todos.
-        try {
-            const key = this._collectionKey(name, franchiseId);
-            if (this._isMergeableListDoc(key) && this._db) {
-                this._db.collection('datastore').doc(key).get().then(doc => {
-                    if (!doc.exists) return;
-                    const merged = this._mergeListDoc(key, doc.data().value);
-                    if (merged.changed) {
-                        localStorage.setItem(this.PREFIX + key, merged.value);
-                        // Push merged version de volta pro cloud
-                        try { this._writeToCloud(key, JSON.parse(merged.value)); } catch (_) {}
-                        console.log('🔄 addToCollection race-fix: merged', key, '+ extras do cloud');
+        // 🔄 RACE-FIX V2 (2026-05-18): ANTES era write direto + merge async
+        // depois, mas isso CAUSAVA RACE: device A com local stale escrevia
+        // pro cloud (overwrite), depois fetch retornava o lixo recém-escrito
+        // e merge não recuperava nada. Funcionária Amanda apagou registro
+        // do teste assim.
+        //
+        // AGORA: pra collections mergeable, escreve LOCAL imediato (UX),
+        // depois faz pull-merge-write atomico no cloud SEM sobrescrever.
+        if (this._isMergeableListDoc(key) && this._db) {
+            // 1. Local imediato (UX feedback instantâneo)
+            try {
+                localStorage.setItem(this.PREFIX + key, JSON.stringify(col));
+                localStorage.setItem(this.PREFIX + key + '__local_ts', String(Date.now()));
+            } catch (_) {}
+
+            // 2. Pull cloud + merge + write cloud (background)
+            const self = this;
+            this._db.collection('datastore').doc(key).get()
+                .then(function (doc) {
+                    var cloudItems = [];
+                    try {
+                        if (doc.exists && doc.data().value) {
+                            cloudItems = JSON.parse(doc.data().value);
+                        }
+                    } catch (_) { cloudItems = []; }
+                    if (!Array.isArray(cloudItems)) cloudItems = [];
+
+                    // Merge cloud + local (que ja tem nosso novo item)
+                    var byId = {};
+                    cloudItems.concat(col).forEach(function (it) {
+                        if (!it || !it.id) return;
+                        byId[it.id] = byId[it.id] ? self._pickNewestItem(byId[it.id], it) : it;
+                    });
+                    var merged = Object.values(byId);
+
+                    // Atualiza local com merged (pode ter trazido registros do cloud)
+                    try {
+                        localStorage.setItem(self.PREFIX + key, JSON.stringify(merged));
+                    } catch (_) {}
+
+                    // Escreve merged pro cloud (não sobrescreve outros devices)
+                    try { self._writeToCloud(key, merged); } catch (_) {}
+
+                    if (merged.length !== col.length) {
+                        console.log('🔄 addToCollection V2 merged: cloud=' + cloudItems.length + ' local=' + col.length + ' final=' + merged.length);
+                        // Dispara evento pra UI re-renderizar com dados recuperados
+                        try { window.dispatchEvent(new CustomEvent('mp_remote_update', { detail: { key: key, source: 'addToCollection-merge' } })); } catch (_) {}
                     }
-                }).catch(() => { /* offline ou sem permissão — write local já feito */ });
-            }
-        } catch (_) {}
+                })
+                .catch(function (err) {
+                    // Offline ou erro de permissão — local já foi salvo,
+                    // _writeToCloud direto tenta enfileirar pra retry depois
+                    console.warn('addToCollection V2 cloud falhou (' + (err && err.message) + '), salvando local + tentando cloud direto');
+                    try { self._writeToCloud(key, col); } catch (_) {}
+                });
+            return item;
+        }
+
+        // Fluxo padrão (não-mergeable ou sem Firestore)
+        this.setCollection(name, franchiseId, col);
         return item;
     },
 
