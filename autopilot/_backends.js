@@ -30,13 +30,36 @@ const CODEX_BIN = "C:\\Users\\rodri\\AppData\\Local\\Packages\\OpenAI.Codex_2p2n
 // ============================================
 // Util: capture stdout/stderr de child_process
 // ============================================
-function collectProcess(proc) {
+function collectProcess(proc, timeoutMs = 0) {
     return new Promise((resolve, reject) => {
         let stdout = "", stderr = "";
+        let settled = false;
+        let timer = null;
+        if (timeoutMs > 0) {
+            timer = setTimeout(() => {
+                if (settled) return;
+                settled = true;
+                try { proc.kill("SIGTERM"); } catch (e) {}
+                const err = new Error("backend_timeout_" + timeoutMs + "ms");
+                err.stdout = stdout;
+                err.stderr = stderr;
+                reject(err);
+            }, timeoutMs);
+        }
         proc.stdout.on("data", c => stdout += c.toString());
         proc.stderr.on("data", c => stderr += c.toString());
-        proc.on("close", code => resolve({ exitCode: code, stdout, stderr }));
-        proc.on("error", reject);
+        proc.on("close", code => {
+            if (settled) return;
+            settled = true;
+            if (timer) clearTimeout(timer);
+            resolve({ exitCode: code, stdout, stderr });
+        });
+        proc.on("error", err => {
+            if (settled) return;
+            settled = true;
+            if (timer) clearTimeout(timer);
+            reject(err);
+        });
     });
 }
 
@@ -97,7 +120,7 @@ const CLAUDE = {
         const proc = spawn("claude", cliArgs, { shell: true, env });
         proc.stdin.write(combined, "utf8");
         proc.stdin.end();
-        const { exitCode, stdout, stderr } = await collectProcess(proc);
+        const { exitCode, stdout, stderr } = await collectProcess(proc, opts.timeoutMs || 30000);
         if (exitCode !== 0) throw new Error(stderr || stdout || `claude_exit_${exitCode}`);
         let reply = "", usage = null;
         try {
@@ -138,7 +161,7 @@ const CODEX = {
         const proc = spawn(cmdLine, [], { shell: true });
         proc.stdin.write(combined, "utf8");
         proc.stdin.end();
-        const { exitCode, stdout, stderr } = await collectProcess(proc);
+        const { exitCode, stdout, stderr } = await collectProcess(proc, opts.timeoutMs || 180000);
         let reply = "";
         try {
             if (fs.existsSync(outFile)) reply = fs.readFileSync(outFile, "utf8").trim();
@@ -162,7 +185,7 @@ const GEMINI_CLI = {
         const proc = spawn("gemini", ["-m", model, "-p", "-"], { shell: true });
         proc.stdin.write(combined, "utf8");
         proc.stdin.end();
-        const { exitCode, stdout, stderr } = await collectProcess(proc);
+        const { exitCode, stdout, stderr } = await collectProcess(proc, opts.timeoutMs || 45000);
         if (exitCode !== 0 || !stdout.trim()) throw new Error(stderr || `gemini_exit_${exitCode}`);
         return { reply: stdout.trim(), usage: null, backend: "gemini-cli" };
     }
@@ -186,7 +209,7 @@ const COPILOT_CLI = {
         // Limitação: copilot CLI não aceita stdin, então passamos via -t
         const prompt = combined.slice(0, 5000); // limite de arg
         const proc = spawn("gh", ["copilot", "explain", prompt], { shell: true });
-        const { exitCode, stdout, stderr } = await collectProcess(proc);
+        const { exitCode, stdout, stderr } = await collectProcess(proc, opts.timeoutMs || 45000);
         if (exitCode !== 0 || !stdout.trim()) throw new Error(stderr || `copilot_exit_${exitCode}`);
         return { reply: stdout.trim(), usage: null, backend: "copilot-cli" };
     }
@@ -276,10 +299,10 @@ function loadConfig() {
         }
     } catch (e) {}
     // Padrão: Claude primeiro, Codex segundo, demais por ordem do array
-    return { order: ["claude", "codex", "gemini-cli", "copilot-cli", "lmstudio", "ollama"], disabled: [] };
+    return { order: ["codex", "claude", "ollama", "gemini-cli", "copilot-cli", "lmstudio"], disabled: [] };
 }
 
-function getCascade() {
+function getCascade(opts = {}) {
     const config = loadConfig();
     const disabled = new Set(config.disabled || []);
     const order = config.order || [];
@@ -294,6 +317,14 @@ function getCascade() {
     // Resto na ordem do array original
     for (const b of byId.values()) {
         if (!disabled.has(b.id)) ordered.push(b);
+    }
+    if (opts.preferredBackend) {
+        const preferred = String(opts.preferredBackend);
+        const idx = ordered.findIndex(b => b.id === preferred);
+        if (idx > 0) {
+            const [backend] = ordered.splice(idx, 1);
+            ordered.unshift(backend);
+        }
     }
     return ordered;
 }
