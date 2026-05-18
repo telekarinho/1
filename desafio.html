@@ -1819,6 +1819,22 @@ if(gameConfig.streak) updateStreak();
 
 /* Show result */
 showStep(3);
+/* MODO TV: depois de 14s mostrando o resultado, volta automaticamente
+   pro attract pra liberar a TV pro proximo cliente. Sem isso, a TV ficava
+   travada na tela de resultado ate o idleTimer de 60s. */
+if(isStoreTvMode){
+clearTimeout(window._tvResultAutoBack);
+window._tvResultAutoBack=setTimeout(function(){
+if(document.getElementById('step3').classList.contains('active')){
+document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+var att=document.getElementById('stepAttract');
+if(att) att.classList.add('active');
+if(typeof startAttract==='function') startAttract();
+if(typeof setTvReleaseStatus==='function') setTvReleaseStatus('Aguardando liberacao do PDV...');
+activeVoucher=null;activeVoucherCode=null;gameState='idle';
+}
+},14000);
+}
 document.getElementById('resultName').textContent=playerN;
 var rv=document.getElementById('resultValue');
 var dbg=document.getElementById('resultDiffBadge');
@@ -3523,9 +3539,25 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   };
 
   // ROBUSTO: observa mudancas no DOM em vez de hookar funcoes privadas (IIFE).
-  // Regra: rotator aparece em TODAS as telas EXCETO quando o jogo ta rodando.
-  // Sintoma de "jogo rodando": step2 ativo OU botao gameBtn com classe btn-stop.
+  //
+  // MODO TV (?tv=1):
+  //   Rotator so aparece quando stepAttract ESTA ATIVO.
+  //   Voucher liberado pelo PDV → processVoucherResult muda pra step0/step1/
+  //   stepDiff/step2/step3. Em qualquer um deles = desafio em curso → rotator
+  //   FORA. So volta quando o idleTimer chuta de volta pra stepAttract apos
+  //   o desafio terminar.
+  //
+  // MODO CLIENTE/DESKTOP (sem ?tv=1):
+  //   Rotator nao aparece (isTvMode === false fez early-return no IIFE).
+  //   Sintoma legado mantido: step2 + btn-stop = "running" pro caso de
+  //   alguem acessar /desafio.html em desktop e jogar.
   function isGameRunning(){
+    if (isTvMode) {
+      var attract = document.getElementById('stepAttract');
+      var attractActive = attract && attract.classList.contains('active');
+      // Em TV, QUALQUER tela diferente de attract = desafio em curso
+      return !attractActive;
+    }
     var btn = document.getElementById('gameBtn');
     var s2 = document.getElementById('step2');
     var step2Active = s2 && s2.classList.contains('active');
