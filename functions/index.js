@@ -2983,6 +2983,16 @@ exports.notifyOrderStatusPush = orderNotifications.notifyOrderStatusPush;
 exports.notifyOrderDeliveredOutbox = orderNotifications.notifyOrderDeliveredOutbox;
 
 // ============================================
+// Desafio Unlock Token Generator (apos entrega):
+// gera token unico permitindo cliente jogar desafio extra na proxima
+// 24h, bypassando o anti-fraude que bloqueia 1 desafio livre/dia.
+// Envia link via WhatsApp Belinha (whatsapp_outbox).
+// ============================================
+const desafioUnlock = require("./desafio-unlock");
+exports.generateDesafioUnlockToken = desafioUnlock.generateDesafioUnlockToken;
+exports.generateDesafioUnlockTokenManual = desafioUnlock.generateDesafioUnlockTokenManual;
+
+// ============================================
 // Time Clock Reminders + Banco de Horas
 // cron a cada 5min envia push pros funcionarios 10min antes da escala
 // + funcoes pra solicitar/aprovar banco de horas via FCM
