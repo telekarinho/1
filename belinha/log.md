@@ -10001,3 +10001,42 @@ _Belinha — Ciclo #233 | 2026-05-15_
 
 _Belinha — Ciclo #254 | 2026-05-18_
 
+
+---
+
+## Ciclo #256 — 2026-05-18
+
+**Área:** Concorrentes — The Best Açaí + JAH Açaí atualização Namorados 12/06
+
+**Contexto:** Prescrito no ciclo #255 como próximo passo. Faltam 25 dias para o Dia dos Namorados (12/06). Last update TheBest: ciclo #226 (15/05). JAH não tinha update sobre Namorados especificamente. Urgente confirmar como os dois maiores concorrentes vão cobrir a data.
+
+**O que pesquisou/analisou:**
+- 6 WebSearches cobrindo: TheBest Piscininha Namorados; JAH Açaí Caio Castro Namorados 2026; JAH mascote Jahckeline; TheBest Piscininha afeto/casal/sharing; JAH Namorados mascote produto; TheBest Londrina junho 2026
+- WebFetch bloqueado (403) em: thebestacai.com.br/blog, patoshoje.com.br, abcdacomunicacao.com.br, jornaldobras.com.br, mapadasfranquias.com.br, promoview.com.br — uso de snippets indexados
+- Mapeou 3 unidades The Best em Londrina via iFood + Catuaí Shopping (nenhuma no Muffato)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/the-best-acai.md` | Seção `ATUALIZAÇÃO CICLO #256` (~80 linhas): ângulo emocional "afeto" na Piscininha confirmado; mapa 3 unidades Londrina; JAH Jahckeline reveal + Polaroid casal; tabela 4-concorrentes Namorados; insight copy "anti-prato-compartilhado" |
+
+**Destaques:**
+1. **The Best Piscininha usa "afeto" no título oficial** — posicionamento emocional cobre Namorados sem campanha dedicada; produto de sharing/fondue vs. Duo MilkyPot (individuais personalizados)
+2. **JAH revela mascote Jahckeline (leoa)** para Namorados — ação PDV Polaroid casal (06–12/06); delivery com cartão personalizado formato Polaroid. Fortíssimo em instagramabilidade mas não captura dados
+3. **Insight competitivo novo:** nenhum rival usa "você monta o potinho de quem você ama" — MilkyPot é o único anti-prato-compartilhado. Copy acionável incluída no arquivo
+4. **3 unidades The Best em Londrina** (Catuaí, Aeroporto, Higienópolis) — nenhuma no Muffato → MilkyPot tem exclusividade de ponto de venda no ecossistema Muffato
+
+**Commit:** a registrar
+
+**Próximo passo sugerido:**
+- **Ciclo #257 — Conteúdo:** Criar Story 11/06 "anti-prato-compartilhado" baseado no insight deste ciclo (copy base disponível em `the-best-acai.md` seção §5)
+- **Ciclo #258 — Conversão:** Mecânica "foto com potinho = reward" (UGC + fidelidade) — prescrita ciclo #226, 32 ciclos pendente — executar agora
+- **Ciclo #259 — UX:** Auditar lógica de banner 26/05–12/06 após add ciclo #254 — garantir que preview (26/05), VIP (03/06) e Véspera (11/06) não colapsam em telas pequenas
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (09/06 18h):** Publicar Story UGC DUO (`ugc-duo-namorados-ativacao-12jun.md`)
+- **Operador (11/06):** Publicar Story "anti-prato-compartilhado" (copy em `the-best-acai.md` §5)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #256 | 2026-05-18_

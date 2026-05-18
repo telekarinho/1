@@ -1089,3 +1089,79 @@ Tanto JAH (sorvete 12/06) quanto The Best (creme 06/06) entram em junho com pist
 **Fontes ciclo #226:** abcdacomunicacao.com.br, patoshoje.com.br, thebestacai.com.br/blog, jornaldobras.com.br, brasiliaeomaximo.com.br, WebSearch 15/05/2026
 
 _Belinha — Ciclo #226 | 2026-05-15_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #256 — 2026-05-18
+
+### Piscininha Confirmada + Posicionamento de Afeto + JAH Jahckeline (Namorados)
+
+#### 1. The Best Piscininha — Confirmação e Novo Ângulo Emocional
+
+**Status:** CONFIRMADA — lança 06/06/2026, período 06/06–06/07/2026
+
+**Novo dado — título oficial do blog da The Best:**
+> *"The Best Piscininha: a novidade que mergulha sabor, diversão e **afeto** no seu inverno"*
+
+A palavra **"afeto"** no título oficial revela que a The Best vai usar a Piscininha como produto de Namorados **sem campanha dedicada** — o produto absorve a data por posicionamento emocional. Isso confirma que **não haverá SKU ou campanha separada de Namorados 12/06**; a Piscininha carrega a narrativa sozinha.
+
+**Leitura estratégica para MilkyPot:**
+- The Best entra em Namorados com produto de sharing/fondue = experiência compartilhada anônima
+- MilkyPot responde com produto personalizado (nome no potinho) + Duo = experiência individual-dentro-do-casal
+- Território "afeto" já ocupado pela The Best em formato self-service → MilkyPot deve ocupar "afeto com identidade" (potinho com nome de quem você ama)
+
+#### 2. Londrina — Mapeamento de Unidades The Best Açaí
+
+Confirmadas 3 unidades The Best em Londrina (fontes: iFood + Catuaí Shopping):
+
+| Unidade | Localização | Canal |
+|---------|-------------|-------|
+| The Best Açaí Catuaí | Shopping Catuaí (~13km do Muffato) | iFood + presencial |
+| The Best Açaí Aeroporto | Av. Arthur Thomas 831, San Conrado | iFood + presencial |
+| The Best Açaí Higienópolis | Av. Higienópolis, Jardim Higienópolis | iFood + presencial |
+
+**Distância vs. MilkyPot Muffato (Av. Quintino Bocaiúva, 1045):**
+- Nenhuma unidade The Best está no Muffato ou adjacente
+- Competição por Namorados = delivery + memória de marca, não por proximidade física
+- Vantagem MilkyPot: **presença física onde o cliente faz compras** (supermercado Muffato) → impulso de decisão no ponto de venda
+
+#### 3. JAH Açaí — Ação Namorados 2026: Mascote Jahckeline + Polaroid
+
+**Nova mascote confirmada:** **Jahckeline** — leoa, par romântico do JAHckson (leão)
+- Revelação da mascote coincide com campanha Namorados (06–12/06)
+- Mecânica PDV: casal que compra em loja recebe foto Polaroid grátis (cópia no feed da unidade e redes sociais da marca)
+- Mecânica delivery: cartão personalizado formato Polaroid enviado com pedido (app próprio + parceiros)
+
+**Análise da ação JAH vs. MilkyPot:**
+
+| Atributo | JAH Namorados (Jahckeline + Polaroid) | MilkyPot Namorados (Duo + ovelhinha) |
+|----------|--------------------------------------|---------------------------------------|
+| Mascote casal | Jahckson + Jahckeline (leão + leoa) | Ovelhinha (individual, pode ser par) |
+| Personalização | Polaroid genérica do casal | Nome no potinho + sabor escolhido por cada um |
+| Entregável físico | Foto Polaroid (cópia no acervo da loja) | Potinho personalizado (levam pra casa) |
+| Storytelling | "Mascote encontrou seu par" | "Potinho feito pra dois — do jeito de cada um" |
+| UGC espontâneo | Médio — Polaroid é bonita mas passiva | Alto — potinho com nome convida foto própria |
+| Canal | Loja + delivery apps | WhatsApp próprio |
+| Invasividade de dados | Foto vai para redes da marca | Pedido WA = lead próprio (phone + nome) |
+
+**Oportunidade:** JAH Namorados é mais instagramável (Polaroid + mascote revelação) mas MilkyPot captura dados e cria vínculo mais duradouro (nome salvo, lead WA ativo para Festa Junina).
+
+#### 4. Mapa Consolidado — Namorados 12/06/2026 por Concorrente
+
+| Marca | Produto/Ação | Canal Londrina | Ângulo |
+|-------|-------------|----------------|--------|
+| The Best Açaí | Piscininha (dulce/pistache/choc) — "afeto no inverno" | iFood + 3 lojas | Sharing fondue, sem campanha dedicada |
+| JAH Açaí | Jahckeline reveal + Polaroid casal | Delivery apps + PDV | Mascote casal + experiência física |
+| JohnnyJoy | "Dois Amores" (2 sabores por copo) | Delivery apps + PDV | Par de sabores = par de pessoas |
+| MilkyPot Muffato | Duo MilkyPot + keyword NAMORADOS26 | **WhatsApp próprio** | Personalização individual + lead capturado |
+
+#### 5. Insight Acionável — Diferencial MilkyPot ainda não comunicado
+
+Nenhum concorrente usa **"você escolhe o sabor de quem você ama"** como mecânica de Namorados. The Best = você divide um pote. JAH = vocês tiram foto. JohnnyJoy = vocês compartilham um copo. **MilkyPot = você faz o potinho perfeito para a pessoa certa** — diferentes, separados, personalizados. É o anti-prato-compartilhado.
+
+Copy sugerida para Story 11/06 (complementa stories da série ciclo #255):
+> *"No nosso, não precisa dividir. 🐑💕 Um potinho do jeito dela. Um potinho do jeito dele. Os dois feitos pra dois. → NAMORADOS26 no WhatsApp"*
+
+**Fontes ciclo #256:** thebestacai.com.br/blog (snippet), patoshoje.com.br (snippet), abcdacomunicacao.com.br (snippet), mapadasfranquias.com.br (snippet), promoview.com.br (snippet), ifood.com.br (loja), catuailondrina.com.br, WebSearch 18/05/2026
+
+_Belinha — Ciclo #256 | 2026-05-18_
