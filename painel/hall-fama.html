@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>MilkyPot — Hall da Fama (Stories Premiados)</title>
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<style>
+body{font-family:'Nunito',sans-serif;background:#FAF9FC;margin:0}
+.page{padding:20px 24px;max-width:1200px;margin:0 auto}
+h1{font-family:'Baloo 2',cursive;color:#2D1747;font-size:26px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+.sub{color:#6B7280;font-size:14px;margin:0 0 22px;line-height:1.5}
+.sub code{background:#F3F4F6;padding:2px 6px;border-radius:6px;font-size:12px}
+
+.controls-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.btn{padding:9px 16px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.btn.primary{background:#7E57C2;color:#fff;border-color:#7E57C2}
+.btn.danger{background:#fff;color:#DC2626;border-color:#FCA5A5}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.drop-zone{
+  border:2.5px dashed #D1D5DB;border-radius:18px;padding:34px 24px;
+  background:#fff;text-align:center;cursor:pointer;transition:all .15s;
+  margin-bottom:20px
+}
+.drop-zone.drag{border-color:#7E57C2;background:#FAF5FF;transform:scale(1.01)}
+.drop-zone .icon{font-size:60px;margin-bottom:8px}
+.drop-zone h3{font-family:'Baloo 2',cursive;color:#2D1747;margin:0 0 4px;font-size:20px}
+.drop-zone p{color:#6B7280;font-size:13px;margin:0}
+
+.toggles{background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:16px;margin-bottom:18px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid #F3F4F6}
+.toggle-row:last-child{border-bottom:0}
+.toggle-row .info strong{display:block;color:#1F2937;font-weight:800;font-size:14px}
+.toggle-row .info small{color:#6B7280;font-size:12px}
+.toggle-row .info code{background:#F3F4F6;padding:1px 5px;border-radius:4px;font-size:11px}
+.switch{position:relative;width:52px;height:28px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .slider{position:absolute;inset:0;background:#D1D5DB;border-radius:28px;cursor:pointer;transition:.2s}
+.switch .slider::before{content:'';position:absolute;width:22px;height:22px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.switch input:checked + .slider{background:#7E57C2}
+.switch input:checked + .slider::before{transform:translateX(24px)}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.card{background:#fff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;aspect-ratio:9/16;object-fit:cover;background:#F3F4F6}
+.card .meta{padding:10px 12px;border-top:1px solid #F3F4F6}
+.card .legend-input{width:100%;border:1px solid #E5E7EB;border-radius:8px;padding:6px 8px;font-size:12px;font-family:inherit;margin-bottom:8px}
+.card .legend-input:focus{outline:none;border-color:#7E57C2}
+.card .date{font-size:10px;color:#9CA3AF;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+.card .actions{display:flex;gap:6px}
+.card .actions button{flex:1;padding:6px;font-size:12px;font-weight:700}
+
+.empty{text-align:center;padding:60px 20px;color:#9CA3AF;background:#fff;border:1px solid #E5E7EB;border-radius:14px}
+.empty .icon{font-size:60px;margin-bottom:12px}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1F2937;color:#fff;padding:12px 22px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 14px 40px rgba(0,0,0,.3);z-index:9999;display:none}
+.toast.show{display:block;animation:toastIn .3s ease-out}
+.toast.error{background:#DC2626}
+.toast.success{background:#16A34A}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>🏆 Hall da Fama</h1>
+  <p class="sub">
+    Suba prints de stories/highlights do Instagram com ganhadores das promoções —
+    desafio 10s, 300g, raspadinha mega, etc.
+    A TV do desafio mostra essas fotos rotacionando em <code>milkypot.com/desafio.html?tv=1</code>
+    como prova social ao vivo. Cliente vê e quer ser o próximo.
+  </p>
+
+  <div class="controls-bar">
+    <select id="franchiseSelect" class="btn" style="min-width:200px">
+      <option value="muffato-quintino">Muffato Quintino (padrão)</option>
+    </select>
+    <button class="btn primary" onclick="document.getElementById('fileInput').click()">📤 Subir foto(s)</button>
+    <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
+    <span style="margin-left:auto;font-size:12px;color:#6B7280" id="counter">— fotos</span>
+  </div>
+
+  <div class="toggles">
+    <div class="toggle-row">
+      <div class="info">
+        <strong>Mostrar Hall da Fama na TV do desafio</strong>
+        <small>Quando ativo, o slide rotaciona suas fotos no momento certo da rotação geral.</small>
+      </div>
+      <label class="switch"><input type="checkbox" id="toggleEnabled" checked onchange="saveConfig()"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <div class="info">
+        <strong>Manter QR do Instagram visível junto</strong>
+        <small>QR aponta pro highlight <code>highlights/18075880883645372</code> pra quem quiser seguir.</small>
+      </div>
+      <label class="switch"><input type="checkbox" id="toggleShowQr" checked onchange="saveConfig()"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="icon">📸</div>
+    <h3>Arraste prints aqui ou clique pra escolher</h3>
+    <p>Aceita JPG, PNG, WebP. Redimensiona automaticamente pra economizar Firestore.</p>
+  </div>
+
+  <h3 style="font-family:'Baloo 2',cursive;color:#2D1747;margin:24px 0 12px">Fotos no Hall da Fama</h3>
+  <div id="gallery" class="gallery"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+  if (typeof Auth !== 'undefined' && !Auth.requireAuth('franchisee')) return;
+
+  var fid = 'muffato-quintino';
+  var photos = [];
+  var config = { enabled: true, showQr: true };
+  var maxPhotos = 30;
+  var maxBytes = 380 * 1024; // ~380KB por foto (firestore doc limit é 1MB)
+
+  function toast(msg, type){
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + (type || '');
+    setTimeout(function(){ el.classList.remove('show'); }, 2800);
+  }
+
+  function loadFranchises(){
+    if (!firebase || !firebase.firestore) return;
+    firebase.firestore().collection('datastore').doc('franchises').get().then(function(snap){
+      if (!snap.exists) return;
+      var raw = snap.data().value || '[]';
+      var list = JSON.parse(raw);
+      if (!Array.isArray(list)) list = list.franchises || [];
+      var sel = document.getElementById('franchiseSelect');
+      sel.innerHTML = '';
+      list.forEach(function(f){
+        var opt = document.createElement('option');
+        opt.value = f.id;
+        opt.textContent = f.name || f.id;
+        if (f.id === fid) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.onchange = function(){ fid = sel.value; loadAll(); };
+    }).catch(function(){});
+  }
+
+  async function loadAll(){
+    if (!firebase || !firebase.firestore) return;
+    var db = firebase.firestore();
+    try {
+      var snap = await db.collection('datastore').doc('hall_da_fama_' + fid).get();
+      var data = snap.exists ? snap.data() : {};
+      var raw = data.value || '{}';
+      var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      photos = Array.isArray(parsed.photos) ? parsed.photos : [];
+      config = parsed.config || { enabled: true, showQr: true };
+      document.getElementById('toggleEnabled').checked = config.enabled !== false;
+      document.getElementById('toggleShowQr').checked = config.showQr !== false;
+    } catch (e) {
+      console.warn(e);
+      photos = [];
+    }
+    render();
+  }
+
+  function render(){
+    var gallery = document.getElementById('gallery');
+    document.getElementById('counter').textContent = photos.length + ' / ' + maxPhotos + ' fotos';
+    if (!photos.length) {
+      gallery.outerHTML = '<div id="gallery" class="empty"><div class="icon">📸</div>Nenhuma foto ainda. Suba prints pra começar a viralizar a TV.</div>';
+      return;
+    }
+    var html = photos.map(function(p, i){
+      var when = p.addedAt ? new Date(p.addedAt).toLocaleString('pt-BR') : '—';
+      return '<div class="card" data-id="'+ p.id +'">'
+        + '<img src="'+ p.dataUrl +'" alt="Ganhador">'
+        + '<div class="meta">'
+          + '<div class="date">'+ when +'</div>'
+          + '<input class="legend-input" placeholder="Legenda (opcional)" value="'+ escapeHtml(p.legenda || '') +'" onchange="updateLegenda(\''+ p.id +'\', this.value)">'
+          + '<div class="actions">'
+            + '<button class="btn danger" onclick="removePhoto(\''+ p.id +'\')">🗑️ Remover</button>'
+          + '</div>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+    gallery.innerHTML = html;
+  }
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+
+  function resizeImage(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(){
+        var img = new Image();
+        img.onload = function(){
+          // Target: max 900px na maior dimensão
+          var max = 900;
+          var w = img.width, h = img.height;
+          if (w > h && w > max) { h = h * max / w; w = max; }
+          else if (h > max) { w = w * max / h; h = max; }
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          // Tenta JPEG 0.82, vai reduzindo qualidade até caber
+          var quality = 0.82;
+          var dataUrl = canvas.toDataURL('image/jpeg', quality);
+          while (dataUrl.length > maxBytes && quality > 0.4) {
+            quality -= 0.1;
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+          resolve(dataUrl);
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  window.handleFiles = async function(files){
+    if (!files || !files.length) return;
+    var added = 0;
+    for (var i = 0; i < files.length; i++) {
+      if (photos.length >= maxPhotos) {
+        toast('Limite de ' + maxPhotos + ' fotos atingido — remova alguma antes', 'error');
+        break;
+      }
+      try {
+        var dataUrl = await resizeImage(files[i]);
+        photos.unshift({
+          id: 'hf_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+          dataUrl: dataUrl,
+          legenda: '',
+          addedAt: new Date().toISOString()
+        });
+        added++;
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    if (added > 0) {
+      await saveAll();
+      render();
+      toast(added + ' foto' + (added !== 1 ? 's' : '') + ' adicionada' + (added !== 1 ? 's' : '') + '!', 'success');
+    }
+  };
+
+  window.removePhoto = async function(id){
+    if (!confirm('Remover essa foto do Hall da Fama?')) return;
+    photos = photos.filter(function(p){ return p.id !== id; });
+    await saveAll();
+    render();
+    toast('Foto removida', 'success');
+  };
+
+  window.updateLegenda = async function(id, text){
+    var p = photos.find(function(x){ return x.id === id; });
+    if (p) { p.legenda = text.trim(); await saveAll(); }
+  };
+
+  window.saveConfig = async function(){
+    config.enabled = document.getElementById('toggleEnabled').checked;
+    config.showQr = document.getElementById('toggleShowQr').checked;
+    await saveAll();
+    toast('Configuração salva', 'success');
+  };
+
+  async function saveAll(){
+    if (!firebase || !firebase.firestore) return;
+    try {
+      var payload = JSON.stringify({ photos: photos, config: config });
+      // Sanity: payload total < 950KB
+      if (payload.length > 950 * 1024) {
+        toast('Hall da Fama lotado — remova fotos antigas pra liberar espaço', 'error');
+        return;
+      }
+      await firebase.firestore().collection('datastore').doc('hall_da_fama_' + fid).set({
+        value: payload,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (e) {
+      console.error(e);
+      toast('Erro ao salvar: ' + e.message, 'error');
+    }
+  }
+
+  // Drag & drop
+  var dropZone = document.getElementById('dropZone');
+  ['dragenter','dragover'].forEach(function(ev){
+    dropZone.addEventListener(ev, function(e){ e.preventDefault(); dropZone.classList.add('drag'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    dropZone.addEventListener(ev, function(e){ e.preventDefault(); dropZone.classList.remove('drag'); });
+  });
+  dropZone.addEventListener('drop', function(e){
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+  });
+
+  loadFranchises();
+  loadAll();
+})();
+</script>
+</body>
+</html>

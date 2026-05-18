@@ -3020,6 +3020,57 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
 }
 /* No slide da raspadinha, escondemos o emoji default pra dar lugar ao card */
 .promo-slide-rasp .promo-emoji{ display:none; }
+
+/* ===== HALL DA FAMA LIVE ===== */
+.promo-slide-hall .promo-emoji{ display:none; }
+.hall-fama-carousel{
+  position:relative;
+  width:clamp(220px, 32vmin, 360px);
+  aspect-ratio:9/16;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 0 4px rgba(255,255,255,.5);
+  background:#1A1A2E;
+}
+.hall-fama-photo{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  opacity:0;
+  animation:hallFamaIn var(--hf-dur,12s) ease-in-out infinite;
+}
+.hall-fama-photo img{
+  width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+}
+.hall-fama-legend{
+  position:absolute; bottom:0; left:0; right:0;
+  padding:12px 14px 14px;
+  background:linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.6) 60%, transparent 100%);
+  color:#fff; font-family:'Baloo 2',cursive; font-weight:800;
+  font-size:clamp(13px, 2vmin, 18px); line-height:1.2;
+  text-align:center;
+}
+@keyframes hallFamaIn{
+  /* Cada foto fica visivel ~2.4s do ciclo total (animation-delay
+     escalona via JS: 0s, 2.4s, 4.8s, 7.2s, 9.6s).
+     Janela: 0%-2% aparece, 2%-18% visivel, 18%-22% desaparece. */
+  0%       { opacity:0; transform:scale(1.04); }
+  2%, 18%  { opacity:1; transform:scale(1); }
+  22%,100% { opacity:0; transform:scale(.98); }
+}
+.hall-empty-hint{
+  margin-top:6px;
+  font-size:clamp(11px, 1.6vmin, 16px);
+  color:rgba(255,255,255,.7);
+  font-style:italic; font-weight:600;
+}
+/* No slide hall fama, QR fica pequeno e flutua no canto pra nao roubar
+   atencao das fotos */
+.promo-slide-hall .promo-qr{
+  width:clamp(70px, 11vmin, 120px);
+  position:absolute; right:clamp(14px, 2vw, 28px); bottom:clamp(60px, 8vh, 100px);
+}
 </style>
 
 <script>
@@ -3120,10 +3171,13 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:8500 },
     { id:'ganhadores', emoji:'🏆', eyebrow:'HALL DA FAMA',
       headline:'Vê quem ganhou ontem.',
-      subtext:'Todo cliente que acertou 300g ou ganhou o desafio\nvai pros destaques do nosso Instagram. Pode ser você amanhã.',
-      cta:'Escaneia e vê os craques + segue a gente',
+      subtext:'Todo cliente que acerta 300g ou ganha o desafio\nvai pro Hall da Fama. Pode ser você amanhã.',
+      cta:'Escaneia e vê os stories + segue a gente',
       qr: qrExternal('https://www.instagram.com/stories/highlights/18075880883645372/', 'ganhadores'),
-      bg:'linear-gradient(135deg,#FFD700 0%,#E1306C 50%,#7E57C2 100%)', dur:9000 },
+      bg:'linear-gradient(135deg,#FFD700 0%,#E1306C 50%,#7E57C2 100%)', dur:12000,
+      // Live: carrega fotos do Firestore (admin sobe em painel/hall-fama.html)
+      // e mostra rotacionando em mini-carousel + QR Insta no canto.
+      hallFamaLive: true },
     { id:'compartilha', emoji:'📲', eyebrow:'CHAMA UM AMIGO',
       headline:'Manda o cardápio pra galera.',
       subtext:'Aponta o celular, pega o link da loja\ne joga no grupo do WhatsApp. Bora dividir esse sorvete?',
@@ -3164,23 +3218,85 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     } catch(_) {}
   }
 
-  // Premios REAIS da raspinha (config admin atual da loja Muffato Quintino).
-  // Sem mostrar probabilidades — cliente so precisa saber QUE GANHA.
-  // Atualizado conforme spec do user: 11 premios todos positivos,
-  // nenhum "Quase!" (toda compra acima de R$ 15 sai com premio real).
+  // Premios REAIS da raspinha — todos no formato "comprou X, leva Y junto"
+  // pra MAXIMIZAR upsell e MINIMIZAR prejuizo (Y sempre tem custo bem
+  // menor que X). Sem mostrar probabilidades — cliente so precisa saber
+  // QUE ganha.
+  // Ideia: cada premio condiciona a recompra a uma categoria especifica,
+  // virando motor de cross-sell.
   var RASP_DEMO_PRIZES = [
-    { emoji:'⚖️', label:'100g BUFFET',         sub:'na próxima compra acima de R$ 15' },
-    { emoji:'⚖️', label:'100g BUFFET',         sub:'na próxima compra acima de R$ 20' },
-    { emoji:'⚖️', label:'150g BUFFET',         sub:'na próxima compra acima de R$ 25' },
-    { emoji:'⚖️', label:'200g BUFFET',         sub:'na próxima compra acima de R$ 35' },
-    { emoji:'🍦', label:'1 PICOLÉ GRÁTIS',     sub:'qualquer sabor da casa' },
-    { emoji:'🍨', label:'1 CASQUINHA GRÁTIS',  sub:'na próxima compra acima de R$ 10' },
-    { emoji:'🍧', label:'1 COPINHO DE SORVETE', sub:'na próxima compra acima de R$ 20' },
-    { emoji:'🍦', label:'1 SUNDAE P GRÁTIS',   sub:'na próxima compra acima de R$ 30' },
-    { emoji:'⬆️', label:'UPGRADE MILK SHAKE',  sub:'P → M ou M → G de graça' },
-    { emoji:'🎁', label:'COMBO BUFFET + PICOLÉ', sub:'100g buffet + 1 picolé' },
-    { emoji:'👯', label:'VOLTE COM UM AMIGO',  sub:'os dois ganham 100g de buffet' }
+    { emoji:'🥛➕🍦', label:'COMPROU MILK SHAKE? LEVA CASQUINHA',
+      sub:'Casquinha de leite ninho de brinde no próximo' },
+    { emoji:'🍨➕🍧', label:'COMPROU SUNDAE? LEVA COPINHO',
+      sub:'Copinho de sorvete grátis no próximo sundae' },
+    { emoji:'🍦➕🍦', label:'CASCÃO? LEVA CASQUINHA',
+      sub:'Casquinha de brinde no próximo cascão' },
+    { emoji:'⚖️➕🍡', label:'BUFFET 250g+? LEVA PICOLÉ',
+      sub:'1 picolé de graça acima de 250g' },
+    { emoji:'⬆️',    label:'UPGRADE MILK SHAKE',
+      sub:'P vira M ou M vira G de graça' },
+    { emoji:'⬆️',    label:'UPGRADE SUNDAE',
+      sub:'P vira M ou M vira G de graça' },
+    { emoji:'➕⚖️',  label:'+50g BUFFET',
+      sub:'no próximo buffet acima de R$ 15' },
+    { emoji:'🍫',    label:'TOPPING PREMIUM GRÁTIS',
+      sub:'Nutella, Ovomaltine ou Oreo no próximo' },
+    { emoji:'👯',    label:'VOLTE COM UM AMIGO',
+      sub:'os dois ganham 1 casquinha' },
+    { emoji:'🥤',    label:'DOSE DUPLA MILK SHAKE',
+      sub:'comprou G ou Monster? leva 1 P pra dividir' },
+    { emoji:'🎁',    label:'COMBO SURPRESA',
+      sub:'casquinha + picolé no próximo Milk Shake M+' }
   ];
+
+  // Hall da Fama: fotos LIVE do Firestore. Admin sobe em painel/hall-fama.html,
+  // a TV escuta via onSnapshot e renderiza mini-carousel rotando 1 por 2.4s.
+  // Slide dura 12s → cabe ~5 fotos por exibicao. Se vazio, fallback pra
+  // mensagem motivacional ("seja o primeiro").
+  var hallPhotos = [];
+  var hallConfig = { enabled: true, showQr: true };
+  var hallUnsub = null;
+  function subscribeHallFama(){
+    if (hallUnsub) return;
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      hallUnsub = firebase.firestore().collection('datastore')
+        .doc('hall_da_fama_' + fidParam)
+        .onSnapshot(function(snap){
+          try {
+            if (!snap.exists) { hallPhotos = []; return; }
+            var raw = snap.data().value || '{}';
+            var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            hallPhotos = Array.isArray(parsed.photos) ? parsed.photos : [];
+            hallConfig = parsed.config || { enabled: true, showQr: true };
+          } catch (e) {
+            console.warn('Hall da Fama parse:', e);
+          }
+        }, function(err){ console.warn('Hall da Fama snap err:', err); });
+    } catch (e) { console.warn('subscribeHallFama:', e); }
+  }
+  subscribeHallFama();
+
+  function renderHallFamaLive(slide){
+    // Se admin desativou OU nao tem fotos, fallback elegante
+    if (hallConfig.enabled === false || !hallPhotos.length) {
+      return '<div class="promo-emoji">'+ slide.emoji +'</div>' +
+             '<div class="hall-empty-hint">Seja o primeiro a aparecer aqui 🏆</div>';
+    }
+    // Mini-carousel: max 6 fotos, rotacionam via CSS animation-delay
+    var fotos = hallPhotos.slice(0, 6);
+    var dur = fotos.length * 2.4; // 2.4s por foto
+    var html = '<div class="hall-fama-carousel" style="--hf-dur:'+ dur +'s">';
+    fotos.forEach(function(p, i){
+      html += '<div class="hall-fama-photo" style="animation-delay:'+ (i*2.4) +'s">' +
+                '<img src="'+ p.dataUrl +'" alt="Ganhador">' +
+                (p.legenda ? '<div class="hall-fama-legend">'+ escapeText(p.legenda) +'</div>' : '') +
+              '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+  function escapeText(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
 
   function renderRaspadinhaDemo(){
     // Demo cicla pelos 11 premios reais, cada um aparece por 900ms,
@@ -3209,17 +3325,29 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   function renderSlide(s){
     rotEl.style.background = s.bg;
     rotEl.style.setProperty('--promo-dur', (s.dur/1000)+'s');
+    var extraClass = '';
+    if (s.raspDemo) extraClass = ' promo-slide-rasp';
+    if (s.hallFamaLive) extraClass = ' promo-slide-hall';
+    // Centro do slide: raspadinha demo / hall fama live / emoji default
+    var middleHtml;
+    if (s.raspDemo) middleHtml = renderRaspadinhaDemo();
+    else if (s.hallFamaLive) middleHtml = renderHallFamaLive(s);
+    else middleHtml = '<div class="promo-emoji">'+ s.emoji +'</div>';
+    // QR no Hall da Fama so aparece se admin manteve showQr ativo
+    var qrHtml = '';
+    if (s.qr) {
+      var showThisQr = s.hallFamaLive ? (hallConfig.showQr !== false) : true;
+      if (showThisQr) qrHtml = '<img class="promo-qr" src="'+ s.qr +'" alt="QR ' + s.id + '" loading="lazy">';
+    }
     rotEl.innerHTML =
       '<div class="promo-progress"></div>' +
-      '<div class="promo-slide' + (s.raspDemo ? ' promo-slide-rasp' : '') + '">' +
+      '<div class="promo-slide' + extraClass + '">' +
         '<div class="promo-eyebrow">'+ s.eyebrow +'</div>' +
-        (s.raspDemo
-          ? renderRaspadinhaDemo()
-          : '<div class="promo-emoji">'+ s.emoji +'</div>') +
+        middleHtml +
         '<h1 class="promo-headline">'+ s.headline +'</h1>' +
         '<p class="promo-subtext">'+ s.subtext.replace(/\n/g,'<br>') +'</p>' +
         '<div class="promo-cta">📱 '+ s.cta +'</div>' +
-        (s.qr ? '<img class="promo-qr" src="'+ s.qr +'" alt="QR ' + s.id + '" loading="lazy">' : '') +
+        qrHtml +
         '<div class="promo-tap">👆 Toque pra jogar o Desafio 10s · Aponta a câmera no QR pra promo</div>' +
       '</div>';
     trackEvent('view', s.id);
