@@ -1675,15 +1675,28 @@
     </div>
 </div>
 
-<!-- Voucher Modal -->
+<!-- Voucher Modal (also Obrigado + QR Raspadinha pos-finalizacao) -->
 <div class="modal-bg" id="voucherModal" style="z-index:2000">
-    <div style="background:#fff;border-radius:20px;padding:32px 28px;text-align:center;max-width:420px;width:90%;box-shadow:0 12px 48px rgba(0,0,0,0.25);animation:winIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275)">
-        <div style="font-size:48px;margin-bottom:8px">🎟️</div>
-        <div style="font-family:'Baloo 2',cursive;font-size:22px;font-weight:800;color:#6C63FF;margin-bottom:4px">Desafio liberado na TV!</div>
-        <div style="font-size:13px;color:#888;margin-bottom:16px">Nome e WhatsApp foram enviados. Na TV, toque na tela para iniciar sem teclado.</div>
-        <div id="voucherCodeDisplay" style="font-family:'Orbitron',monospace,'Courier New',monospace;font-size:clamp(32px,6vw,48px);font-weight:900;color:#FF0040;letter-spacing:4px;padding:16px 24px;background:linear-gradient(135deg,#FFF5F7,#F5F0FF);border:3px dashed #FF0040;border-radius:16px;margin-bottom:16px;user-select:all"></div>
-        <div style="font-size:12px;color:#aaa;margin-bottom:16px">Codigo mantido apenas como reserva, caso precise validar manualmente.</div>
-        <button onclick="closeVoucherModal()" style="background:linear-gradient(135deg,#6C63FF,#5A52E0);color:#fff;border:none;padding:12px 40px;border-radius:50px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">OK</button>
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;text-align:center;max-width:480px;width:92%;box-shadow:0 12px 48px rgba(0,0,0,0.25);animation:winIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);max-height:92vh;overflow-y:auto">
+        <div style="font-size:56px;margin-bottom:6px" id="voucherEmoji">🐑</div>
+        <div id="voucherGreeting" style="font-family:'Baloo 2',cursive;font-size:26px;font-weight:900;color:#7E57C2;margin-bottom:4px">Obrigado!</div>
+        <div id="voucherSubtitle" style="font-size:14px;color:#6B7280;margin-bottom:18px;line-height:1.4">Aqui está sua raspadinha + tudo que você ganhou hoje.</div>
+
+        <!-- QR raspadinha — aparece quando scratchShortCode esta presente -->
+        <div id="voucherQrWrap" style="display:none;margin-bottom:18px;padding:18px;background:linear-gradient(135deg,#FFF5F7,#F5F0FF);border-radius:18px;border:2px dashed #FF4F8A">
+            <div style="font-family:'Baloo 2',cursive;font-size:16px;font-weight:800;color:#FF4F8A;margin-bottom:10px">🎫 Sua raspadinha — aponta a câmera</div>
+            <img id="voucherQrImg" src="" alt="QR raspadinha" style="border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.15);max-width:240px;width:100%;background:#fff;padding:8px">
+            <div id="voucherShortCode" style="font-size:13px;color:#7E57C2;margin-top:10px;font-weight:700;letter-spacing:1px"></div>
+            <div style="font-size:11px;color:#9CA3AF;margin-top:4px">Validade <strong id="voucherValidity">7 dias</strong> · só na próxima compra</div>
+        </div>
+
+        <!-- Codigo do desafio TV (legado — so aparece se code estiver setado) -->
+        <div id="voucherChallengeWrap" style="display:none;margin-bottom:14px">
+            <div style="font-size:12px;color:#6B7280;font-weight:700;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase">🎯 Código do desafio na TV</div>
+            <div id="voucherCodeDisplay" style="font-family:'Orbitron',monospace,'Courier New',monospace;font-size:clamp(22px,5vw,32px);font-weight:900;color:#FF0040;letter-spacing:3px;padding:12px 18px;background:#FFF5F7;border:2px dashed #FF0040;border-radius:12px;user-select:all"></div>
+        </div>
+
+        <button onclick="closeVoucherModal()" style="background:linear-gradient(135deg,#7E57C2,#FF4F8A);color:#fff;border:none;padding:14px 42px;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 8px 20px rgba(126,87,194,0.3)">✓ Entreguei pro cliente</button>
     </div>
 </div>
 <style>
@@ -5368,8 +5381,15 @@
             });
         } catch(e) { console.warn('Auto print:', e); }
 
-        // Show voucher modal
-        showVoucherModal(voucherDisplay);
+        // Show voucher modal — passa nome do cliente + dados da raspinha pra
+        // renderizar o "Obrigado {Nome}!" + QR scaneavel pra raspinha agora.
+        showVoucherModal({
+            code: voucherDisplay,
+            customerName: oName || '',
+            scratchShortCode: (scratchData && scratchData.shortCode) || '',
+            scratchValidityDays: (scratchData && scratchData.validityDays) || 7,
+            orderTotal: total
+        });
 
         toast('✅ '+oName+' — R$ '+total.toFixed(2).replace('.',',')+' finalizado!');
 
@@ -7057,8 +7077,60 @@
     });
 
     // === VOUCHER MODAL ===
-    window.showVoucherModal=function(code){
-        document.getElementById('voucherCodeDisplay').textContent=code;
+    window.showVoucherModal=function(arg){
+        /* Compat: aceita string (codigo legado) OU objeto:
+           { code, customerName, scratchShortCode, scratchValidityDays, orderTotal } */
+        var cfg = (typeof arg === 'string') ? { code: arg } : (arg || {});
+        var code = cfg.code || '';
+        var customerName = (cfg.customerName || '').trim();
+        var shortCode = cfg.scratchShortCode || '';
+        var validity = cfg.scratchValidityDays || 7;
+
+        /* Greeting personalizado */
+        var greetingEl = document.getElementById('voucherGreeting');
+        var subtitleEl = document.getElementById('voucherSubtitle');
+        var emojiEl = document.getElementById('voucherEmoji');
+        if (greetingEl) {
+            greetingEl.textContent = customerName
+                ? 'Obrigado, ' + customerName + '!'
+                : 'Obrigado!';
+        }
+        if (subtitleEl) {
+            if (shortCode && code) {
+                subtitleEl.innerHTML = 'Sua raspadinha já tá ativa + código do desafio liberado na TV.<br>É só apontar a câmera e curtir 🍦';
+            } else if (shortCode) {
+                subtitleEl.innerHTML = 'Sua raspadinha já tá ativa.<br>Aponta a câmera no QR e veja o que ganhou.';
+            } else if (code) {
+                subtitleEl.textContent = 'Desafio liberado na TV. Toque na tela para iniciar.';
+            } else {
+                subtitleEl.textContent = 'Aproveite seu MilkyPot 🍦';
+            }
+        }
+        if (emojiEl) emojiEl.textContent = shortCode ? '🎫' : (code ? '🎯' : '🐑');
+
+        /* QR Raspadinha */
+        var qrWrap = document.getElementById('voucherQrWrap');
+        var qrImg = document.getElementById('voucherQrImg');
+        var shortCodeEl = document.getElementById('voucherShortCode');
+        var validityEl = document.getElementById('voucherValidity');
+        if (qrWrap) {
+            if (shortCode) {
+                var raspUrl = 'https://milkypot.com/raspinha.html?code=' + encodeURIComponent(shortCode);
+                if (qrImg) qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&color=1A1A2E&bgcolor=FFFFFF&data=' + encodeURIComponent(raspUrl);
+                if (shortCodeEl) shortCodeEl.textContent = 'Código: ' + shortCode;
+                if (validityEl) validityEl.textContent = validity + ' dias';
+                qrWrap.style.display = '';
+            } else {
+                qrWrap.style.display = 'none';
+            }
+        }
+
+        /* Codigo desafio TV (legado) */
+        var challengeWrap = document.getElementById('voucherChallengeWrap');
+        var codeDisp = document.getElementById('voucherCodeDisplay');
+        if (codeDisp) codeDisp.textContent = code;
+        if (challengeWrap) challengeWrap.style.display = code ? '' : 'none';
+
         document.getElementById('voucherModal').classList.add('open');
     };
     window.closeVoucherModal=function(){
