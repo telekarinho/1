@@ -71,6 +71,12 @@ service cloud.firestore {
                     || document.matches('tv_.*')
                     || document.matches('tvremote_.*')
                     || document.matches('radio_.*')
+                    // Hall da Fama: fotos dos ganhadores 300g. desafio.html?tv=1
+                    // (TV indoor publica sem login) precisa ler pra rotacionar
+                    // no slide hallFamaLive. Painel/hall-fama.html escreve com
+                    // auth de franqueado. Risco zero — fotos vao pro IG publico
+                    // de qualquer jeito.
+                    || document.matches('hall_da_fama_.*')
                     // Sync operacional entre PCs/celulares: reads publicos (espelham
                     // os writes que ja eram publicos). Tokens Firebase Auth expiram
                     // em 1h e nem sempre auto-refresh — exigir auth quebrava sync
@@ -301,6 +307,27 @@ service cloud.firestore {
                               && request.resource.data.status == 'redeemed')
                           );
       allow delete: if isSuperAdmin();
+    }
+
+    // ============================================
+    // TV-PROMO EVENTS — Telemetria da TV indoor + QR scans
+    // ============================================
+    // desafio.html?tv=1 (TV indoor da loja) e go.html (redirect de QR)
+    // gravam aqui pra alimentar painel/tv-promo-metrics.html.
+    // Sem essa rule a TV silenciava o erro no .catch e a tela ficava
+    // "Carregando dados ao vivo..." pra sempre.
+    //
+    // Seguranca: append-only, type/slideId/dayKey validados pra evitar
+    // flood de lixo. Read so admin/franqueado.
+    match /tv_promo_events/{eventId} {
+      allow create: if request.resource.data.type in ['view', 'scan']
+                       && request.resource.data.dayKey is string
+                       && request.resource.data.dayKey.size() == 10
+                       && request.resource.data.slideId is string
+                       && request.resource.data.slideId.size() > 0
+                       && request.resource.data.slideId.size() < 50;
+      allow read: if isSuperAdmin() || isFranchisee();
+      allow update, delete: if false;
     }
 
     // ============================================

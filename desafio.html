@@ -1819,9 +1819,10 @@ if(gameConfig.streak) updateStreak();
 
 /* Show result */
 showStep(3);
-/* MODO TV: depois de 14s mostrando o resultado, volta automaticamente
+/* MODO TV: depois de 30s mostrando o resultado, volta automaticamente
    pro attract pra liberar a TV pro proximo cliente. Sem isso, a TV ficava
-   travada na tela de resultado ate o idleTimer de 60s. */
+   travada na tela de resultado ate o idleTimer de 60s.
+   30s e tempo suficiente pra ler o ranking 1o ao 10o + recorde do cliente. */
 if(isStoreTvMode){
 clearTimeout(window._tvResultAutoBack);
 window._tvResultAutoBack=setTimeout(function(){
@@ -1833,7 +1834,7 @@ if(typeof startAttract==='function') startAttract();
 if(typeof setTvReleaseStatus==='function') setTvReleaseStatus('Aguardando liberacao do PDV...');
 activeVoucher=null;activeVoucherCode=null;gameState='idle';
 }
-},14000);
+},30000);
 }
 document.getElementById('resultName').textContent=playerN;
 var rv=document.getElementById('resultValue');
@@ -2188,16 +2189,17 @@ draw();
 
 /* ========== RANKING ========== */
 function renderRanking(){
-/* Weekly ranking (resets every Monday) */
+/* Weekly ranking (resets every Monday) - top 10 numerado */
 var list=document.getElementById('rankingList');
 var weekStart=getWeekStart();
-var weekItems=best.filter(function(r){return r.date&&new Date(r.date)>=weekStart}).slice(0,5);
+var weekItems=best.filter(function(r){return r.date&&new Date(r.date)>=weekStart}).slice(0,10);
+// medals: 3 primeiros emoji ouro/prata/bronze, 4-10 com "Xº" pra ficar legivel a 3m
+var medals=['&#129351;','&#129352;','&#129353;','4&ordm;','5&ordm;','6&ordm;','7&ordm;','8&ordm;','9&ordm;','10&ordm;'];
 if(!weekItems.length){list.innerHTML='<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa esta semana</div>';}
 else{
 var html='';
 weekItems.forEach(function(r,i){
 var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
-var medals=['&#129351;','&#129352;','&#129353;','4','5'];
 var d=Math.abs((r.target||gameTarget)-r.val);
 html+='<div class="ranking-row">';
 if(r.photo) html+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
@@ -2207,14 +2209,13 @@ html+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(
 list.innerHTML=html;
 }
 
-/* Global ranking (ALL TIME - never resets) */
+/* Global ranking (ALL TIME - never resets) - top 10 numerado */
 var globalList=document.getElementById('globalRankingList');
 var globalItems=best.slice(0,10);
 if(!globalItems.length){globalList.innerHTML='<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa ainda</div>';return}
 var ghtml='';
 globalItems.forEach(function(r,i){
 var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
-var medals=['&#129351;','&#129352;','&#129353;','4','5','6','7','8','9','10'];
 var d=Math.abs((r.target||10000)-r.val);
 ghtml+='<div class="ranking-row">';
 if(r.photo) ghtml+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
@@ -2233,7 +2234,8 @@ if (!items.length) {
 list.innerHTML = '<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa ainda \u2014 seja o primeiro!</div>';
 return;
 }
-var medals = ['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49','4','5','6','7','8','9','10'];
+// medals: 3 primeiros emoji ouro/prata/bronze, 4-10 com "X\u00BA" pra leitura clara
+var medals = ['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49','4\u00BA','5\u00BA','6\u00BA','7\u00BA','8\u00BA','9\u00BA','10\u00BA'];
 var html = '';
 items.forEach(function(r, i) {
 var cls = i === 0 ? 'rp1' : i === 1 ? 'rp2' : i === 2 ? 'rp3' : 'rp' + (i+1);
@@ -2267,7 +2269,7 @@ weekItems.push({ name: d.name, phone: d.phone, val: d.elapsed, target: d.target 
 weekItems.sort(function(a, b) {
 return Math.abs((a.target||10000) - a.val) - Math.abs((b.target||10000) - b.val);
 });
-renderRankingWithData(weekItems.slice(0, 5), 'rankingList', false);
+renderRankingWithData(weekItems.slice(0, 10), 'rankingList', false);
 })
 .catch(function() { renderRanking(); }); // fallback para localStorage
 
@@ -3228,7 +3230,7 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       // SEM QR no slide: o QR é UNICO e impresso na nota da compra.
       // Cada cliente recebe o SEU codigo individual ao pagar.
       qr: null,
-      bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)', dur:12000,
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)', dur:30000,
       // Demo visual: simula a raspadinha real raspando sozinha em loop,
       // mostrando os 11 premios reais que estao ATIVOS no admin agora.
       raspDemo: true },
@@ -3237,45 +3239,45 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       subtext:'Cada R$1 que você paga vira moedinha pro próximo sorvete.\nDe graça. Tipo o cashback do banco.',
       cta:'Cadastra rapidinho — só precisa do email',
       qr: qrUrl('/clube.html', 'milkyclube'),
-      bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)', dur:9000 },
+      bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)', dur:30000 },
     { id:'roleta', emoji:'🎰', eyebrow:'ROLETA DA SORTE',
       headline:'Pagou? Gira a roleta.',
       subtext:'Aparece sozinha na sua tela quando você termina o pedido.\nPode sair 20% off, topping grátis ou moedinha extra.',
       cta:'É automático — só aceitar e girar quando aparecer',
       // SEM QR: roleta abre sozinha apos o pagamento (modal no checkout).
       qr: null,
-      bg:'linear-gradient(135deg,#FFD700 0%,#FF4F8A 100%)', dur:8500 },
+      bg:'linear-gradient(135deg,#FFD700 0%,#FF4F8A 100%)', dur:30000 },
     { id:'desafio10s', emoji:'⏱️', eyebrow:'DESAFIO 10 SEGUNDOS',
       headline:'Para o cronômetro em 10s cravado e ganha.',
       subtext:'Margem de 0,3 segundo. Acertou? Sorvete por nossa conta.\nDá pra jogar aqui mesmo, dessa tela.',
       cta:'Toca a tela ou escaneia pra jogar do celular',
       qr: qrUrl('/desafio.html', 'desafio10s'),
-      bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)', dur:9000 },
+      bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)', dur:30000 },
     { id:'acerta300', emoji:'⚖️', eyebrow:'ACERTOU 300g, NÃO PAGA',
       headline:'Montou 300g no buffet? A casa paga.',
       subtext:'Você monta seu pote, a gente pesa. Bateu 300g (margem 3g)\né de graça. Errou? Paga normal R$5,99/100g.',
       cta:'Pega o pote e vai no buffet — desafio é ao vivo',
       // SEM QR: desafio e fisico (cliente monta no buffet da loja).
       qr: null,
-      bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:9500 },
+      bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:30000 },
     { id:'googlereview', emoji:'⭐', eyebrow:'AVALIA NO GOOGLE',
       headline:'5 estrelas vale raspadinha premium + 50 moedas.',
       subtext:'Foi bom o sorvete? Conta pro Google.\nA gente te recompensa por isso.',
       cta:'Aponta a câmera e cai direto no Google',
       qr: qrExternal('https://g.page/r/CXrthQS1rgPdEAE/review', 'googlereview'),
-      bg:'linear-gradient(135deg,#4285F4 0%,#FFD700 100%)', dur:9000 },
+      bg:'linear-gradient(135deg,#4285F4 0%,#FFD700 100%)', dur:30000 },
     { id:'instagram', emoji:'📸', eyebrow:'POSTA NO INSTA',
       headline:'Posta marcando @milkypotbr e ganha 150 moedas.',
       subtext:'Pode ser foto, vídeo, story, qualquer coisa.\nMarcou a gente? 150 moedinhas pro próximo pedido.',
       cta:'Hashtag: #PrimeiraMordidaMilky',
       qr: qrExternal('https://instagram.com/milkypotbr', 'instagram'),
-      bg:'linear-gradient(135deg,#E1306C 0%,#FCAF45 100%)', dur:9000 },
+      bg:'linear-gradient(135deg,#E1306C 0%,#FCAF45 100%)', dur:30000 },
     { id:'influencer', emoji:'💸', eyebrow:'INDICA E GANHA',
       headline:'Indica um amigo, ganha cada vez que ele vem.',
       subtext:'Cadastra, pega seu link, manda no Whats da galera.\nCada amigo que pede com seu link: você ganha moeda.',
       cta:'Não precisa ser famoso — só ter amigos guloso',
       qr: qrUrl('/influencer.html', 'influencer'),
-      bg:'linear-gradient(135deg,#FF4F8A 0%,#FF8A65 100%)', dur:9500 },
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#FF8A65 100%)', dur:30000 },
     { id:'streak', emoji:'🔥', eyebrow:'CLIENTE FIEL GANHA MAIS',
       headline:'Veio 3 dias seguidos? +25 moedas.',
       subtext:'7 dias = sundae GRÁTIS. 14 dias = +100 moedas.\n30 dias seguidos = camiseta exclusiva LENDÁRIO.',
@@ -3283,19 +3285,19 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       // SEM QR: streak e automatico pra quem ta no MilkyClube.
       // Se cliente quer entrar no clube, ja tem o slide MilkyClube com QR.
       qr: null,
-      bg:'linear-gradient(135deg,#FF4F8A 0%,#FFD700 100%)', dur:9500 },
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#FFD700 100%)', dur:30000 },
     { id:'milkypass', emoji:'📱', eyebrow:'CARTÃO NO CELULAR',
       headline:'Teu cartão do clube mora no celular.',
       subtext:'Salva no Apple Wallet ou Google Wallet — sem app pra baixar.\nNa hora de pagar, mostra o QR. Pronto.',
       cta:'Entra no clube e clica em "Adicionar ao Wallet"',
       qr: qrUrl('/clube.html#pass', 'milkypass'),
-      bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:8500 },
+      bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:30000 },
     { id:'ganhadores', emoji:'🏆', eyebrow:'HALL DA FAMA',
       headline:'Vê quem ganhou ontem.',
       subtext:'Todo cliente que acerta 300g ou ganha o desafio\nvai pro Hall da Fama. Pode ser você amanhã.',
       cta:'Escaneia e vê os stories + segue a gente',
       qr: qrExternal('https://www.instagram.com/stories/highlights/18075880883645372/', 'ganhadores'),
-      bg:'linear-gradient(135deg,#FFD700 0%,#E1306C 50%,#7E57C2 100%)', dur:12000,
+      bg:'linear-gradient(135deg,#FFD700 0%,#E1306C 50%,#7E57C2 100%)', dur:30000,
       // Live: carrega fotos do Firestore (admin sobe em painel/hall-fama.html)
       // e mostra rotacionando em mini-carousel + QR Insta no canto.
       hallFamaLive: true },
@@ -3304,7 +3306,7 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       subtext:'Aponta o celular, pega o link da loja\ne joga no grupo do WhatsApp. Bora dividir esse sorvete?',
       cta:'milkypot.com — só apontar a câmera',
       qr: qrUrl('/cardapio.html', 'compartilha'),
-      bg:'linear-gradient(135deg,#25D366 0%,#42A5F5 100%)', dur:8000 }
+      bg:'linear-gradient(135deg,#25D366 0%,#42A5F5 100%)', dur:30000 }
   ];
 
   var rotEl = document.getElementById('promoRotator');
