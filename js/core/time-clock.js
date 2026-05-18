@@ -580,6 +580,23 @@
             ? effJornada.cargaDiariaMin
             : Math.round((((staff && staff.carga_horaria_semanal) || 44) / ((staff && staff.jornada && staff.jornada.tipo === '6x1') ? 6 : 5)) * 60);
 
+        // ☕ INTERVALO SUPRIMIDO — quando intervalo realizado < intervalo combinado
+        // CLT art. 71 §4º (Reforma 2017): periodo suprimido pago em DINHEIRO +50%
+        // como verba indenizatoria. Empresa pode tratar como banco horas se houver
+        // acordo coletivo/individual escrito (com risco trabalhista).
+        // Calculo: intervalo combinado (jornadaEfetiva.intervalo_almoco_min) - realizado
+        var intervaloDevidoMin = effJornada ? (effJornada.intervalo_almoco_min || 0) : ((staff && staff.jornada && staff.jornada.intervalo_almoco_min) || 0);
+        var intervaloSuprimidoMin = 0;
+        if (entrada && saida && intervaloDevidoMin > 0) {
+            // Só conta como suprimido se a jornada exige intervalo (>6h) E o realizado foi menor
+            if (minutosTrabalhados + minutosAlmoco > 6 * 60) {
+                var realizadoEfetivo = Math.max(minutosAlmoco, 0);
+                if (realizadoEfetivo < intervaloDevidoMin) {
+                    intervaloSuprimidoMin = intervaloDevidoMin - realizadoEfetivo;
+                }
+            }
+        }
+
         // Hora extra (se trabalhou alem da carga + tolerancia) → vai pro BANCO DE HORAS
         var minutosExtras = 0;
         if (minutosTrabalhados > cargaDiariaMin + TOLERANCIA_DIA_MIN) {
@@ -587,9 +604,29 @@
         }
 
         // 💼 SALDO DO DIA — positivo = vai pro banco, negativo = devedor
+        // Inclui intervalo suprimido SE config bank.tratamento_intervalo === 'banco_horas'
         var saldoDiaMin = 0;
+        var intervaloSuprimidoTratamento = 'hora_extra'; // padrão recomendado CLT
+        var intervaloSuprimidoComAdicional = 0;
         if (entrada && saida) {
             saldoDiaMin = minutosTrabalhados - cargaDiariaMin;
+            if (intervaloSuprimidoMin > 0) {
+                // CLT manda +50% sobre o periodo suprimido
+                intervaloSuprimidoComAdicional = Math.round(intervaloSuprimidoMin * 1.5);
+                // Le config: hora_extra (padrao, paga em dinheiro) | banco_horas (acordo) | desativado
+                if (typeof OvertimeBank !== 'undefined' && OvertimeBank.getConfig) {
+                    var bankCfg = OvertimeBank.getConfig(franchiseId);
+                    intervaloSuprimidoTratamento = bankCfg.tratamento_intervalo_suprimido || 'hora_extra';
+                }
+                if (intervaloSuprimidoTratamento === 'banco_horas') {
+                    // Soma ao saldo do dia (com +50% conforme CLT)
+                    saldoDiaMin += intervaloSuprimidoComAdicional;
+                } else if (intervaloSuprimidoTratamento === 'hora_extra') {
+                    // Soma aos minutos extras (vai pro pagamento, NÃO pro banco)
+                    minutosExtras += intervaloSuprimidoComAdicional;
+                }
+                // 'desativado' = nada (admin assume risco trabalhista)
+            }
         }
 
         // Atraso na entrada (vs jornada efetiva, não padrão)
@@ -611,8 +648,8 @@
 
         // Validacao CLT intrajornada
         var avisoIntervalo = '';
-        if (minutosTrabalhados > 6 * 60 && minutosAlmoco < 60) {
-            avisoIntervalo = 'Intervalo de almoço menor que 1h (jornada > 6h exige intervalo mínimo de 1h conforme CLT art. 71)';
+        if (intervaloSuprimidoMin > 0) {
+            avisoIntervalo = 'Intervalo suprimido em ' + intervaloSuprimidoMin + 'min (CLT art. 71 §4º — pagamento +50% obrigatório, ' + intervaloSuprimidoComAdicional + 'min creditados ' + (intervaloSuprimidoTratamento === 'banco_horas' ? 'no banco de horas' : intervaloSuprimidoTratamento === 'hora_extra' ? 'como hora extra' : '— TRATAMENTO DESATIVADO ⚠️') + ')';
         }
 
         return {
@@ -626,6 +663,10 @@
             completo: !!(entrada && saida),
             minutosTrabalhados: minutosTrabalhados,
             minutosAlmoco: minutosAlmoco,
+            intervaloDevidoMin: intervaloDevidoMin,
+            intervaloSuprimidoMin: intervaloSuprimidoMin,           // CLT art. 71 §4º — minutos não tirados
+            intervaloSuprimidoComAdicional: intervaloSuprimidoComAdicional,  // já com +50%
+            intervaloSuprimidoTratamento: intervaloSuprimidoTratamento,      // 'hora_extra' | 'banco_horas' | 'desativado'
             minutosExtras: minutosExtras,
             minutosAtraso: minutosAtraso,
             minutosNoturnos: minutosNoturnos,
@@ -859,7 +900,7 @@
         lines.push('Mes: ' + espelho.monthLabel);
         lines.push('PIS: ' + (espelho.staff ? espelho.staff.pis : ''));
         lines.push('');
-        lines.push('Data;Dia;Entrada;Saida Almoco;Volta Almoco;Saida;Trabalhado;Almoco;Extras;Atraso;Justificativa');
+        lines.push('Data;Dia;Entrada;Saida Almoco;Volta Almoco;Saida;Trabalhado;Almoco;Extras;Interv.Suprimido;Interv.Supr.+50%;Tratamento;Atraso;Justificativa');
 
         espelho.days.forEach(function (d) {
             var row = [
@@ -872,11 +913,18 @@
                 d.completo ? minutesToTime(d.minutosTrabalhados) : '-',
                 d.completo ? minutesToTime(d.minutosAlmoco) : '-',
                 d.minutosExtras ? minutesToTime(d.minutosExtras) : '-',
+                d.intervaloSuprimidoMin ? minutesToTime(d.intervaloSuprimidoMin) : '-',
+                d.intervaloSuprimidoComAdicional ? minutesToTime(d.intervaloSuprimidoComAdicional) : '-',
+                d.intervaloSuprimidoMin ? (d.intervaloSuprimidoTratamento || 'hora_extra') : '-',
                 d.minutosAtraso ? minutesToTime(d.minutosAtraso) : '-',
                 d.justificativa ? d.justificativa.reason : ''
             ].map(function (v) { return String(v).replace(/;/g, ','); }).join(';');
             lines.push(row);
         });
+
+        // Totaliza intervalo suprimido
+        var totalSupMin = espelho.days.reduce(function(a,d){ return a + (d.intervaloSuprimidoMin || 0); }, 0);
+        var totalSupAdicMin = espelho.days.reduce(function(a,d){ return a + (d.intervaloSuprimidoComAdicional || 0); }, 0);
 
         lines.push('');
         lines.push('TOTAIS');
@@ -886,6 +934,8 @@
         lines.push('Atrasos;' + espelho.totaisFormatado.atraso);
         lines.push('Adicional noturno;' + espelho.totaisFormatado.noturno);
         lines.push('Banco de horas;' + espelho.totaisFormatado.bancoHoras);
+        lines.push('Intervalo suprimido (CLT 71 §4);' + minutesToTime(totalSupMin));
+        lines.push('Intervalo suprimido com +50%;' + minutesToTime(totalSupAdicMin));
         lines.push('Faltas (sem justificativa);' + espelho.totals.faltas);
 
         var content = '﻿' + lines.join('\n'); // BOM pra Excel abrir UTF-8

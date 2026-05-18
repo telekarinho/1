@@ -272,6 +272,7 @@
                     <button class="pt-tab" onclick="ptSwitchTab('banco', this)">🏦 Banco de Horas</button>
                     <button class="pt-tab" onclick="ptSwitchTab('justificativas', this)">📝 Justificativas</button>
                     <button class="pt-tab" onclick="ptSwitchTab('escala', this)">📊 Escala</button>
+                    <button class="pt-tab" onclick="ptSwitchTab('config', this)">⚙️ Config CLT</button>
                     <button class="pt-tab" onclick="ptSwitchTab('fiscalizacao', this)">⚖️ Fiscalizacao (AFD)</button>
                 </div>
 
@@ -402,6 +403,74 @@
                         </thead>
                         <tbody id="ptEscalaBody"></tbody>
                     </table>
+                </div>
+
+                <!-- TAB CONFIG CLT — tratamento de intervalo suprimido + acordos -->
+                <div class="pt-panel" id="pt-tab-config">
+                    <div class="pt-legal">
+                        <strong>⚙️ Configurações conforme CLT:</strong> defina como sua loja trata os
+                        casos previstos em lei. Mudanças aqui afetam os cálculos de banco de horas e
+                        holerite de TODOS os funcionários a partir do próximo registro.
+                    </div>
+
+                    <!-- ☕ INTERVALO SUPRIMIDO -->
+                    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:18px 22px;margin-bottom:14px">
+                        <h3 style="margin:0 0 6px;color:#2D1747;font-family:'Baloo 2',cursive">☕ Quando funcionário não tira (ou tira menos) o intervalo de almoço/janta</h3>
+                        <p style="margin:0 0 12px;color:#6B7280;font-size:.85rem">
+                            <b>CLT art. 71 §4º (Reforma 2017):</b> a empresa deve pagar o período suprimido com
+                            adicional de 50% (natureza indenizatória). Como sua loja trata isso?
+                        </p>
+
+                        <div style="display:grid;gap:10px">
+                            <label style="border:2px solid #E5E7EB;border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;gap:10px;align-items:flex-start" id="optHE">
+                                <input type="radio" name="tratamentoIntervalo" value="hora_extra" style="margin-top:3px">
+                                <div>
+                                    <strong style="color:#16A34A">💰 Pagar como hora extra (RECOMENDADO ✓)</strong>
+                                    <div style="font-size:.82rem;color:#374151;margin-top:4px">
+                                        Minutos suprimidos × 1.5 vão pra hora extra do holerite. <b>100% conforme CLT</b>, sem risco trabalhista.
+                                        Funcionário recebe em dinheiro mensalmente.
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label style="border:2px solid #E5E7EB;border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;gap:10px;align-items:flex-start" id="optBH">
+                                <input type="radio" name="tratamentoIntervalo" value="banco_horas" style="margin-top:3px">
+                                <div>
+                                    <strong style="color:#F59E0B">🏦 Mandar pro banco de horas (com acordo escrito)</strong>
+                                    <div style="font-size:.82rem;color:#374151;margin-top:4px">
+                                        Minutos suprimidos × 1.5 viram saldo positivo no banco de horas.
+                                        <b style="color:#DC2626">⚠ Exige acordo coletivo (CCT do sindicato) OU aditivo individual escrito assinado.</b>
+                                        Sem documento, fiscalização do MTE pode multar e funcionário pode cobrar em ação trabalhista.
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label style="border:2px solid #E5E7EB;border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;gap:10px;align-items:flex-start" id="optDS">
+                                <input type="radio" name="tratamentoIntervalo" value="desativado" style="margin-top:3px">
+                                <div>
+                                    <strong style="color:#DC2626">🚫 Não computar (NÃO RECOMENDADO)</strong>
+                                    <div style="font-size:.82rem;color:#374151;margin-top:4px">
+                                        Sistema apenas avisa no app, mas não soma nada no holerite/banco.
+                                        <b style="color:#DC2626">⚠⚠ Funcionário pode processar a empresa cobrando retroativo +50% + juros.</b>
+                                        Use só se TEM CERTEZA do contexto (ex: já paga separado por fora — o que NÃO recomendamos).
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <button class="btn-primary" onclick="ptSalvarConfigCLT()" style="margin-top:14px">💾 Salvar configuração</button>
+                        <div id="ptConfigCLTStatus" style="margin-top:10px;font-size:.82rem"></div>
+                    </div>
+
+                    <!-- 📋 ACORDOS DOCUMENTADOS -->
+                    <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:14px 18px;border-radius:10px;font-size:.85rem;color:#92400E;line-height:1.6">
+                        <strong>📋 Lembrete legal:</strong> se você escolher "banco de horas", guarde sempre:
+                        <ol style="margin:6px 0 0;padding-left:22px">
+                            <li>Cópia assinada do aditivo contratual com cada funcionário (ou CCT do sindicato)</li>
+                            <li>Espelho mensal de ponto entregue ao trabalhador (CLT art. 74)</li>
+                            <li>Relatório do contador com o histórico completo de compensações</li>
+                        </ol>
+                    </div>
                 </div>
 
                 <!-- TAB FISCALIZACAO -->
@@ -551,6 +620,7 @@
             if (name === 'fiscalizacao') { ptInitAFDControls(); ptLoadAudit(); }
             if (name === 'holerite') ptInitHoleriteControls();
             if (name === 'banco') ptLoadBanco();
+            if (name === 'config') ptCarregarConfigCLT();
         }
 
         // ========== HOLERITE ADMIN ==========
@@ -1148,6 +1218,51 @@
             document.getElementById('ptJornadaModal').remove();
             ptLoadHoje();
             if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
+        };
+
+        // ============================================
+        // ⚙️ CONFIG CLT — tratamento intervalo suprimido
+        // ============================================
+        // Salva na franquia overtimeBankConfig.tratamento_intervalo_suprimido
+        // (campo lido por TimeClock.computeDay via OvertimeBank.getConfig).
+        function ptCarregarConfigCLT() {
+            try {
+                var cfg = OvertimeBank.getConfig(franchiseId);
+                var atual = cfg.tratamento_intervalo_suprimido || 'hora_extra';
+                document.querySelectorAll('input[name="tratamentoIntervalo"]').forEach(function(r) {
+                    r.checked = (r.value === atual);
+                });
+                // Highlight visual no card selecionado
+                ['HE','BH','DS'].forEach(function(k, i) {
+                    var op = ['hora_extra','banco_horas','desativado'][i];
+                    var card = document.getElementById('opt' + k);
+                    if (card) card.style.borderColor = (atual === op) ? (op === 'hora_extra' ? '#16A34A' : (op === 'banco_horas' ? '#F59E0B' : '#DC2626')) : '#E5E7EB';
+                });
+            } catch (e) { console.warn('config CLT load:', e.message); }
+        }
+        window.ptSalvarConfigCLT = function() {
+            var v = document.querySelector('input[name="tratamentoIntervalo"]:checked');
+            if (!v) { alert('Selecione uma opção'); return; }
+            var escolha = v.value;
+            if (escolha === 'desativado') {
+                if (!confirm('⚠⚠ ATENÇÃO LEGAL: você está optando por NÃO computar o intervalo suprimido.\n\nIsso pode gerar AÇÃO TRABALHISTA do funcionário cobrando retroativo + juros + multa.\n\nTem certeza absoluta?')) return;
+            }
+            if (escolha === 'banco_horas') {
+                if (!confirm('📋 Lembrete legal: tratar intervalo suprimido como banco de horas exige acordo escrito (CCT do sindicato OU aditivo individual assinado).\n\nVocê tem esse documento guardado?')) return;
+            }
+            // Salva na config da franquia (OvertimeBank.saveConfig faz merge)
+            try {
+                var cfg = OvertimeBank.getConfig(franchiseId);
+                cfg.tratamento_intervalo_suprimido = escolha;
+                OvertimeBank.saveConfig(franchiseId, cfg);
+                document.getElementById('ptConfigCLTStatus').innerHTML = '<span style="color:#16A34A;font-weight:700">✓ Configuração salva. A partir do próximo registro de ponto, esse tratamento será aplicado.</span>';
+                ptCarregarConfigCLT();
+                // Recarrega Hoje pra refletir nova logica
+                ptLoadHoje();
+                if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
+            } catch (e) {
+                document.getElementById('ptConfigCLTStatus').innerHTML = '<span style="color:#DC2626">Erro ao salvar: ' + escapeHtml(e.message) + '</span>';
+            }
         };
 
         // ============================================

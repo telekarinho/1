@@ -38,7 +38,15 @@
         ovetimeOnSunday:           false,    // permitir horas extras em domingo
         overtimeOnHoliday:         false,    // permitir em feriado nacional
         notifyEmployeeAtThreshold: 80,       // notifica funcionario quando atingir X% do limite
-        forbidExtraIfBankFull:     true      // bloqueia extras se banco ja esta no maximo
+        forbidExtraIfBankFull:     true,     // bloqueia extras se banco ja esta no maximo
+
+        // ===== INTERVALO INTRAJORNADA SUPRIMIDO (CLT art. 71 §4º Reforma 2017) =====
+        // Quando funcionario nao tira (ou tira menos) intervalo de almoço/janta combinado,
+        // a empresa DEVE pagar o periodo suprimido +50% como verba indenizatoria (dinheiro).
+        // Trocar isso por banco de horas exige acordo coletivo OU individual ESCRITO
+        // (CCT do sindicato OU aditivo contratual assinado). Sem isso, fiscalizacao MTE pode multar.
+        // Opcoes: 'hora_extra' (default - paga em folha como hora extra) | 'banco_horas' (com aviso de risco) | 'desativado' (admin assume risco)
+        tratamento_intervalo_suprimido: 'hora_extra'
     };
 
     function nowIso() { return new Date().toISOString(); }

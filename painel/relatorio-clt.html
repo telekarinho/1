@@ -173,7 +173,7 @@
     html += '<div class="rc-section">';
     html += '<h3>📅 Espelho Mensal Detalhado</h3>';
     html += '<div style="overflow-x:auto"><table class="rc-table">';
-    html += '<thead><tr><th>Dia</th><th>Sem</th><th>Jornada Prevista</th><th>Entrada</th><th>Almoço</th><th>Volta</th><th>Saída</th><th>Trabalhado</th><th>Saldo Banco</th><th>Extras</th><th>Atraso</th><th>Noturno</th><th>Justific.</th></tr></thead><tbody>';
+    html += '<thead><tr><th>Dia</th><th>Sem</th><th>Jornada Prevista</th><th>Entrada</th><th>Almoço</th><th>Volta</th><th>Saída</th><th>Trabalhado</th><th>Saldo Banco</th><th>Extras</th><th>☕ Interv.Supr.</th><th>Atraso</th><th>Noturno</th><th>Justific.</th></tr></thead><tbody>';
     espelho.days.forEach(d => {
       var rowClass = '';
       if (d.isHoliday) rowClass = 'holiday';
@@ -191,9 +191,9 @@
       else if (jeff && jeff.source === 'domingo') jBadge = ' <span class="pill amber">📿</span>';
       html += '<td>' + jPrev + jBadge + '</td>';
       if (d.isFolga && d.records.length === 0) {
-        html += '<td colspan="9" style="text-align:center;font-style:italic;color:#9CA3AF">FOLGA</td>';
+        html += '<td colspan="10" style="text-align:center;font-style:italic;color:#9CA3AF">FOLGA</td>';
       } else if (d.isFalta) {
-        html += '<td colspan="9" style="text-align:center;color:#991B1B;font-weight:700">FALTA' + (d.justificativa ? ' (' + esc(d.justificativa.type) + ')' : ' s/ justific.') + '</td>';
+        html += '<td colspan="10" style="text-align:center;color:#991B1B;font-weight:700">FALTA' + (d.justificativa ? ' (' + esc(d.justificativa.type) + ')' : ' s/ justific.') + '</td>';
       } else {
         html += '<td>' + (d.entrada ? Utils.formatTime(d.entrada.timestamp) : '-') + '</td>';
         html += '<td>' + (d.almocoSaida ? Utils.formatTime(d.almocoSaida.timestamp) : '-') + '</td>';
@@ -207,6 +207,16 @@
           html += '<td style="color:' + col + ';font-weight:700">' + sgn + m2t(Math.abs(d.saldoDiaMin)) + '</td>';
         } else { html += '<td>-</td>'; }
         html += '<td>' + (d.minutosExtras ? m2t(d.minutosExtras) : '-') + '</td>';
+        // Intervalo suprimido (CLT art. 71 §4º)
+        if (d.intervaloSuprimidoMin && d.intervaloSuprimidoMin > 0) {
+          var trat = d.intervaloSuprimidoTratamento || 'hora_extra';
+          var tratIco = trat === 'banco_horas' ? '🏦' : (trat === 'desativado' ? '⚠' : '💰');
+          var tratColor = trat === 'desativado' ? '#9CA3AF' : '#D97706';
+          var adicMin = d.intervaloSuprimidoComAdicional || Math.round(d.intervaloSuprimidoMin * 1.5);
+          html += '<td style="color:' + tratColor + ';font-weight:600" title="Suprimido: ' + m2t(d.intervaloSuprimidoMin) + ' · com +50%: ' + m2t(adicMin) + ' · tratamento: ' + trat + '">' + tratIco + ' ' + m2t(d.intervaloSuprimidoMin) + '<br><small style="font-weight:400">(+50%=' + m2t(adicMin) + ')</small></td>';
+        } else {
+          html += '<td>-</td>';
+        }
         html += '<td>' + (d.minutosAtraso ? m2t(d.minutosAtraso) : '-') + '</td>';
         html += '<td>' + (d.minutosNoturnos ? m2t(d.minutosNoturnos) : '-') + '</td>';
         html += '<td>' + (d.justificativa ? '<span class="pill blue" title="' + esc(d.justificativa.reason) + '">' + esc(d.justificativa.type) + '</span>' : '-') + '</td>';
@@ -214,18 +224,29 @@
       html += '</tr>';
     });
     html += '</tbody></table></div>';
-    html += '<div style="font-size:.72rem;color:#6B7280;margin-top:8px">📅=ajuste pontual · 🎉=feriado · 📿=domingo · saldo=trabalhado - jornada prevista (vai pro banco se +)</div>';
+    html += '<div style="font-size:.72rem;color:#6B7280;margin-top:8px">📅=ajuste pontual · 🎉=feriado · 📿=domingo · saldo=trabalhado - jornada prevista (vai pro banco se +) · ☕ Interv.Supr.=intervalo de almoço/janta suprimido (💰=paga como hora extra +50% · 🏦=vai pro banco de horas · ⚠=tratamento desativado)</div>';
     html += '</div>';
 
     // OBSERVAÇÕES LEGAIS
     html += '<div class="rc-section">';
     html += '<h3>📜 Conformidade & Observações</h3>';
     var avisos = espelho.days.filter(d => d.avisoIntervalo).length;
+    // Totaliza intervalo suprimido
+    var totalSupMin = espelho.days.reduce(function(a,d){ return a + (d.intervaloSuprimidoMin || 0); }, 0);
+    var totalSupAdicMin = espelho.days.reduce(function(a,d){ return a + (d.intervaloSuprimidoComAdicional || 0); }, 0);
+    var diasSup = espelho.days.filter(function(d){ return d.intervaloSuprimidoMin && d.intervaloSuprimidoMin > 0; }).length;
+    var tratGeral = (espelho.days.find(function(d){ return d.intervaloSuprimidoTratamento; }) || {}).intervaloSuprimidoTratamento || 'hora_extra';
+    var tratGeralLbl = tratGeral === 'banco_horas' ? '🏦 Banco de horas (exige acordo escrito CCT ou aditivo)' : (tratGeral === 'desativado' ? '⚠ Desativado (risco fiscalizatório MTE — admin assumiu responsabilidade)' : '💰 Hora extra +50% em folha (CLT art. 71 §4º — recomendado)');
     html += '<ul style="font-size:.85rem;line-height:1.8;padding-left:20px;color:#374151">';
-    html += '<li><b>NSR (Número Sequencial de Registro):</b> ' + (espelho.days.reduce((a,d) => a + (d.records ? d.records.length : 0), 0)) + ' marcações registradas com hash SHA-256 imutável</li>';
-    html += '<li><b>Intervalo intrajornada (art. 71):</b> ' + (avisos > 0 ? '⚠ ' + avisos + ' dia(s) com intervalo menor que 1h' : '✓ Todos os dias com intervalo correto') + '</li>';
-    html += '<li><b>Carga máxima (art. 7º XIII):</b> ' + (espelho.totals.bancoHorasMin > 60 * 220 ? '⚠ Banco horas excede limite anual de 6 meses' : '✓ Dentro do limite') + '</li>';
-    html += '<li><b>Adicional noturno (art. 73):</b> ' + (espelho.totaisFormatado.noturno) + ' computado conforme jornada 22h-5h, +20% sobre hora normal</li>';
+    html += '<li><b>NSR (Número Sequencial de Registro):</b> ' + (espelho.days.reduce((a,d) => a + (d.records ? d.records.length : 0), 0)) + ' marcações registradas com hash SHA-256 imutável (Portaria MTE 671/2021)</li>';
+    html += '<li><b>Intervalo intrajornada (CLT art. 71):</b> ' + (avisos > 0 ? '⚠ ' + avisos + ' dia(s) com intervalo menor que 1h' : '✓ Todos os dias com intervalo correto') + '</li>';
+    if (totalSupMin > 0) {
+      html += '<li><b>☕ Intervalo suprimido (CLT art. 71 §4º — Reforma 2017):</b> ' + diasSup + ' dia(s) com supressão, total <b>' + m2t(totalSupMin) + '</b> · com adicional +50%: <b>' + m2t(totalSupAdicMin) + '</b> · tratamento configurado: ' + tratGeralLbl + '</li>';
+    } else {
+      html += '<li><b>☕ Intervalo suprimido (CLT art. 71 §4º):</b> ✓ Nenhuma supressão de intervalo no período</li>';
+    }
+    html += '<li><b>Carga máxima (CLT art. 7º XIII):</b> ' + (espelho.totals.bancoHorasMin > 60 * 220 ? '⚠ Banco horas excede limite anual de 6 meses' : '✓ Dentro do limite') + '</li>';
+    html += '<li><b>Adicional noturno (CLT art. 73):</b> ' + (espelho.totaisFormatado.noturno) + ' computado conforme jornada 22h-5h, +20% sobre hora normal</li>';
     html += '<li><b>Faltas:</b> ' + espelho.totals.faltas + ' sem justificativa (passível desconto DSR conforme Lei 605/49)</li>';
     html += '</ul>';
     html += '</div>';
