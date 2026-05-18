@@ -2,6 +2,45 @@
 
 ---
 
+## Ciclo #258 — 2026-05-18
+
+**Área:** Conversão — Plaquinha de Balcão · UGC Foto Reward (PDV físico)
+
+**Contexto:** Mecânica UGC foto reward prescrita desde ciclo #226 (32 ciclos pendente). O arquivo `whatsapp-ugc-foto-reward.md` (Ciclo #235) cobre script verbal + templates WA, mas faltava o **material físico para o balcão** — o convite visual que funciona sem depender do atendente falar. Este ciclo cria esse artefato.
+
+**O que pesquisou/analisou:**
+- Releu `whatsapp-ugc-foto-reward.md` — confirmou que WA side está completo
+- Releu `ugc-compartilhe-potinho.md` — versão genérica da inauguração (sem reward pontos específico)
+- Releu `conversao-upsell-pdv-15carimbos.md` — contexto PDV scripts existentes
+- Identificou gap: sem plaquinha permanente para o reward +5 pontos → script verbal depende de turno/pessoa/memória
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/pdv-ugc-foto-reward-placinha-balcao.md` | Novo arquivo: 3 versões de plaquinha (A5 padrão, A6 compacto, Namorados +10pts DUO), fluxo completo cliente→UGC→reward, posicionamento físico, instruções impressão Canva/gráfica/casa, checklist ativação, tabela comparativa script vs. plaquinha |
+
+**Destaques:**
+1. **Versão Namorados embutida** (09–12/06): trocar plaquinha padrão pela variante "+10 pontos DUO" — instrução clara com data de troca/retorno
+2. **3 níveis de impressão:** Canva (resultado visual) · gráfica R$3–8 (durável) · impressora doméstica (mínimo viável) — operador escolhe conforme urgência
+3. **QR code para WA** como CTA principal — consistente com funil próprio sem iFood
+4. **Checklist 5 itens** para ativação imediata — zero dependência de naming/ingrediente (ao contrário do Potinho Junino)
+
+**Commit:** `fe0181e`
+
+**Próximo passo sugerido:**
+- **Ciclo #259 — UX:** Auditar lógica banner 26/05–12/06 — garantir que preview/VIP/Véspera não colapsam em telas pequenas (prescrito ciclo #254)
+- **Ciclo #260 — Concorrentes:** MilkyMoo — atualizar com promoções Namorados (last update ciclo #219)
+- **Ciclo #261 — Conteúdo:** Reel "bastidores de montagem" 10/06 (véspera Namorados) — prescrito ciclo #257 como `reel-10jun-montagem-ao-vivo-bastidores.md` (verificar se existe)
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (imediato):** Imprimir e plastificar `pdv-ugc-foto-reward-placinha-balcao.md` — sem dependência de terceiros ✅
+- **Operador (09/06):** Trocar plaquinha padrão → variante Namorados (+10 pts DUO)
+
+_Belinha — Ciclo #258 | 2026-05-18_
+
+---
+
 ## Ciclo #255 — 2026-05-18
 
 **Área:** Conteúdo — Stories comparação implícita Duo vs. "copo compartilhado" (contra-posicionamento JohnnyJoy sem citar concorrente)
