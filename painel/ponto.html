@@ -220,6 +220,7 @@
             <a href="ponto.html" class="sidebar-link active"><span class="icon">⏰</span> Ponto Eletronico</a>
             <a href="colaboradores-hub.html" class="sidebar-link"><span class="icon">📨</span> Solicitações & Avisos</a>
             <a href="relatorio-clt.html" class="sidebar-link"><span class="icon">📊</span> Relatório CLT</a>
+            <a href="folha.html" class="sidebar-link"><span class="icon">💰</span> Folha (Holerite/Férias/13º/FGTS/eSocial)</a>
             <div class="sidebar-nav-group">Config</div>
             <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
         </nav>
@@ -462,14 +463,47 @@
                         <div id="ptConfigCLTStatus" style="margin-top:10px;font-size:.82rem"></div>
                     </div>
 
-                    <!-- 📋 ACORDOS DOCUMENTADOS -->
-                    <div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:14px 18px;border-radius:10px;font-size:.85rem;color:#92400E;line-height:1.6">
-                        <strong>📋 Lembrete legal:</strong> se você escolher "banco de horas", guarde sempre:
-                        <ol style="margin:6px 0 0;padding-left:22px">
-                            <li>Cópia assinada do aditivo contratual com cada funcionário (ou CCT do sindicato)</li>
-                            <li>Espelho mensal de ponto entregue ao trabalhador (CLT art. 74)</li>
-                            <li>Relatório do contador com o histórico completo de compensações</li>
-                        </ol>
+                    <!-- 📄 CCT / ADITIVOS — Upload de documentos -->
+                    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:18px 22px;margin-bottom:14px">
+                        <h3 style="margin:0 0 6px;color:#2D1747;font-family:'Baloo 2',cursive">📄 Documentos CCT & Aditivos</h3>
+                        <p style="margin:0 0 12px;color:#6B7280;font-size:.85rem">
+                            Faça upload da <b>Convenção Coletiva (CCT)</b> do sindicato OU dos
+                            <b>aditivos individuais</b> assinados. Obrigatório se você usa banco de horas
+                            ou tratamento "banco_horas" no intervalo suprimido (CLT 59 §6, CLT 71 §4º).
+                        </p>
+                        <div id="cctComplianceStatus" style="margin-bottom:12px"></div>
+                        <div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:12px">
+                            <select id="cctTipo" class="pt-input"><option value="cct">CCT do sindicato</option><option value="aditivo_individual">Aditivo individual ao contrato</option></select>
+                            <input type="text" id="cctSindicato" class="pt-input" placeholder="Sindicato ou nome funcionário">
+                            <input type="date" id="cctVigIni" class="pt-input" placeholder="Vigência início">
+                            <input type="date" id="cctVigFim" class="pt-input" placeholder="Vigência fim (opcional)">
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                            <input type="file" id="cctFile" accept=".pdf,.jpg,.png" style="flex:1">
+                            <input type="text" id="cctLink" class="pt-input" placeholder="OU link externo (Drive, Dropbox...)" style="flex:1">
+                            <button class="btn-primary" onclick="ptCCTUpload()">📤 Cadastrar</button>
+                        </div>
+                        <div id="cctDocsList"></div>
+                    </div>
+
+                    <!-- ⏰ ALERTAS DE VENCIMENTO BANCO HORAS -->
+                    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:18px 22px;margin-bottom:14px">
+                        <h3 style="margin:0 0 6px;color:#2D1747;font-family:'Baloo 2',cursive">⏰ Alertas de vencimento — Banco de Horas</h3>
+                        <p style="margin:0 0 12px;color:#6B7280;font-size:.85rem">
+                            <b>CLT 59 §5 (individual = 6m) e §6 (coletivo = 12m):</b> saldos não compensados
+                            no prazo DEVEM ser pagos em folha. Aqui ficam os avisos do que está pra vencer.
+                        </p>
+                        <div id="bancoExpAlerts"><span style="color:#9CA3AF">Carregando...</span></div>
+                    </div>
+
+                    <!-- 📋 CATÁLOGO CLT 473 -->
+                    <div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:18px 22px">
+                        <h3 style="margin:0 0 6px;color:#2D1747;font-family:'Baloo 2',cursive">📋 Catálogo de Faltas Justificadas (CLT 473)</h3>
+                        <p style="margin:0 0 12px;color:#6B7280;font-size:.85rem">
+                            Faltas que <b>NÃO podem ser descontadas</b> do salário nem do DSR. Use estes
+                            tipos ao registrar justificativas. Sistema valida limites anuais automaticamente.
+                        </p>
+                        <div id="clt473List"></div>
                     </div>
                 </div>
 
@@ -591,6 +625,8 @@
     <script src="../js/core/auth.js"></script>
     <script src="../js/core/audit.js"></script>
     <script src="../js/core/time-clock.js"></script>
+    <script src="../js/core/overtime-bank.js"></script>
+    <script src="../js/core/clt-compliance.js"></script>
     <script src="../js/core/staff-benefits.js"></script>
     <script src="../js/core/payroll.js"></script>
 
@@ -1248,7 +1284,20 @@
                 if (!confirm('⚠⚠ ATENÇÃO LEGAL: você está optando por NÃO computar o intervalo suprimido.\n\nIsso pode gerar AÇÃO TRABALHISTA do funcionário cobrando retroativo + juros + multa.\n\nTem certeza absoluta?')) return;
             }
             if (escolha === 'banco_horas') {
-                if (!confirm('📋 Lembrete legal: tratar intervalo suprimido como banco de horas exige acordo escrito (CCT do sindicato OU aditivo individual assinado).\n\nVocê tem esse documento guardado?')) return;
+                // CCT obrigatorio — bloqueia se nao tiver documento valido
+                if (typeof CLTCompliance !== 'undefined') {
+                    var ativo = CLTCompliance.getActiveCCT(franchiseId);
+                    if (!ativo) {
+                        alert('🚨 BLOQUEADO: para tratar intervalo suprimido como banco de horas você PRECISA ter uma CCT do sindicato OU aditivo individual cadastrado.\n\nVá em "📄 Documentos CCT" abaixo e faça upload do PDF assinado antes de prosseguir.');
+                        return;
+                    }
+                    var hoje = new Date().toISOString().slice(0,10);
+                    if (ativo.vigenciaFim && ativo.vigenciaFim < hoje) {
+                        alert('🚨 BLOQUEADO: o documento CCT cadastrado ("' + (ativo.sindicato || ativo.fileName) + '") venceu em ' + ativo.vigenciaFim + '.\n\nFaça upload da CCT renovada antes de salvar esta configuração.');
+                        return;
+                    }
+                }
+                if (!confirm('📋 Lembrete legal: tratar intervalo suprimido como banco de horas exige acordo escrito (CCT do sindicato OU aditivo individual assinado).\n\nDocumento ativo encontrado. Confirma a configuração?')) return;
             }
             // Salva na config da franquia (OvertimeBank.saveConfig faz merge)
             try {
@@ -1263,6 +1312,157 @@
             } catch (e) {
                 document.getElementById('ptConfigCLTStatus').innerHTML = '<span style="color:#DC2626">Erro ao salvar: ' + escapeHtml(e.message) + '</span>';
             }
+        };
+
+        // ============================================
+        // 📄 CCT — UPLOAD / LIST / DELETE
+        // ============================================
+        function ptCarregarCCTPanel() {
+            if (typeof CLTCompliance === 'undefined') return;
+            // Status
+            try {
+                var check = CLTCompliance.checkCCTCompliance(franchiseId);
+                var box = document.getElementById('cctComplianceStatus');
+                if (box) {
+                    var bg = check.compliant ? '#D1FAE5' : '#FEE2E2';
+                    var col = check.compliant ? '#065F46' : '#991B1B';
+                    box.innerHTML = '<div style="background:' + bg + ';color:' + col + ';padding:10px 14px;border-radius:8px;font-size:.85rem"><b>' + (check.compliant ? '✓' : '⚠') + '</b> ' + escapeHtml(check.message) + (check.suggestion ? '<br><small>' + escapeHtml(check.suggestion) + '</small>' : '') + '</div>';
+                }
+            } catch (e) {}
+            // List docs
+            try {
+                var docs = CLTCompliance.listCCTDocs(franchiseId);
+                var list = document.getElementById('cctDocsList');
+                if (!list) return;
+                if (!docs.length) {
+                    list.innerHTML = '<div style="color:#9CA3AF;font-size:.85rem;font-style:italic">Nenhum documento cadastrado ainda.</div>';
+                    return;
+                }
+                list.innerHTML = '<table class="pt-table" style="margin-top:8px"><thead><tr><th>Tipo</th><th>Sindicato/Funcionário</th><th>Vigência</th><th>Arquivo</th><th>Status</th><th></th></tr></thead><tbody>' +
+                    docs.map(function(d) {
+                        var hoje = new Date().toISOString().slice(0,10);
+                        var ativo = (!d.vigenciaFim || d.vigenciaFim >= hoje) && (!d.vigenciaInicio || d.vigenciaInicio <= hoje);
+                        var statusCol = ativo ? '#16A34A' : '#DC2626';
+                        var statusLbl = ativo ? '✓ Vigente' : '✗ Expirado/Pendente';
+                        var arq = d.fileDataUrl
+                            ? '<a href="' + d.fileDataUrl + '" target="_blank" download="' + escapeHtml(d.fileName || 'cct.pdf') + '">📎 ' + escapeHtml(d.fileName || 'arquivo') + '</a>'
+                            : (d.linkExterno ? '<a href="' + escapeHtml(d.linkExterno) + '" target="_blank">🔗 Link externo</a>' : '-');
+                        return '<tr>' +
+                            '<td>' + (d.tipo === 'cct' ? 'CCT' : 'Aditivo Indiv.') + '</td>' +
+                            '<td>' + escapeHtml(d.sindicato || '-') + '</td>' +
+                            '<td>' + (d.vigenciaInicio || '?') + ' → ' + (d.vigenciaFim || '∞') + '</td>' +
+                            '<td>' + arq + '</td>' +
+                            '<td style="color:' + statusCol + ';font-weight:700">' + statusLbl + '</td>' +
+                            '<td><button class="btn-secondary" onclick="ptCCTDelete(\'' + d.id + '\')">🗑️</button></td>' +
+                            '</tr>';
+                    }).join('') + '</tbody></table>';
+            } catch (e) { console.warn('cct list:', e.message); }
+        }
+
+        window.ptCCTUpload = function() {
+            var tipo = document.getElementById('cctTipo').value;
+            var sindicato = document.getElementById('cctSindicato').value.trim();
+            var vIni = document.getElementById('cctVigIni').value;
+            var vFim = document.getElementById('cctVigFim').value;
+            var file = document.getElementById('cctFile').files[0];
+            var link = document.getElementById('cctLink').value.trim();
+            if (!sindicato) { alert('Preencha o sindicato ou nome do funcionário'); return; }
+            if (!file && !link) { alert('Anexe um PDF/imagem OU informe um link externo'); return; }
+            var save = function(dataUrl, fileName) {
+                CLTCompliance.saveCCTDoc(franchiseId, {
+                    tipo: tipo,
+                    sindicato: sindicato,
+                    vigenciaInicio: vIni || null,
+                    vigenciaFim: vFim || null,
+                    fileDataUrl: dataUrl || null,
+                    fileName: fileName || null,
+                    linkExterno: link || null
+                });
+                document.getElementById('cctSindicato').value = '';
+                document.getElementById('cctVigIni').value = '';
+                document.getElementById('cctVigFim').value = '';
+                document.getElementById('cctFile').value = '';
+                document.getElementById('cctLink').value = '';
+                ptCarregarCCTPanel();
+                ptCarregarConfigCLT();
+            };
+            if (file) {
+                // Limite 2MB pra DataURL nao explodir
+                if (file.size > 2 * 1024 * 1024) {
+                    if (!confirm('Arquivo grande (' + (file.size/1024/1024).toFixed(1) + 'MB). Recomendado usar link externo. Continuar mesmo assim?')) return;
+                }
+                var fr = new FileReader();
+                fr.onload = function(e) { save(e.target.result, file.name); };
+                fr.readAsDataURL(file);
+            } else {
+                save(null, null);
+            }
+        };
+
+        window.ptCCTDelete = function(docId) {
+            if (!confirm('Remover este documento? Essa ação não pode ser desfeita.')) return;
+            CLTCompliance.deleteCCTDoc(franchiseId, docId);
+            ptCarregarCCTPanel();
+            ptCarregarConfigCLT();
+        };
+
+        // ============================================
+        // ⏰ ALERTAS VENCIMENTO BANCO HORAS
+        // ============================================
+        function ptCarregarBancoExpAlerts() {
+            if (typeof CLTCompliance === 'undefined') return;
+            try {
+                var alerts = CLTCompliance.getAllBankExpirationAlerts(franchiseId);
+                var box = document.getElementById('bancoExpAlerts');
+                if (!box) return;
+                if (!alerts.length) {
+                    box.innerHTML = '<div style="background:#D1FAE5;color:#065F46;padding:10px 14px;border-radius:8px;font-size:.85rem">✓ Nenhum saldo de banco de horas a vencer nos próximos 30 dias.</div>';
+                    return;
+                }
+                // Agrupa por severidade
+                var sevOrder = { expired: 0, critical: 1, high: 2, medium: 3, low: 4 };
+                var sevColor = { expired: '#7F1D1D', critical: '#DC2626', high: '#D97706', medium: '#CA8A04', low: '#16A34A' };
+                var sevLabel = { expired: '🚨 VENCIDO', critical: '⚠ Crítico', high: '⚠ Alto', medium: 'Médio', low: 'Baixo' };
+                alerts.sort(function(a,b) { return sevOrder[a.severidade] - sevOrder[b.severidade]; });
+                box.innerHTML = '<table class="pt-table"><thead><tr><th>Funcionário</th><th>Data depósito</th><th>Saldo</th><th>Vence em</th><th>Severidade</th><th>Ação</th></tr></thead><tbody>' +
+                    alerts.slice(0, 50).map(function(a) {
+                        return '<tr>' +
+                            '<td>' + escapeHtml(a.staffName) + '</td>' +
+                            '<td>' + a.date + '</td>' +
+                            '<td><b>' + Math.floor(a.minutos/60) + 'h ' + (a.minutos%60) + 'min</b></td>' +
+                            '<td>' + a.vencimentoEm + ' (' + (a.diasParaVencer >= 0 ? 'em ' + a.diasParaVencer + 'd' : Math.abs(a.diasParaVencer) + 'd atrás') + ')</td>' +
+                            '<td style="color:' + sevColor[a.severidade] + ';font-weight:700">' + sevLabel[a.severidade] + '</td>' +
+                            '<td><small>' + a.acao.replace(/_/g,' ') + '</small></td>' +
+                            '</tr>';
+                    }).join('') + '</tbody></table>' +
+                    (alerts.length > 50 ? '<div style="color:#9CA3AF;font-size:.75rem;margin-top:6px">+' + (alerts.length - 50) + ' alertas adicionais não exibidos</div>' : '');
+            } catch (e) { console.warn('banco exp:', e.message); }
+        }
+
+        // ============================================
+        // 📋 CATÁLOGO CLT 473
+        // ============================================
+        function ptCarregarCLT473() {
+            if (typeof CLTCompliance === 'undefined') return;
+            var tipos = CLTCompliance.listCLT473Tipos();
+            var box = document.getElementById('clt473List');
+            if (!box) return;
+            box.innerHTML = '<table class="pt-table" style="font-size:.82rem"><thead><tr><th>Tipo</th><th>Dias</th><th>Base legal</th><th>Comprovante</th></tr></thead><tbody>' +
+                tipos.map(function(t) {
+                    var dias = t.dias > 0 ? t.dias + ' dia(s)' : 'Variável';
+                    var max = t.maxPorAno ? ' <small style="color:#D97706">(max ' + t.maxPorAno + 'x/ano)</small>' : '';
+                    var obs = t.obs ? '<br><small style="color:#6B7280">' + escapeHtml(t.obs) + '</small>' : '';
+                    return '<tr><td><b>' + escapeHtml(t.label) + '</b>' + max + obs + '</td><td>' + dias + '</td><td><small>' + escapeHtml(t.base) + '</small></td><td><small>' + escapeHtml(t.comprovante) + '</small></td></tr>';
+                }).join('') + '</tbody></table>';
+        }
+
+        // Hook no switchTab: quando entrar na aba config, carrega tudo
+        var _origCarregarConfigCLT = ptCarregarConfigCLT;
+        ptCarregarConfigCLT = function() {
+            _origCarregarConfigCLT();
+            ptCarregarCCTPanel();
+            ptCarregarBancoExpAlerts();
+            ptCarregarCLT473();
         };
 
         // ============================================

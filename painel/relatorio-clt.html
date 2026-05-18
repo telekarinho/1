@@ -247,7 +247,17 @@
     }
     html += '<li><b>Carga máxima (CLT art. 7º XIII):</b> ' + (espelho.totals.bancoHorasMin > 60 * 220 ? '⚠ Banco horas excede limite anual de 6 meses' : '✓ Dentro do limite') + '</li>';
     html += '<li><b>Adicional noturno (CLT art. 73):</b> ' + (espelho.totaisFormatado.noturno) + ' computado conforme jornada 22h-5h, +20% sobre hora normal</li>';
-    html += '<li><b>Faltas:</b> ' + espelho.totals.faltas + ' sem justificativa (passível desconto DSR conforme Lei 605/49)</li>';
+    html += '<li><b>Faltas:</b> ' + espelho.totals.faltas + ' sem justificativa</li>';
+    // 📅 DSR perdidos (Lei 605/49) — domingos descontados por falta na semana
+    if (espelho.totals.dsrPerdidos > 0) {
+      html += '<li><b>📅 DSR perdidos (Lei 605/49):</b> <span style="color:#DC2626;font-weight:700">' + espelho.totals.dsrPerdidos + ' domingo(s)</span> a descontar na folha — datas: ' + esc(espelho.totals.dsrPerdidosDatas.join(', ')) + '</li>';
+    } else {
+      html += '<li><b>📅 DSR (Lei 605/49):</b> ✓ Nenhum domingo a descontar</li>';
+    }
+    // 🚨 Domingo/feriado trabalhado sem folga compensatoria em 7d (CLT 67)
+    if (espelho.totals.domTrabSemFolgaComp && espelho.totals.domTrabSemFolgaComp.length > 0) {
+      html += '<li><b>🚨 Folga compensatória pendente (CLT 67):</b> <span style="color:#D97706;font-weight:700">' + espelho.totals.domTrabSemFolgaComp.length + ' dia(s)</span> de domingo/feriado trabalhados sem folga em 7 dias — risco trabalhista, programar folga ASAP</li>';
+    }
     html += '</ul>';
     html += '</div>';
 

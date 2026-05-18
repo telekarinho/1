@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>💰 Folha de Pagamento — MilkyPot</title>
+  <link rel="stylesheet" href="../css/style.css?v=mp-v288">
+  <link rel="stylesheet" href="../css/shared-panel.css?v=mp-v288">
+  <style>
+    .folha-tab { padding: 10px 18px; border:none; background:transparent; cursor:pointer; border-bottom:3px solid transparent; font-weight:700; color:#6B7280; font-family:'Baloo 2',cursive; }
+    .folha-tab.active { color:#2D1747; border-bottom-color:#7C3AED; }
+    .folha-panel { display:none; padding:18px 0; }
+    .folha-panel.active { display:block; }
+    .kpi-grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-bottom:20px; }
+    .kpi-card { background:#fff; border:1px solid #E5E7EB; border-radius:14px; padding:16px; }
+    .kpi-num { font-size:1.6rem; font-weight:800; color:#2D1747; font-family:'Baloo 2',cursive; }
+    .kpi-lbl { font-size:.78rem; color:#6B7280; text-transform:uppercase; letter-spacing:.5px; }
+    table.folha-table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+    table.folha-table th, table.folha-table td { padding:8px 12px; text-align:left; border-bottom:1px solid #F3F4F6; font-size:.85rem; }
+    table.folha-table th { background:#F9FAFB; font-weight:700; color:#374151; }
+    .badge-status { padding:3px 8px; border-radius:99px; font-size:.7rem; font-weight:700; display:inline-block; }
+    .badge-status.dispon { background:#D1FAE5; color:#065F46; }
+    .badge-status.venc60 { background:#FEF3C7; color:#92400E; }
+    .badge-status.vencido { background:#FEE2E2; color:#991B1B; }
+    .badge-status.andamento { background:#DBEAFE; color:#1E40AF; }
+  </style>
+</head>
+<body>
+  <div class="shared-panel">
+    <header class="sp-header">
+      <h1 style="margin:0;font-family:'Baloo 2',cursive">💰 Folha de Pagamento & Encargos</h1>
+      <p style="margin:4px 0 0;color:#6B7280;font-size:.9rem">Holerites · Férias · 13º salário · FGTS · Rescisão · Compliance CLT 100%</p>
+    </header>
+
+    <div style="background:#fff;border-radius:14px;padding:18px;margin-top:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+      <div style="display:flex;gap:0;border-bottom:1px solid #E5E7EB;overflow-x:auto">
+        <button class="folha-tab active" onclick="folhaTab('holerite', this)">💵 Holerite Mensal</button>
+        <button class="folha-tab" onclick="folhaTab('ferias', this)">🏖 Férias</button>
+        <button class="folha-tab" onclick="folhaTab('decimo', this)">🎁 13º Salário</button>
+        <button class="folha-tab" onclick="folhaTab('fgts', this)">🏦 FGTS</button>
+        <button class="folha-tab" onclick="folhaTab('rescisao', this)">📋 Rescisão</button>
+        <button class="folha-tab" onclick="folhaTab('esocial', this)">📤 eSocial</button>
+      </div>
+
+      <!-- HOLERITE -->
+      <div class="folha-panel active" id="folha-holerite">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+          <select id="holStaff" class="pt-input" style="min-width:240px"></select>
+          <select id="holMes" class="pt-input"></select>
+          <select id="holAno" class="pt-input"></select>
+          <button class="btn-primary" onclick="folhaGerarHolerite()">🧾 Gerar holerite</button>
+          <button class="btn-secondary" onclick="folhaImprimirHolerite()">🖨️ Imprimir/PDF</button>
+          <button class="btn-secondary" onclick="folhaGerarLote()">📦 Gerar lote (todos funcionários)</button>
+        </div>
+        <div id="holContent"></div>
+      </div>
+
+      <!-- FÉRIAS -->
+      <div class="folha-panel" id="folha-ferias">
+        <div style="margin-bottom:14px">
+          <select id="ferStaff" class="pt-input" style="min-width:240px" onchange="folhaCarregarFerias()"></select>
+        </div>
+        <div id="ferContent"></div>
+      </div>
+
+      <!-- 13º -->
+      <div class="folha-panel" id="folha-decimo">
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <select id="dec13Ano" class="pt-input"></select>
+          <button class="btn-primary" onclick="folhaCalcular13o()">🎁 Calcular 13º (todos)</button>
+        </div>
+        <div id="dec13Content"></div>
+      </div>
+
+      <!-- FGTS -->
+      <div class="folha-panel" id="folha-fgts">
+        <button class="btn-primary" onclick="folhaCalcularFGTS()" style="margin-bottom:14px">🏦 Calcular saldo FGTS (todos)</button>
+        <div id="fgtsContent"></div>
+      </div>
+
+      <!-- RESCISÃO -->
+      <div class="folha-panel" id="folha-rescisao">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+          <select id="rescStaff" class="pt-input" style="min-width:240px"></select>
+          <select id="rescMotivo" class="pt-input">
+            <option value="dispensa_sem_justa_causa">Dispensa sem justa causa</option>
+            <option value="pedido_demissao">Pedido de demissão</option>
+            <option value="termino_contrato">Término contrato experiência</option>
+            <option value="justa_causa">Justa causa</option>
+          </select>
+          <input type="date" id="rescData" class="pt-input">
+          <button class="btn-primary" onclick="folhaCalcularRescisao()">📋 Calcular rescisão</button>
+        </div>
+        <div id="rescContent"></div>
+      </div>
+
+      <!-- ESOCIAL -->
+      <div class="folha-panel" id="folha-esocial">
+        <div style="background:#EDE9FE;border-left:4px solid #7C3AED;padding:14px;border-radius:10px;font-size:.85rem;color:#5B21B6;margin-bottom:16px">
+          <b>📤 eSocial:</b> sistema federal obrigatório para empresas (Decreto 8.373/2014). Os XMLs abaixo seguem o leiaute S-1.2 vigente.
+          Você assina com seu certificado digital A1/A3 e envia ao governo via <code>webservice.esocial.gov.br</code> ou pelo portal manual.
+        </div>
+        <div style="display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+          <button class="btn-primary" onclick="folhaESocial('S-1000')">📤 S-1000 (Informações do empregador)</button>
+          <button class="btn-primary" onclick="folhaESocial('S-1005')">📤 S-1005 (Estabelecimentos)</button>
+          <button class="btn-primary" onclick="folhaESocial('S-2200')">📤 S-2200 (Admissão funcionários)</button>
+          <button class="btn-primary" onclick="folhaESocial('S-1200')">📤 S-1200 (Remuneração mensal)</button>
+          <button class="btn-primary" onclick="folhaESocial('S-1210')">📤 S-1210 (Pagamentos)</button>
+          <button class="btn-primary" onclick="folhaESocial('S-2299')">📤 S-2299 (Desligamento)</button>
+        </div>
+        <div id="esocialContent" style="margin-top:18px"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="../js/core/constants.js?v=mp-v288"></script>
+  <script src="../js/core/utils.js?v=mp-v288"></script>
+  <script src="../js/core/datastore.js?v=mp-v288"></script>
+  <script src="../js/core/firebase-config.js?v=mp-v288"></script>
+  <script src="../js/core/auth.js?v=mp-v288"></script>
+  <script src="../js/core/time-clock.js?v=mp-v288"></script>
+  <script src="../js/core/overtime-bank.js?v=mp-v288"></script>
+  <script src="../js/core/clt-compliance.js?v=mp-v288"></script>
+  <script src="../js/core/payroll-compliance.js?v=mp-v288"></script>
+  <script src="../js/core/esocial-export.js?v=mp-v288"></script>
+  <script>
+    var franchiseId = null, currentHolerite = null;
+
+    function $(id) { return document.getElementById(id); }
+    function esc(s) { return Utils.escapeHtml(String(s == null ? '' : s)); }
+    function fmt(n) { return 'R$ ' + (Number(n) || 0).toFixed(2).replace('.', ','); }
+
+    function folhaTab(name, btn) {
+      document.querySelectorAll('.folha-tab').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      document.querySelectorAll('.folha-panel').forEach(function(p) { p.classList.remove('active'); });
+      $('folha-' + name).classList.add('active');
+    }
+
+    function initSelects() {
+      var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
+      var staffOpts = '<option value="">— Selecione —</option>' + staff.map(function(s) { return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join('');
+      ['holStaff', 'ferStaff', 'rescStaff'].forEach(function(id) { if ($(id)) $(id).innerHTML = staffOpts; });
+
+      var meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+      var hoje = new Date();
+      $('holMes').innerHTML = meses.map(function(m, i) { return '<option value="' + (i+1) + '"' + (i === hoje.getMonth() ? ' selected' : '') + '>' + m + '</option>'; }).join('');
+      var anoAtual = hoje.getFullYear();
+      var anoOpts = '';
+      for (var y = anoAtual; y >= anoAtual - 2; y--) anoOpts += '<option value="' + y + '">' + y + '</option>';
+      $('holAno').innerHTML = anoOpts;
+      $('dec13Ano').innerHTML = anoOpts;
+      $('rescData').value = hoje.toISOString().slice(0,10);
+    }
+
+    // ========== HOLERITE ==========
+    function folhaGerarHolerite() {
+      var sid = $('holStaff').value;
+      if (!sid) { alert('Selecione um funcionário'); return; }
+      try {
+        var hol = PayrollCompliance.gerarHolerite(franchiseId, sid, parseInt($('holAno').value, 10), parseInt($('holMes').value, 10));
+        currentHolerite = hol;
+        var franchise = (DataStore.getAllFranchises() || []).find(function(f) { return f.id === franchiseId; }) || {};
+        $('holContent').innerHTML = PayrollCompliance.holeriteHTML(hol, franchise);
+      } catch (e) {
+        $('holContent').innerHTML = '<div style="color:#DC2626;padding:14px">❌ Erro: ' + esc(e.message) + '</div>';
+      }
+    }
+
+    function folhaImprimirHolerite() {
+      if (!currentHolerite) { alert('Gere o holerite primeiro'); return; }
+      var franchise = (DataStore.getAllFranchises() || []).find(function(f) { return f.id === franchiseId; }) || {};
+      PayrollCompliance.imprimirHolerite(currentHolerite, franchise);
+    }
+
+    function folhaGerarLote() {
+      var ano = parseInt($('holAno').value, 10);
+      var mes = parseInt($('holMes').value, 10);
+      var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
+      var html = '<div style="display:flex;justify-content:space-between;margin-bottom:10px;align-items:center"><h3>📦 Lote — ' + mes + '/' + ano + ' (' + staff.length + ' funcionários)</h3><button class="btn-primary" onclick="window.print()">🖨️ Imprimir todos</button></div>';
+      var franchise = (DataStore.getAllFranchises() || []).find(function(f) { return f.id === franchiseId; }) || {};
+      var totalLiquido = 0;
+      staff.forEach(function(s) {
+        try {
+          var hol = PayrollCompliance.gerarHolerite(franchiseId, s.id, ano, mes);
+          totalLiquido += hol.totais.liquido;
+          html += '<div style="page-break-after:always;margin-bottom:30px">' + PayrollCompliance.holeriteHTML(hol, franchise) + '</div>';
+        } catch (e) {
+          html += '<div style="color:#DC2626;padding:8px">' + esc(s.name) + ': ' + esc(e.message) + '</div>';
+        }
+      });
+      html = '<div style="background:#D1FAE5;padding:14px;border-radius:10px;margin-bottom:16px"><b>💰 Total líquido a pagar:</b> ' + fmt(totalLiquido) + '</div>' + html;
+      $('holContent').innerHTML = html;
+    }
+
+    // ========== FÉRIAS ==========
+    function folhaCarregarFerias() {
+      var sid = $('ferStaff').value;
+      if (!sid) { $('ferContent').innerHTML = ''; return; }
+      var staff = (DataStore.getCollection('staff', franchiseId) || []).find(function(s) { return s.id === sid; });
+      staff.franchiseId = franchiseId;  // pra ferias_gozadas lookup
+      var fer = PayrollCompliance.calculaFerias(staff);
+      if (fer.error) { $('ferContent').innerHTML = '<div style="color:#DC2626">' + esc(fer.error) + '</div>'; return; }
+      var alertBg = fer.vencidos.length > 0 ? '#FEE2E2' : (fer.proximoVencimento ? '#FEF3C7' : '#D1FAE5');
+      var alertCol = fer.vencidos.length > 0 ? '#991B1B' : (fer.proximoVencimento ? '#92400E' : '#065F46');
+      var html = '<div style="background:' + alertBg + ';color:' + alertCol + ';padding:12px;border-radius:10px;margin-bottom:14px;font-weight:700">' + esc(fer.alerta) + '</div>';
+      html += '<table class="folha-table"><thead><tr><th>Período aquisitivo</th><th>Vence em</th><th>Dias direito</th><th>Já gozados</th><th>Restantes</th><th>Valor estimado</th><th>Status</th></tr></thead><tbody>';
+      fer.periodos.forEach(function(p) {
+        var sCls = p.status === 'vencido' ? 'vencido' : (p.status === 'vence_em_60d' ? 'venc60' : (p.status === 'em_andamento' ? 'andamento' : 'dispon'));
+        html += '<tr><td>' + p.inicio + ' → ' + p.fim + '</td><td>' + p.concessivoFim + '</td><td>' + (p.diasDireito||0).toFixed(0) + '</td><td>' + p.diasJaGozados + '</td><td><b>' + p.diasRestantes + '</b></td><td>' + fmt(p.valorEstimado) + '</td><td><span class="badge-status ' + sCls + '">' + p.status.toUpperCase() + '</span></td></tr>';
+      });
+      html += '</tbody></table>';
+
+      // Calculadora de gozo
+      html += '<div style="margin-top:20px;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:14px"><h4>🧮 Calcular valor de gozo</h4>';
+      html += '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><label>Dias a gozar: <input type="number" id="ferDias" value="30" min="1" max="30" class="pt-input" style="width:80px"></label>';
+      html += '<label><input type="checkbox" id="ferAbono"> Vender 10 dias (abono pecuniário)</label>';
+      html += '<button class="btn-primary" onclick="folhaCalcularGozo(\'' + sid + '\')">💰 Calcular</button></div>';
+      html += '<div id="ferGozoResult" style="margin-top:10px"></div></div>';
+      $('ferContent').innerHTML = html;
+    }
+
+    window.folhaCalcularGozo = function(sid) {
+      var staff = (DataStore.getCollection('staff', franchiseId) || []).find(function(s) { return s.id === sid; });
+      var dias = parseInt($('ferDias').value, 10);
+      var abono = $('ferAbono').checked;
+      var v = PayrollCompliance.valorFerias(staff, dias, abono);
+      $('ferGozoResult').innerHTML = '<table class="folha-table"><tr><td>Valor bruto (' + v.diasGozados + 'd)</td><td>' + fmt(v.valorBruto) + '</td></tr>' +
+        '<tr><td>1/3 constitucional</td><td>' + fmt(v.umTercoConstitucional) + '</td></tr>' +
+        '<tr><td>Abono pecuniário (10d)</td><td>' + fmt(v.abonoPecuniario) + '</td></tr>' +
+        '<tr><td><b>Total bruto</b></td><td><b>' + fmt(v.totalBruto) + '</b></td></tr>' +
+        '<tr><td>INSS</td><td style="color:#DC2626">- ' + fmt(v.inss) + '</td></tr>' +
+        '<tr><td>IRRF</td><td style="color:#DC2626">- ' + fmt(v.irrf) + '</td></tr>' +
+        '<tr style="background:#D1FAE5"><td><b>LÍQUIDO a pagar</b></td><td><b>' + fmt(v.liquido) + '</b></td></tr></table>';
+    };
+
+    // ========== 13º ==========
+    function folhaCalcular13o() {
+      var ano = parseInt($('dec13Ano').value, 10);
+      var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
+      var html = '<table class="folha-table"><thead><tr><th>Funcionário</th><th>Meses</th><th>Base</th><th>1ª parcela (até 30/11)</th><th>2ª parcela (até 20/12)</th></tr></thead><tbody>';
+      var total1 = 0, total2 = 0;
+      staff.forEach(function(s) {
+        var d = PayrollCompliance.calcula13o(franchiseId, s.id, ano);
+        if (!d) return;
+        total1 += d.primeiraParcela.valor;
+        total2 += d.segundaParcela.valor;
+        html += '<tr><td>' + esc(s.name) + '</td><td>' + d.avos + '</td><td>' + fmt(d.baseAvos) + '</td><td>' + fmt(d.primeiraParcela.valor) + '</td><td>' + fmt(d.segundaParcela.valor) + '<br><small>INSS: ' + fmt(d.segundaParcela.inssDescontado) + ' · IRRF: ' + fmt(d.segundaParcela.irrfDescontado) + '</small></td></tr>';
+      });
+      html += '<tr style="background:#F9FAFB;font-weight:700"><td colspan="3">TOTAL</td><td>' + fmt(total1) + '</td><td>' + fmt(total2) + '</td></tr></tbody></table>';
+      $('dec13Content').innerHTML = html;
+    }
+
+    // ========== FGTS ==========
+    function folhaCalcularFGTS() {
+      var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function(s) { return s.active; });
+      var html = '<table class="folha-table"><thead><tr><th>Funcionário</th><th>Meses contrib.</th><th>Depósito/mês</th><th>Saldo estimado</th><th>Multa 40% rescisão</th><th>Custo total se demitir</th></tr></thead><tbody>';
+      var totalSaldo = 0, totalCusto = 0;
+      staff.forEach(function(s) {
+        var f = PayrollCompliance.calculaFGTS(franchiseId, s.id);
+        if (!f) return;
+        totalSaldo += f.saldoEstimado;
+        totalCusto += f.custoTotalRescisao;
+        html += '<tr><td>' + esc(s.name) + '</td><td>' + f.mesesContribuidos + '</td><td>' + fmt(f.depositoMensal) + '</td><td><b>' + fmt(f.saldoEstimado) + '</b></td><td style="color:#D97706">' + fmt(f.multaRescisaoSemJustaCausa) + '</td><td><b>' + fmt(f.custoTotalRescisao) + '</b></td></tr>';
+      });
+      html += '<tr style="background:#F9FAFB;font-weight:700"><td colspan="3">TOTAL</td><td>' + fmt(totalSaldo) + '</td><td></td><td>' + fmt(totalCusto) + '</td></tr></tbody></table>';
+      html += '<div style="margin-top:10px;font-size:.78rem;color:#6B7280">⚠ Valores estimados. Para extrato oficial CAIXA, acesse <a href="https://www.fgts.gov.br" target="_blank">fgts.gov.br</a> com certificado digital.</div>';
+      $('fgtsContent').innerHTML = html;
+    }
+
+    // ========== RESCISÃO ==========
+    function folhaCalcularRescisao() {
+      var sid = $('rescStaff').value;
+      if (!sid) { alert('Selecione um funcionário'); return; }
+      var r = PayrollCompliance.calculaRescisao(franchiseId, sid, $('rescMotivo').value, $('rescData').value);
+      if (!r) { $('rescContent').innerHTML = '<div style="color:#DC2626">Não foi possível calcular</div>'; return; }
+      var html = '<div style="background:#fff;border-radius:10px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.06)">';
+      html += '<h3 style="margin-top:0">📋 Cálculo de Rescisão — ' + esc(r.staff.name) + '</h3>';
+      html += '<div style="display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:14px">';
+      html += '<div><b>Motivo:</b> ' + r.motivo.replace(/_/g,' ') + '</div>';
+      html += '<div><b>Data:</b> ' + r.dataRescisao + '</div>';
+      html += '<div><b>Anos trabalhados:</b> ' + r.anosTrabalhados + '</div></div>';
+      html += '<h4>Verbas a pagar</h4><table class="folha-table">';
+      r.verbas.forEach(function(v) { html += '<tr><td>' + esc(v.desc) + '</td><td style="text-align:right">' + fmt(v.valor) + '</td></tr>'; });
+      html += '<tr style="background:#F9FAFB;font-weight:700"><td>TOTAL BRUTO</td><td style="text-align:right">' + fmt(r.totalBruto) + '</td></tr></table>';
+      html += '<h4>Descontos</h4><table class="folha-table">';
+      r.descontos.forEach(function(d) { html += '<tr><td>' + esc(d.desc) + '</td><td style="text-align:right;color:#DC2626">- ' + fmt(d.valor) + '</td></tr>'; });
+      html += '<tr style="background:#D1FAE5;font-weight:700"><td>TOTAL LÍQUIDO</td><td style="text-align:right">' + fmt(r.totalLiquido) + '</td></tr></table>';
+      html += '<div style="margin-top:14px;background:#FEF3C7;padding:10px;border-radius:8px;color:#92400E;font-size:.82rem">⚠ ' + esc(r.observacao) + '</div></div>';
+      $('rescContent').innerHTML = html;
+    }
+
+    // ========== ESOCIAL ==========
+    function folhaESocial(evento) {
+      if (typeof eSocialExport === 'undefined') {
+        $('esocialContent').innerHTML = '<div style="color:#DC2626">Módulo eSocial não carregado</div>';
+        return;
+      }
+      try {
+        var result = eSocialExport.gerar(franchiseId, evento, { mes: parseInt($('holMes').value || new Date().getMonth()+1, 10), ano: parseInt($('holAno').value || new Date().getFullYear(), 10) });
+        $('esocialContent').innerHTML = '<div style="background:#fff;padding:14px;border-radius:10px;border:1px solid #E5E7EB">' +
+          '<div style="display:flex;justify-content:space-between;margin-bottom:10px"><h4 style="margin:0">📤 ' + evento + ' — ' + result.qtdEventos + ' evento(s) gerado(s)</h4>' +
+          '<button class="btn-primary" onclick="eSocialExport.download(\'' + evento + '\', ' + JSON.stringify(result.xmls).replace(/"/g,'&quot;') + ')">💾 Baixar ZIP</button></div>' +
+          '<pre style="background:#0F172A;color:#A5B4FC;padding:12px;border-radius:6px;font-size:.72rem;overflow-x:auto;max-height:400px">' + esc(result.xmls.slice(0, 3).map(function(x) { return x.xml; }).join('\n\n--- proximo evento ---\n\n')) + '</pre>' +
+          '<div style="margin-top:10px;font-size:.78rem;color:#6B7280">Preview dos primeiros 3 eventos. ZIP contém todos.</div></div>';
+      } catch (e) {
+        $('esocialContent').innerHTML = '<div style="color:#DC2626;padding:14px">❌ ' + esc(e.message) + '</div>';
+      }
+    }
+
+    if (typeof firebase !== 'undefined') {
+      if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig || {});
+      firebase.auth().onAuthStateChanged(function(u) {
+        if (!u) { document.body.innerHTML = '<div style="padding:40px;text-align:center"><h2>🔒 Login necessário</h2><a href="../login.html">Entrar</a></div>'; return; }
+        var session = Auth.getSession();
+        franchiseId = session && session.franchiseId;
+        if (!franchiseId) { document.body.innerHTML = '<div style="padding:40px">Franquia não identificada</div>'; return; }
+        initSelects();
+      });
+    }
+  </script>
+</body>
+</html>

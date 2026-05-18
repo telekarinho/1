@@ -498,7 +498,13 @@ const DataStore = {
             // 📝 Solicitações + 📣 Comunicados — múltiplos devices escrevem
             docId.startsWith('solicitacoes_') ||
             docId.startsWith('comunicados_') ||
-            docId.startsWith('treinamentos_')
+            docId.startsWith('treinamentos_') ||
+            // 💰 Compliance financeiro
+            docId.startsWith('cct_documents_') ||
+            docId.startsWith('ferias_gozadas_') ||
+            docId.startsWith('holerites_') ||
+            docId.startsWith('decimo_pago_') ||
+            docId.startsWith('rescisoes_')
         );
     },
 
@@ -681,7 +687,17 @@ const DataStore = {
             // 🏖️ Marcacao de ferias aprovadas
             'ferias_' + fid,
             // 🔄 Trocas de turno aprovadas
-            'trocas_turno_' + fid
+            'trocas_turno_' + fid,
+            // 📄 CCT/aditivos uploadados pelo admin
+            'cct_documents_' + fid,
+            // 🏖️ Periodos de ferias efetivamente gozados (calculo do banco de dias)
+            'ferias_gozadas_' + fid,
+            // 💵 Holerites gerados (auditoria + reimpressao)
+            'holerites_' + fid,
+            // 🎁 13o salario pago (1a e 2a parcela)
+            'decimo_pago_' + fid,
+            // 📋 Rescisoes processadas
+            'rescisoes_' + fid
         ];
     },
 
