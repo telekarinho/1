@@ -974,6 +974,9 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <script>
 if(!firebase.apps.length){firebase.initializeApp({apiKey:"AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA",authDomain:"milkypot-ad945.firebaseapp.com",projectId:"milkypot-ad945",storageBucket:"milkypot-ad945.firebasestorage.app",messagingSenderId:"859364650620",appId:"1:859364650620:web:aecf11f4cf99b7792463f9"});}
 </script>
+<!-- Anti-fraude: 1 desafio gratuito por dia por dispositivo (fingerprint).
+     Cliente desbloqueio extra fazendo pedido no catalogo/Belinha. -->
+<script src="/js/core/anti-fraud.js"></script>
 <script>
 (function(){
 /* ========== FEATURE 12: GAMIFICATION CONFIG (loaded from Firebase) ========== */
@@ -1026,6 +1029,20 @@ var urlParams=new URLSearchParams(window.location.search||'');
 var isStoreTvMode=(urlParams.has('tv')||urlParams.has('kiosk'))
    &&!urlParams.has('manual')&&!urlParams.has('delivery')&&!urlParams.has('gratis');
 var tvFranchiseId=urlParams.get('franchise')||urlParams.get('fid')||'';
+
+/* CLIENTE CELULAR (escaneou QR da TV) — NAO e TV indoor mas tem fonte
+   "tv-desafio" no params. Ativa fluxo de desafio gratuito diario com
+   anti-fraude (1 play/dia/device). */
+var clientFid=urlParams.get('fid')||urlParams.get('franchise')||'muffato-quintino';
+var isMobileChallengeMode=!isStoreTvMode && (
+    urlParams.get('source')==='tv-desafio' ||
+    urlParams.get('promo')==='desafio10s' ||
+    urlParams.has('unlock')
+);
+/* Marca como freeMode forcado no celular (libera UI sem precisar voucher) */
+if (isMobileChallengeMode) {
+    prizeConfig.requireVoucher = false;
+}
 
 document.getElementById('attCount').textContent=attempts;
 
@@ -1722,6 +1739,19 @@ if(navigator.vibrate) navigator.vibrate([50,30,80]);
 if(gameConfig.reactionVideo&&mediaRecorder&&mediaRecorder.state==='recording') mediaRecorder.stop();
 attempts++;localStorage.setItem('mp_d_att',attempts);
 document.getElementById('attCount').textContent=attempts;
+
+/* ANTI-FRAUDE: marca o desafio gratuito do dia como JOGADO (mobile mode).
+   Bloqueia replay no mesmo dispositivo ate amanha (ou ate unlock token via
+   compra). */
+if(isMobileChallengeMode && window.AntiFraud){
+    try {
+        window.AntiFraud.markPlayed(clientFid, {
+            elapsed: elapsed,
+            target: gameTarget,
+            playerName: playerN || null
+        }, window._mobileUnlockToken).catch(function(e){console.warn('markPlayed:',e)});
+    } catch(e){ console.warn('AntiFraud.markPlayed:',e); }
+}
 
 /* === UPDATE VOUCHER ATTEMPTS USED === */
 if(isFreeMode){
@@ -2737,6 +2767,75 @@ showStep(0);document.getElementById('playerName').focus();
 startAttract();
 watchTvVoucherRelease();
 
+/* ============================================
+   MOBILE CHALLENGE — escaneou QR da TV no celular.
+   Anti-fraude: 1 desafio grátis/dia/dispositivo (fingerprint).
+   Se bloqueado: modal com convite pra fazer pedido.
+   ============================================ */
+if (isMobileChallengeMode && window.AntiFraud) {
+    (async function(){
+        try {
+            var check = await window.AntiFraud.canPlayFree(clientFid);
+            if (!check.allowed) {
+                showLockoutModal();
+            } else {
+                /* Libera modo livre — usuario joga sem voucher */
+                isFreeMode = true;
+                window._mobileUnlockToken = check.unlockToken || null;
+                /* Vai direto pra escolha de dificuldade pulando voucher */
+                setTimeout(function(){
+                    document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+                    var stepDiff = document.getElementById('stepDiff');
+                    if (stepDiff) stepDiff.classList.add('active');
+                    else document.getElementById('step0').classList.add('active');
+                }, 600);
+            }
+        } catch(e){ console.warn('Anti-fraud check:', e); }
+    })();
+}
+
+/* Modal de bloqueio diario com call-to-action pra fazer pedido. */
+function showLockoutModal(){
+    var existing = document.getElementById('lockoutModal');
+    if (existing) return;
+    var fid = encodeURIComponent(clientFid);
+    var cardapioUrl = 'https://milkypot.com/cardapio.html?source=desafio-lockout&fid=' + fid;
+    var whatsUrl = 'https://wa.me/554399919777?text=' + encodeURIComponent('Quero pedir agora e desbloquear o desafio!');
+    var html =
+      '<div id="lockoutModal" style="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);'+
+      'display:flex;align-items:center;justify-content:center;padding:24px;'+
+      'font-family:\'Baloo 2\',\'Nunito\',sans-serif">'+
+        '<div style="background:#fff;border-radius:22px;max-width:440px;width:100%;'+
+          'padding:32px 26px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.4);'+
+          'animation:lockoutIn .4s ease-out">'+
+          '<div style="font-size:64px;margin-bottom:8px">🐑✋</div>'+
+          '<h2 style="font-family:\'Baloo 2\',cursive;color:#7E57C2;margin:0 0 8px;font-size:26px">Você já jogou hoje!</h2>'+
+          '<p style="color:#6B7280;font-size:15px;margin:0 0 22px;line-height:1.4">'+
+            'O desafio gratuito é <strong>1 vez por dia</strong> por dispositivo.<br>'+
+            'Quer jogar de novo? Faça um pedido e a ovelhinha te libera. 🍦'+
+          '</p>'+
+          '<a href="'+ cardapioUrl +'" style="display:block;background:linear-gradient(135deg,#7E57C2,#FF4F8A);'+
+            'color:#fff;text-decoration:none;padding:14px 18px;border-radius:14px;font-weight:800;'+
+            'font-size:15px;margin-bottom:10px;box-shadow:0 10px 28px rgba(126,87,194,.35)">'+
+            '🛒 Fazer pedido no cardápio'+
+          '</a>'+
+          '<a href="'+ whatsUrl +'" target="_blank" style="display:block;background:#25D366;'+
+            'color:#fff;text-decoration:none;padding:12px 18px;border-radius:14px;font-weight:800;'+
+            'font-size:14px;margin-bottom:10px">'+
+            '💬 Pedir pela Belinha no WhatsApp'+
+          '</a>'+
+          '<button onclick="document.getElementById(\'lockoutModal\').remove()" '+
+            'style="background:transparent;border:0;color:#9CA3AF;font-weight:700;'+
+            'font-size:13px;padding:10px;cursor:pointer">Volto amanhã</button>'+
+          '<div style="margin-top:18px;font-size:11px;color:#9CA3AF">'+
+            'Fez pedido? A confirmação libera novo desafio na hora.'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<style>@keyframes lockoutIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}</style>';
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
 /* Auto-return to attract after 60s inactivity */
 var idleTimer;
 function resetIdle(){
@@ -3108,9 +3207,11 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   var SLIDES = [
     { id:'raspadinha', emoji:'🎫', eyebrow:'TODA COMPRA PREMIA',
       headline:'Pediu? Já ganhou alguma coisa.',
-      subtext:'Compra acima de R$ 15 sai com QR de raspadinha na nota.\nVocê raspa pelo celular e leva o prêmio. Validade 7 dias.',
-      cta:'Aponta a câmera ou raspa direto no celular',
-      qr: qrUrl('/raspinha.html', 'raspadinha'),
+      subtext:'Cada compra acima de R$ 15 sai com seu QR ÚNICO no recibo.\nVocê raspa pelo celular e leva o prêmio. Validade 7 dias.',
+      cta:'Pede no caixa que sai seu QR na hora',
+      // SEM QR no slide: o QR é UNICO e impresso na nota da compra.
+      // Cada cliente recebe o SEU codigo individual ao pagar.
+      qr: null,
       bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)', dur:12000,
       // Demo visual: simula a raspadinha real raspando sozinha em loop,
       // mostrando os 11 premios reais que estao ATIVOS no admin agora.
@@ -3123,9 +3224,10 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)', dur:9000 },
     { id:'roleta', emoji:'🎰', eyebrow:'ROLETA DA SORTE',
       headline:'Pagou? Gira a roleta.',
-      subtext:'Aparece sozinha quando você termina o pedido.\nPode sair 20% off, topping grátis ou moedinha extra.',
-      cta:'Já é automático — só aceitar e girar',
-      qr: qrUrl('/cardapio.html', 'roleta'),
+      subtext:'Aparece sozinha na sua tela quando você termina o pedido.\nPode sair 20% off, topping grátis ou moedinha extra.',
+      cta:'É automático — só aceitar e girar quando aparecer',
+      // SEM QR: roleta abre sozinha apos o pagamento (modal no checkout).
+      qr: null,
       bg:'linear-gradient(135deg,#FFD700 0%,#FF4F8A 100%)', dur:8500 },
     { id:'desafio10s', emoji:'⏱️', eyebrow:'DESAFIO 10 SEGUNDOS',
       headline:'Para o cronômetro em 10s cravado e ganha.',
@@ -3136,8 +3238,9 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     { id:'acerta300', emoji:'⚖️', eyebrow:'ACERTOU 300g, NÃO PAGA',
       headline:'Montou 300g no buffet? A casa paga.',
       subtext:'Você monta seu pote, a gente pesa. Bateu 300g (margem 3g)\né de graça. Errou? Paga normal R$5,99/100g.',
-      cta:'Sem trapaça — a balança é certa',
-      qr: qrUrl('/cardapio.html#buffet', 'acerta300'),
+      cta:'Pega o pote e vai no buffet — desafio é ao vivo',
+      // SEM QR: desafio e fisico (cliente monta no buffet da loja).
+      qr: null,
       bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:9500 },
     { id:'googlereview', emoji:'⭐', eyebrow:'AVALIA NO GOOGLE',
       headline:'5 estrelas vale raspadinha premium + 50 moedas.',
@@ -3160,8 +3263,10 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     { id:'streak', emoji:'🔥', eyebrow:'CLIENTE FIEL GANHA MAIS',
       headline:'Veio 3 dias seguidos? +25 moedas.',
       subtext:'7 dias = sundae GRÁTIS. 14 dias = +100 moedas.\n30 dias seguidos = camiseta exclusiva LENDÁRIO.',
-      cta:'É automático, só não pular dia',
-      qr: qrUrl('/clube.html#streak', 'streak'),
+      cta:'É automático, só não pular dia — entre no MilkyClube',
+      // SEM QR: streak e automatico pra quem ta no MilkyClube.
+      // Se cliente quer entrar no clube, ja tem o slide MilkyClube com QR.
+      qr: null,
       bg:'linear-gradient(135deg,#FF4F8A 0%,#FFD700 100%)', dur:9500 },
     { id:'milkypass', emoji:'📱', eyebrow:'CARTÃO NO CELULAR',
       headline:'Teu cartão do clube mora no celular.',

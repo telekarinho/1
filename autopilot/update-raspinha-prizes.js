@@ -51,29 +51,29 @@ const db = admin.firestore();
 // Soma: 100%. Cooldown 90min entre raspadinhas no PDV.
 //
 const NEW_PRIZES = [
-  // ========== TIER LOW-COST (~R$2-3) — 60% combinado ==========
+  // ========== TIER LOW-COST (~R$2-3) — 56% combinado ==========
   {
     code:'RSP_MS_CASQUINHA', name:'Comprou Milk Shake? Leva Casquinha',
     desc:'Próximo Milk Shake M ou maior vem com 1 casquinha de leite ninho grátis.',
-    prob:18, cost:2.50, validity:7, scope:'same', minOrder:20, tier:'small',
+    prob:17, cost:2.50, validity:7, scope:'same', minOrder:20, tier:'small',
     categoria:'cat_milkshake', minSizeTag:'M'
   },
   {
     code:'RSP_SUNDAE_COPINHO', name:'Comprou Sundae? Leva Copinho',
     desc:'Próximo Sundae M ou maior vem com 1 copinho de sorvete grátis.',
-    prob:15, cost:3.00, validity:7, scope:'same', minOrder:20, tier:'small',
+    prob:14, cost:3.00, validity:7, scope:'same', minOrder:20, tier:'small',
     categoria:'cat_sundae', minSizeTag:'M'
   },
   {
     code:'RSP_CASCAO_CASQUINHA', name:'Cascão? Leva Casquinha',
     desc:'Próximo cascão vem com 1 casquinha de brinde.',
-    prob:15, cost:2.00, validity:7, scope:'same', minOrder:15, tier:'small',
+    prob:14, cost:2.00, validity:7, scope:'same', minOrder:15, tier:'small',
     categoria:'cat_casquinha'
   },
   {
     code:'RSP_BUFFET_PICOLE', name:'Buffet 250g+? Leva Picolé',
     desc:'No próximo buffet acima de 250g, ganhe 1 picolé grátis.',
-    prob:12, cost:3.00, validity:7, scope:'same', minOrder:15, tier:'small',
+    prob:11, cost:3.00, validity:7, scope:'same', minOrder:15, tier:'small',
     categoria:'cat_buffet'
   },
 
@@ -121,7 +121,7 @@ const NEW_PRIZES = [
   {
     code:'RSP_VOLTA_AMIGO', name:'Volte com um Amigo',
     desc:'Volte com 1 amigo e os dois ganham 1 casquinha de leite ninho cada.',
-    prob:5, cost:4.00, validity:7, scope:'same', minOrder:20, tier:'medium',
+    prob:4, cost:4.00, validity:7, scope:'same', minOrder:20, tier:'medium',
     categoria:null
   }
 ];
