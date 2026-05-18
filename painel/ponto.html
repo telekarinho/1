@@ -219,6 +219,7 @@
             <a href="equipe.html" class="sidebar-link"><span class="icon">👥</span> Equipe</a>
             <a href="ponto.html" class="sidebar-link active"><span class="icon">⏰</span> Ponto Eletronico</a>
             <a href="colaboradores-hub.html" class="sidebar-link"><span class="icon">📨</span> Solicitações & Avisos</a>
+            <a href="relatorio-clt.html" class="sidebar-link"><span class="icon">📊</span> Relatório CLT</a>
             <div class="sidebar-nav-group">Config</div>
             <a href="configuracoes.html" class="sidebar-link"><span class="icon">⚙️</span> Configuracoes</a>
         </nav>
@@ -294,7 +295,9 @@
                                 <th>Volta Almoco</th>
                                 <th>Saida</th>
                                 <th>Status</th>
-                                <th>Trabalhado</th>
+                                <th>Jornada hoje</th>
+                                <th>Trabalhado / Banco</th>
+                                <th>Ajustar</th>
                             </tr>
                         </thead>
                         <tbody id="ptTodayBody"></tbody>
@@ -661,6 +664,22 @@
                     var flaggedBadge = rec.flagged ? ' <span title="Marcado como suspeito" style="background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:800">🚩</span>' : '';
                     return '<td style="cursor:pointer;color:#3B82F6;font-weight:600" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh + '\')">' + hh + ' ✎' + selfieIcon + flaggedBadge + '</td>';
                 }
+                // Jornada efetiva do dia (considera overrides + dom/feriado)
+                var jorn = dia.jornadaEfetiva || { hora_entrada: '?', hora_saida: '?', source: 'padrao', sourceLabel: '' };
+                var jornCell = '<small style="color:#374151"><b>' + escapeHtml(jorn.hora_entrada) + '→' + escapeHtml(jorn.hora_saida) + '</b>';
+                if (jorn.source === 'override') jornCell += '<br><span style="color:#3B82F6;font-size:.65rem">📅 ajustado</span>';
+                else if (jorn.source === 'feriado') jornCell += '<br><span style="color:#DC2626;font-size:.65rem">🎉 feriado</span>';
+                else if (jorn.source === 'domingo') jornCell += '<br><span style="color:#7C3AED;font-size:.65rem">📿 domingo</span>';
+                jornCell += '</small>';
+                // Saldo do dia (banco horas)
+                var saldoMin = dia.saldoDiaMin || 0;
+                var saldoStr = '';
+                if (dia.completo) {
+                    var sgn = saldoMin >= 0 ? '+' : '-';
+                    var saldoColor = saldoMin >= 0 ? '#16A34A' : '#DC2626';
+                    saldoStr = '<br><span style="color:' + saldoColor + ';font-size:.7rem;font-weight:700">' + sgn + TimeClock.minutesToTime(Math.abs(saldoMin)) + ' banco</span>';
+                }
+
                 html += '<tr>';
                 html += '<td><strong>' + escapeHtml(s.name) + '</strong>' + (s.pis ? '' : '<br><span class="pt-tag red">SEM PIS</span>') + '</td>';
                 html += '<td>' + escapeHtml(s.role || '-') + '</td>';
@@ -669,12 +688,14 @@
                 html += tdHora(dia.almocoVolta);
                 html += tdHora(dia.saida);
                 html += '<td><span class="pt-tag ' + statusClass + '">' + status + '</span></td>';
-                html += '<td>' + (dia.completo ? dia.horasFormatado : '-') + '</td>';
+                html += '<td>' + jornCell + '</td>';
+                html += '<td>' + (dia.completo ? dia.horasFormatado : '-') + saldoStr + '</td>';
+                html += '<td><button onclick="ptAjustarJornadaDia(\'' + s.id + '\',\'' + today + '\')" style="background:#EFF6FF;color:#1E40AF;border:1px solid #3B82F6;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer" title="Ajustar jornada deste dia">📅</button></td>';
                 html += '</tr>';
             });
 
             if (!staff.length) {
-                html = '<tr><td colspan="8" style="text-align:center;padding:30px;color:#9CA3AF">Cadastre funcionarios em <a href="equipe.html" style="color:#3B82F6">Equipe</a> primeiro.</td></tr>';
+                html = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#9CA3AF">Cadastre funcionarios em <a href="equipe.html" style="color:#3B82F6">Equipe</a> primeiro.</td></tr>';
             }
 
             document.getElementById('ptTodayBody').innerHTML = html;
@@ -1058,6 +1079,76 @@
             }
         });
         window.addEventListener('mp_synced', function() { _ptScheduleRerender(); });
+
+        // ============================================
+        // 📅 AJUSTAR JORNADA DO DIA (override pontual por staff/data)
+        // ============================================
+        // Amanda hoje entra 11h em vez de 13h? Admin define aqui. TimeClock
+        // passa a usar jornada efetiva no calculo de banco horas / extras / atraso.
+        window.ptAjustarJornadaDia = function(staffId, dateStr) {
+            var staff = (DataStore.getCollection('staff', franchiseId) || []).find(function(s) { return s.id === staffId; });
+            if (!staff) { alert('Funcionário não encontrado'); return; }
+            var j = staff.jornada || {};
+            var dStr = dateStr || (new Date().toISOString().slice(0, 10));
+            var existing = TimeClock.getJornadaOverride(franchiseId, staffId, dStr) || {};
+            var modal = document.getElementById('ptJornadaModal');
+            if (modal) modal.remove();
+            modal = document.createElement('div');
+            modal.id = 'ptJornadaModal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px';
+            modal.innerHTML =
+                '<div style="background:#fff;border-radius:18px;max-width:480px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
+                '<div style="padding:18px 22px;background:linear-gradient(135deg,#3B82F6,#1E40AF);color:#fff">' +
+                '<h3 style="margin:0;font-family:\'Baloo 2\',cursive">📅 Ajustar jornada do dia</h3>' +
+                '<small style="opacity:.9">' + escapeHtml(staff.name) + ' — ' + escapeHtml(dStr.split('-').reverse().join('/')) + '</small></div>' +
+                '<div style="padding:20px 22px">' +
+                '<div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.8rem;color:#92400E">' +
+                '<b>📋 Combinado padrão:</b> ' + escapeHtml(j.hora_entrada || '08:00') + ' às ' + escapeHtml(j.hora_saida || '18:00') + ' (' + (j.intervalo_almoco_min || 60) + 'min almoço)</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+                '<div><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">Hora entrada</label>' +
+                '<input type="time" id="jovrEntrada" value="' + (existing.hora_entrada || j.hora_entrada || '08:00') + '" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit"></div>' +
+                '<div><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">Hora saída</label>' +
+                '<input type="time" id="jovrSaida" value="' + (existing.hora_saida || j.hora_saida || '18:00') + '" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit"></div></div>' +
+                '<div style="margin-top:10px"><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">Intervalo almoço/janta (min)</label>' +
+                '<select id="jovrAlmoco" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit">' +
+                '<option value="0">Sem intervalo hoje</option><option value="30">30 min</option><option value="60">1 hora (padrão)</option><option value="90">1h30min</option><option value="120">2 horas</option></select></div>' +
+                '<div style="margin-top:10px"><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">Motivo da alteração (CLT exige registro)</label>' +
+                '<textarea id="jovrMotivo" rows="2" placeholder="Ex: precisamos abrir mais cedo, evento, falta de outro funcionário" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit;font-size:.9rem">' + escapeHtml(existing.motivo || '') + '</textarea></div>' +
+                '<div style="background:#EFF6FF;border-radius:8px;padding:8px 12px;margin-top:12px;font-size:.78rem;color:#1E40AF">' +
+                '✓ Aparece pra ' + escapeHtml(staff.name.split(' ')[0]) + ' no app dela<br>✓ Banco de horas recalculado com base nessa jornada efetiva<br>✓ Audit log: quem ajustou + quando + motivo</div>' +
+                '</div>' +
+                '<div style="padding:14px 22px;border-top:1px solid #E5E7EB;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">' +
+                (Object.keys(existing).length ? '<button onclick="ptRemoverOverride(\'' + staffId + '\',\'' + dStr + '\')" style="background:#FEE2E2;color:#991B1B;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer">🗑 Remover ajuste</button>' : '') +
+                '<button onclick="document.getElementById(\'ptJornadaModal\').remove()" class="btn-outline">Fechar</button>' +
+                '<button onclick="ptSalvarJornadaOverride(\'' + staffId + '\',\'' + dStr + '\')" class="btn-primary">💾 Salvar</button>' +
+                '</div></div>';
+            document.body.appendChild(modal);
+            document.getElementById('jovrAlmoco').value = String(existing.intervalo_almoco_min != null ? existing.intervalo_almoco_min : (j.intervalo_almoco_min || 60));
+        };
+
+        window.ptSalvarJornadaOverride = function(staffId, dateStr) {
+            var hora_entrada = document.getElementById('jovrEntrada').value;
+            var hora_saida = document.getElementById('jovrSaida').value;
+            var intervalo_almoco_min = parseInt(document.getElementById('jovrAlmoco').value, 10);
+            var motivo = document.getElementById('jovrMotivo').value.trim();
+            if (!motivo || motivo.length < 5) { alert('Motivo obrigatório (mín 5 chars) — exigência CLT pra auditoria'); return; }
+            TimeClock.setJornadaOverride(franchiseId, staffId, dateStr, {
+                hora_entrada: hora_entrada, hora_saida: hora_saida,
+                intervalo_almoco_min: intervalo_almoco_min, motivo: motivo
+            });
+            document.getElementById('ptJornadaModal').remove();
+            alert('✓ Jornada ajustada. Funcionária vê no app dela e admin vê no relatório.');
+            ptLoadHoje();
+            if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
+        };
+
+        window.ptRemoverOverride = function(staffId, dateStr) {
+            if (!confirm('Remover ajuste? Volta a jornada combinada padrão.')) return;
+            TimeClock.removeJornadaOverride(franchiseId, staffId, dateStr);
+            document.getElementById('ptJornadaModal').remove();
+            ptLoadHoje();
+            if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
+        };
 
         // ============================================
         // 📸 AUDITAR SELFIE — modal com selfie capturada + foto referência lado a lado

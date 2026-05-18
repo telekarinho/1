@@ -17,7 +17,7 @@
 <script src="../js/core/auth.js"></script>
 <script src="../js/pages/tv-live-data.js"></script>
 <script src="../js/pages/lilo-scanner.js"></script>
-<script src="../js/core/copilot-transport.js"></script>
+<script src="../js/core/copilot-transport.js?v=20260517-executor-sse"></script>
 <style>
   :root { --lilo-pink:#FF4F8A; --lilo-purple:#7E57C2; --lilo-blue:#42A5F5; }
 
@@ -65,6 +65,15 @@
   .msg .bubble ul,ol { margin:6px 0; padding-left:20px; }
   .msg .bubble strong { color:#FF4F8A; }
   .msg.user .bubble strong { color:#FFB1D1; }
+  .msg-meta { display:flex; align-items:baseline; gap:6px; font-size:11px; color:#9CA3AF; margin-top:4px; padding:0 4px; }
+  .msg.user .msg-meta { justify-content:flex-end; }
+  .msg-time { font-variant-numeric: tabular-nums; }
+  .msg-date { color:#B0B7BF; font-weight:600; }
+  .msg-col { display:flex; flex-direction:column; min-width:0; }
+  .thinking-wrap { display:flex; align-items:center; gap:10px; }
+  .thinking-timer { font-size:11px; color:#9CA3AF; font-variant-numeric: tabular-nums; }
+  .thinking-timer.slow { color:#F59E0B; font-weight:700; }
+  .thinking-timer.very-slow { color:#DC2626; font-weight:800; }
 
   .chat-input-area { border-top:1px solid #E5E7EB; padding:14px; background:#fff; }
   .chat-input-row { display:flex; gap:10px; align-items:flex-end; }
@@ -120,6 +129,7 @@
   <nav class="sidebar-nav">
     <div class="sidebar-nav-group">Inteligencia</div>
     <a href="copilot-belinha.html" class="sidebar-link active"><span class="icon">🐑</span> Belinha AI (Copiloto)</a>
+    <a href="marketing-belinha.html" class="sidebar-link"><span class="icon">🚀</span> Marketing IA</a>
     <div class="sidebar-nav-group">Midia da Loja</div>
     <a href="tv-indoor.html" class="sidebar-link"><span class="icon">📺</span> TV Indoor</a>
     <a href="tv-slides-generator.html" class="sidebar-link"><span class="icon">🎨</span> Gerador de Slides</a>
@@ -218,6 +228,7 @@
         <h2>🐑 Conversa com a Belinha</h2>
         <div style="display:flex;gap:8px;align-items:center">
           <span class="cost-badge" id="costBadge">Custo: —</span>
+          <button class="ios-btn ios-btn-sm ios-btn-secondary" onclick="window.open('/logs/viewer','belinhaLogs','width=1100,height=700')" title="Ver logs do servidor ao vivo">📜 Logs</button>
           <button class="ios-btn ios-btn-sm ios-btn-secondary" onclick="clearConversation()">🗑️ Limpar</button>
         </div>
       </div>
@@ -359,6 +370,12 @@
   function updateLocalBadge(isLocal) {
     _localServer = !!isLocal;
     updateAgentStatus();
+    // Quando local detectado, mostra custo zero desde o boot.
+    // So escreve se o badge ainda nao tem valor real acumulado.
+    const cb = document.getElementById('costBadge');
+    if (cb && isLocal && (cb.textContent === 'Custo: —' || cb.textContent === 'Custo: -')) {
+      cb.textContent = 'Custo: R$ 0,00 (codex local)';
+    }
   }
 
   // ====== Context: recolhe dados da franquia pra mandar junto ======
@@ -418,13 +435,38 @@
       }
 
       // TVs status
-      ctx.tvs = (DataStore.get('tv_devices_' + fid) || []).map(t => ({ id:t.id, name:t.name }));
+      const tvDevices = DataStore.get('tv_devices_' + fid) || [];
+      ctx.tvs = tvDevices.map(t => {
+        const hb = DataStore.get('tv_heartbeat_' + fid + '_' + t.id) || null;
+        const last = hb && (hb.at || hb.updatedAt || hb.lastSeen);
+        const online = last ? (Date.now() - new Date(last).getTime()) < 10*60*1000 : false;
+        return { id:t.id, name:t.name, online, lastSeen:last || null };
+      });
       ctx.tvPlaylist = (DataStore.get('tv_playlist_' + fid) || []).length;
+      ctx.tvMedia = (DataStore.get('tv_media_' + fid) || []).length;
     } catch(e) { console.warn('ctx build', e); }
     return ctx;
   }
 
   // ====== Chat ======
+  function formatMsgTime(ts) {
+    if (!ts) return { time:'', date:'', label:'' };
+    let d;
+    try { d = new Date(ts); if (isNaN(d.getTime())) return { time:'', date:'', label:'' }; }
+    catch(e) { return { time:'', date:'', label:'' }; }
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    const yest = new Date(now.getTime() - 86400000);
+    const isYest = d.toDateString() === yest.toDateString();
+    const time = d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    let dateLabel;
+    if (sameDay) dateLabel = 'hoje';
+    else if (isYest) dateLabel = 'ontem';
+    else dateLabel = d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year: d.getFullYear()===now.getFullYear()?undefined:'2-digit' });
+    const fullTitle = d.toLocaleString('pt-BR');
+    return { time, date: dateLabel, label: fullTitle };
+  }
+
   function renderMessages() {
     const el = document.getElementById('chatMessages');
     // mantém o primeiro (welcome)
@@ -435,18 +477,29 @@
       const div = document.createElement('div');
       div.className = 'msg ' + m.role;
       const av = m.role === 'user' ? '👤' : '🐑';
+      const col = document.createElement('div');
+      col.className = 'msg-col';
       const bubble = document.createElement('div');
       bubble.className = 'bubble';
       bubble.innerHTML = formatMarkdown(m.content);
+      col.appendChild(bubble);
+      const t = formatMsgTime(m.timestamp);
+      if (t.time) {
+        const meta = document.createElement('div');
+        meta.className = 'msg-meta';
+        meta.title = t.label;
+        meta.innerHTML = '<span class="msg-date">'+t.date+'</span><span class="msg-time">'+t.time+'</span>';
+        col.appendChild(meta);
+      }
       div.innerHTML = '<div class="avatar">'+av+'</div>';
-      div.appendChild(bubble);
+      div.appendChild(col);
       el.appendChild(div);
     });
     el.scrollTop = el.scrollHeight;
   }
 
   function appendBotMsg(text) {
-    messages.push({ role:'assistant', content: text });
+    messages.push({ role:'assistant', content: text, timestamp: new Date().toISOString() });
     renderMessages();
   }
 
@@ -616,7 +669,7 @@
       finalUserText = (text ? text + '\n\n' : '') + imgDesc;
     }
 
-    messages.push({ role:'user', content: finalUserText });
+    messages.push({ role:'user', content: finalUserText, timestamp: new Date().toISOString() });
     input.value = '';
     autosize(input);
 
@@ -645,47 +698,122 @@
 
     const thinkingEl = document.createElement('div');
     thinkingEl.className = 'msg bot';
-    thinkingEl.innerHTML = '<div class="avatar">🐑</div><div class="thinking"><span></span><span></span><span></span></div>';
+    thinkingEl.innerHTML = '<div class="avatar">🐑</div><div class="thinking-wrap"><div class="thinking"><span></span><span></span><span></span></div><span class="thinking-timer" data-elapsed="0">0s</span></div>';
     document.getElementById('chatMessages').appendChild(thinkingEl);
     document.getElementById('chatMessages').scrollTop = 99999;
+    const timerEl = thinkingEl.querySelector('.thinking-timer');
+    const startedAt = Date.now();
+    const timerInt = setInterval(() => {
+      const s = Math.floor((Date.now() - startedAt) / 1000);
+      if (timerEl) {
+        // Mensagem com contexto da cascata para nao parecer travado
+        let txt;
+        if (s < 15) txt = s + 's';
+        else if (s < 45) txt = s + 's · Codex trabalhando…';
+        else if (s < 90) txt = s + 's · resposta complexa';
+        else if (s < 180) txt = s + 's · finalizando no Codex…';
+        else txt = s + 's · backends lentos';
+        timerEl.textContent = txt;
+        timerEl.classList.toggle('slow', s >= 15 && s < 90);
+        timerEl.classList.toggle('very-slow', s >= 90);
+      }
+    }, 1000);
 
     document.getElementById('sendBtn').disabled = true;
 
     let rawErrorText = '';
     try {
       const ctx = await buildContext();
+      // OTIMIZACAO TOKENS: o servidor tem memoria permanente (decisoes+facts+
+      // last-context em autopilot/memory/). Mandar so as ultimas 8 msgs
+      // (~4 turnos) corta drasticamente input_tokens sem perder continuidade —
+      // o resto e recuperado via Memory.buildMemorySnippet no server.
+      // Configuravel via window.COPILOT_HISTORY_LIMIT (default 8).
+      const histLimit = Math.max(2, Number(window.COPILOT_HISTORY_LIMIT) || 8);
+      const trimmedMessages = messages.length > histLimit ? messages.slice(-histLimit) : messages;
       const data = await CopilotTransport.send({
         apiKey: settings.apiKey,
         model: settings.model || 'claude-sonnet-4-5',
         persona: 'belinha',
-        messages: messages,
+        messages: trimmedMessages,
         context: ctx,
         images: imagesPayload
       });
+      clearInterval(timerInt);
       thinkingEl.remove();
-      const reply = data.reply || '(sem resposta)';
-      // source='local' (mesmo PC) ou 'tunnel' (server local de outro PC via
-      // cloudflared) ambos sao Claude CLI R$0,00
-      if (data.source === 'local' || data.source === 'tunnel') updateLocalBadge(true);
+      const elapsedSec = Math.floor((Date.now() - startedAt) / 1000);
+      // Em vez de "(sem resposta)" feio, mostra mensagem util + sugestao concreta
+      const reply = data.reply && data.reply.trim()
+        ? data.reply
+        : `⚠️ **A AI retornou vazio depois de ${elapsedSec}s.**\n\nIsso normalmente acontece quando:\n- A pergunta tem muitas tarefas misturadas (Claude pensa demais e perde o fio)\n- O backend (Claude/Codex) ficou pendurado sem retornar output\n\n**Como resolver agora:**\n1. **Quebra a pergunta em pedaços menores** (1 pedido por vez)\n2. Pra cada um, eu respondo em **<50ms** se for problema conhecido (encoding, custo, renumerar, copy, criativo, etc)\n3. Ou manda **"tudo"** depois de eu detectar a lista — eu faço em sequência com progresso ao vivo\n\n💡 Diz **"quebra em tasks"** que eu releio sua pergunta anterior e quebro automaticamente.`;
+      // source='local' (mesmo PC), 'tunnel'/'remote' (server local outro PC) e
+      // 'offline' (canned) sao codex local R$0,00. So 'api' soma custo.
+      const isFree = data.source === 'local' || data.source === 'tunnel' || data.source === 'remote' || data.source === 'offline';
+      if (isFree) updateLocalBadge(true);
       else updateLocalBadge(false);
-      messages.push({ role:'assistant', content: reply });
-      if (data.usage) {
+      messages.push({ role:'assistant', content: reply, timestamp: new Date().toISOString() });
+      if (isFree) {
+        const backendLabel = data.backend ? data.backend + ' local' : 'local';
+        document.getElementById('costBadge').textContent = 'Custo: R$ 0,00 (' + backendLabel + ')';
+      } else if (data.usage) {
         totalCost += estimateCost(data.usage, settings.model);
         document.getElementById('costBadge').textContent = 'Custo: R$ ' + totalCost.toFixed(3);
       }
       renderMessages();
       saveHistory();
+
+      // 🚀 Se o server marcou triggerCompositeRun, abre SSE e mostra cada tarefa
+      if (data.triggerCompositeRun) {
+        startCompositeRun();
+      }
+      if (data.triggerExecutorRun) {
+        startExecutorRun();
+      }
     } catch (e) {
+      clearInterval(timerInt);
       thinkingEl.remove();
-      // Tenta capturar HTML cru do response pra detectar 404/erro de path
-      let rawText = e.responseText || e.body || '';
-      const friendly = humanizeError(e, rawText);
-      appendBotMsg(friendly);
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      if (e && e.name === 'AbortError') {
+        appendBotMsg('⏱️ A resposta passou de '+elapsed+'s sem retorno e foi abortada. O servidor pode estar sobrecarregado. Tenta de novo ou reformula a pergunta de forma mais curta.');
+      } else {
+        // Tenta capturar HTML cru do response pra detectar 404/erro de path
+        let rawText = e.responseText || e.body || '';
+        const friendly = humanizeError(e, rawText);
+        appendBotMsg(friendly + '\n\n_(falha em '+elapsed+'s)_');
+      }
       console.error('[belinha-chat]', e);
     }
     document.getElementById('sendBtn').disabled = false;
     input.focus();
   };
+
+  function startExecutorRun() {
+    appendBotMsg('🔄 _Conectando ao executor Codex com progresso ao vivo..._');
+    const es = new EventSource('http://localhost:5757/copilot/execute-run');
+    es.addEventListener('start', e => {
+      const d = JSON.parse(e.data);
+      appendBotMsg('▶️ **Execução iniciada** - ' + (d.message || 'Codex iniciou o trabalho.'));
+    });
+    es.addEventListener('progress', e => {
+      const d = JSON.parse(e.data);
+      appendBotMsg('⏳ **' + d.seconds + 's** - ' + (d.message || 'trabalhando...'));
+    });
+    es.addEventListener('done', e => {
+      const d = JSON.parse(e.data);
+      const elapsed = d.elapsed < 1000 ? d.elapsed + 'ms' : (d.elapsed / 1000).toFixed(1) + 's';
+      appendBotMsg('✅ **Executor concluído em ' + elapsed + '** (' + (d.backend || 'codex') + ')\n\n' + (d.reply || '(sem retorno)'));
+      es.close();
+    });
+    es.addEventListener('error', e => {
+      let msg = 'Falha no executor.';
+      try {
+        const d = JSON.parse(e.data);
+        msg = d.message || msg;
+      } catch(err) {}
+      appendBotMsg('❌ **Executor parou:** ' + msg);
+      es.close();
+    });
+  }
 
   function estimateCost(usage, model) {
     // USD por 1M tokens (aprox — ajuste conforme tabela atual Anthropic)
@@ -699,6 +827,51 @@
     const outCost = ((usage.output_tokens || 0) / 1000000) * p.out;
     const usd = inCost + outCost;
     return usd * 5.5; // ~BRL
+  }
+
+  // 🚀 Composite run via SSE — recebe progresso tarefa-por-tarefa e renderiza
+  function startCompositeRun() {
+    appendBotMsg('🔄 _Conectando ao executor sequencial..._');
+    const es = new EventSource('http://localhost:5757/copilot/composite-run');
+    let totalTasks = 0;
+    es.addEventListener('start', e => {
+      const d = JSON.parse(e.data);
+      totalTasks = d.total;
+      appendBotMsg('🚀 **Iniciando execução de ' + d.total + ' tarefas em sequência.** Você vai ver cada uma aparecer aqui conforme conclui.');
+    });
+    es.addEventListener('task-start', e => {
+      const d = JSON.parse(e.data);
+      appendBotMsg('⏳ **[' + d.taskNum + '/' + d.total + ']** ' + d.text + (d.playbook ? '\n_(playbook: ' + d.playbook + ')_' : '\n_(análise individual)_'));
+    });
+    es.addEventListener('task-progress', e => {
+      const d = JSON.parse(e.data);
+      appendBotMsg('Em andamento **[' + d.taskNum + '/' + totalTasks + ']** - ' + (d.message || 'processando...'));
+    });
+    es.addEventListener('task-done', e => {
+      const d = JSON.parse(e.data);
+      const head = '✅ **[' + d.taskNum + '/' + totalTasks + ' concluída em ' + (d.elapsed < 1000 ? d.elapsed + 'ms' : (d.elapsed/1000).toFixed(1) + 's') + ']** (mode: ' + d.mode + (d.backend ? ' · ' + d.backend : '') + ')\n\n';
+      appendBotMsg(head + (d.reply || '(sem retorno)'));
+    });
+    es.addEventListener('task-error', e => {
+      const d = JSON.parse(e.data);
+      appendBotMsg('❌ **[' + d.taskNum + '/' + totalTasks + ' falhou em ' + (d.elapsed/1000).toFixed(1) + 's]** ' + d.error);
+    });
+    es.addEventListener('done', e => {
+      const d = JSON.parse(e.data);
+      const sumOk = (d.results || []).filter(r => r.mode !== 'error').length;
+      const sumFail = (d.results || []).length - sumOk;
+      appendBotMsg('🎯 **Execução completa: ' + sumOk + '/' + d.total + ' tarefas OK** ' + (sumFail ? '(' + sumFail + ' falharam)' : ''));
+      es.close();
+    });
+    es.addEventListener('error', e => {
+      try {
+        const d = JSON.parse(e.data || '{}');
+        if (d && d.message) appendBotMsg('❌ Erro no executor: ' + d.message);
+      } catch(_){}
+    });
+    es.onerror = () => {
+      // Reconexão automática do EventSource cuida; só fecha se já chegou no done
+    };
   }
 
   window.clearConversation = function() {
@@ -775,7 +948,7 @@ Estado atual:
 ${JSON.stringify(state, null, 2)}`;
 
     // Mensagem do "franqueado" é virtual — o prompt dispara automaticamente
-    messages.push({ role: 'user', content: '🌅 (briefing automático do dia)' });
+    messages.push({ role: 'user', content: '🌅 (briefing automático do dia)', timestamp: new Date().toISOString() });
     renderMessages();
 
     const thinkingEl = document.createElement('div');
@@ -793,10 +966,14 @@ ${JSON.stringify(state, null, 2)}`;
       });
       thinkingEl.remove();
       if (data && data.reply) {
-        updateLocalBadge(data.source === 'local');
+        const isFree = data.source === 'local' || data.source === 'tunnel' || data.source === 'remote' || data.source === 'offline';
+        updateLocalBadge(isFree);
         messages.pop(); // remove o placeholder virtual
-        messages.push({ role: 'assistant', content: data.reply });
-        if (data.usage) {
+        messages.push({ role: 'assistant', content: data.reply, timestamp: new Date().toISOString() });
+        if (isFree) {
+          const backendLabel = data.backend ? data.backend + ' local' : 'local';
+          document.getElementById('costBadge').textContent = 'Custo: R$ 0,00 (' + backendLabel + ')';
+        } else if (data.usage) {
           totalCost += estimateCost(data.usage, s.model);
           document.getElementById('costBadge').textContent = 'Custo: R$ ' + totalCost.toFixed(3);
         }
@@ -813,6 +990,17 @@ ${JSON.stringify(state, null, 2)}`;
   updateAgentStatus();
   loadHistory();
   inp.focus();
+
+  // Auto-prefill se veio do painel Marketing IA (clicou num card de prompt)
+  try {
+    const prefill = sessionStorage.getItem('belinha_prefill_query');
+    if (prefill) {
+      sessionStorage.removeItem('belinha_prefill_query');
+      inp.value = prefill;
+      autosize(inp);
+      setTimeout(() => sendMessage(), 350); // dispara automaticamente
+    }
+  } catch (e) {}
 
   // Detecta servidor local (MilkyPot Autopilot.bat rodando?)
   if (window.CopilotTransport) {

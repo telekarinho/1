@@ -277,6 +277,14 @@
             geolocation: geo,                 // {lat, lng, accuracy} se disponivel
             geofence: geoValidation,          // {valid, distance, radius, reason}
             selfie: selfie,                   // dataURL (ou null)
+            // 🤖 Face match: {status, distance, confidence} - calculado pelo colaborador
+            // app usando face-api.js. NUNCA bloqueia o ponto; admin audita registros flagged.
+            faceMatch: options.faceMatch || null,
+            // 🚩 Auto-flag se face match falhou OU admin marcou suspeito depois
+            flagged: options.flagged === true,
+            flaggedReason: options.flaggedReason || null,
+            flaggedAt: options.flagged === true ? timestamp : null,
+            flaggedBy: options.flagged === true ? 'system_face_match' : null,
             device: getDeviceInfo(),
             userAgent: (navigator.userAgent || '').slice(0, 200),
             createdAt: timestamp,
@@ -407,6 +415,138 @@
     // ----------------------------------------
     // Calcular dia trabalhado
     // ----------------------------------------
+    // ============================================
+    // 🎉 FERIADOS (nacional + customizados por loja)
+    // ============================================
+    // Feriados nacionais fixos. Loja pode adicionar municipais/customizados via
+    // collection holidays_<fid> ([{ date, name, type, hora_saida_max }]).
+    var FERIADOS_NACIONAIS_2026 = [
+        { mmdd: '01-01', name: 'Confraternização Universal' },
+        { mmdd: '02-16', name: 'Carnaval' },
+        { mmdd: '02-17', name: 'Carnaval' },
+        { mmdd: '02-18', name: 'Carnaval (4ª feira)' },
+        { mmdd: '04-03', name: 'Sexta-feira Santa' },
+        { mmdd: '04-21', name: 'Tiradentes' },
+        { mmdd: '05-01', name: 'Dia do Trabalho' },
+        { mmdd: '06-04', name: 'Corpus Christi' },
+        { mmdd: '09-07', name: 'Independência' },
+        { mmdd: '10-12', name: 'N. Sra. Aparecida' },
+        { mmdd: '11-02', name: 'Finados' },
+        { mmdd: '11-15', name: 'Proclamação da República' },
+        { mmdd: '11-20', name: 'Consciência Negra' },
+        { mmdd: '12-25', name: 'Natal' }
+    ];
+
+    function isHoliday(franchiseId, dateStr) {
+        if (!dateStr) return null;
+        var mmdd = dateStr.slice(5);
+        // Feriado nacional
+        var nacional = FERIADOS_NACIONAIS_2026.find(function (f) { return f.mmdd === mmdd; });
+        if (nacional) return { date: dateStr, name: nacional.name, type: 'nacional' };
+        // Feriados customizados da loja
+        if (typeof DataStore !== 'undefined') {
+            var customs = DataStore.getCollection('holidays', franchiseId) || [];
+            var c = customs.find(function (h) { return h.date === dateStr; });
+            if (c) return c;
+        }
+        return null;
+    }
+
+    // ============================================
+    // 📅 OVERRIDE de jornada pra UM DIA específico
+    // ============================================
+    // Coleção jornada_overrides_<fid>: [{ staffId, date, hora_entrada, hora_saida,
+    //   intervalo_almoco_min, motivo, createdBy }]. Admin usa quando precisa
+    // ajustar pontualmente ("hoje Amanda entra 11h em vez de 13h").
+    function getJornadaOverride(franchiseId, staffId, dateStr) {
+        if (typeof DataStore === 'undefined') return null;
+        var overrides = DataStore.getCollection('jornada_overrides', franchiseId) || [];
+        return overrides.find(function (o) {
+            return o.staffId === staffId && o.date === dateStr;
+        }) || null;
+    }
+
+    function setJornadaOverride(franchiseId, staffId, dateStr, fields) {
+        if (typeof DataStore === 'undefined') return null;
+        var overrides = DataStore.getCollection('jornada_overrides', franchiseId) || [];
+        var idx = overrides.findIndex(function (o) { return o.staffId === staffId && o.date === dateStr; });
+        var entry = Object.assign({
+            id: 'jovr_' + dateStr + '_' + staffId,
+            staffId: staffId,
+            date: dateStr,
+            createdAt: nowIso(),
+            createdBy: (typeof Auth !== 'undefined' && Auth.getSession()) ? Auth.getSession().email : 'admin'
+        }, fields);
+        if (idx >= 0) overrides[idx] = Object.assign(overrides[idx], entry);
+        else overrides.push(entry);
+        DataStore.setCollection('jornada_overrides', franchiseId, overrides);
+        return entry;
+    }
+
+    function removeJornadaOverride(franchiseId, staffId, dateStr) {
+        if (typeof DataStore === 'undefined') return;
+        var overrides = DataStore.getCollection('jornada_overrides', franchiseId) || [];
+        overrides = overrides.filter(function (o) { return !(o.staffId === staffId && o.date === dateStr); });
+        DataStore.setCollection('jornada_overrides', franchiseId, overrides);
+    }
+
+    // ============================================
+    // 🎯 JORNADA EFETIVA — pra um staff em uma data específica
+    // ============================================
+    // Cascata de prioridade (do mais específico ao mais genérico):
+    //  1. Override pontual do dia (admin alterou no painel pra esse dia)
+    //  2. Domingo/feriado COM horario_saida_dom_feriado configurado → ajusta saída
+    //  3. Jornada padrão do staff (hora_entrada / hora_saida / intervalo_almoco_min)
+    function getEffectiveJornada(franchiseId, staffId, dateStr) {
+        var staff = (typeof DataStore !== 'undefined')
+            ? (DataStore.getCollection('staff', franchiseId) || []).find(function (s) { return s.id === staffId; })
+            : null;
+        if (!staff) return null;
+        var j = staff.jornada || {};
+
+        var effective = {
+            hora_entrada: j.hora_entrada || '08:00',
+            hora_saida: j.hora_saida || '18:00',
+            intervalo_almoco_min: j.intervalo_almoco_min != null ? j.intervalo_almoco_min : 60,
+            source: 'padrao',
+            sourceLabel: 'Jornada combinada',
+            cargaDiariaMin: 0
+        };
+
+        // 2) Domingo / feriado com saída especial
+        var d = new Date(dateStr + 'T12:00:00');
+        var dow = d.getDay();
+        var holiday = isHoliday(franchiseId, dateStr);
+        var isDomFer = dow === 0 || !!holiday;
+        if (isDomFer && j.hora_saida_dom_feriado) {
+            effective.hora_saida = j.hora_saida_dom_feriado;
+            effective.source = holiday ? 'feriado' : 'domingo';
+            effective.sourceLabel = holiday ? ('Feriado: ' + holiday.name + ' (loja fecha mais cedo)') : 'Domingo (loja fecha mais cedo)';
+        }
+
+        // 1) Override do dia (máxima prioridade)
+        var ovr = getJornadaOverride(franchiseId, staffId, dateStr);
+        if (ovr) {
+            if (ovr.hora_entrada) effective.hora_entrada = ovr.hora_entrada;
+            if (ovr.hora_saida) effective.hora_saida = ovr.hora_saida;
+            if (ovr.intervalo_almoco_min != null) effective.intervalo_almoco_min = ovr.intervalo_almoco_min;
+            effective.source = 'override';
+            effective.sourceLabel = 'Ajuste pontual: ' + (ovr.motivo || 'sem motivo informado');
+            effective.overrideBy = ovr.createdBy;
+        }
+
+        // Calcula carga diária esperada (entrada → saída - almoço)
+        var entradaMin = timeToMinutes(effective.hora_entrada);
+        var saidaMin = timeToMinutes(effective.hora_saida);
+        if (saidaMin < entradaMin) saidaMin += 24 * 60; // virada de dia
+        effective.cargaDiariaMin = Math.max(0, (saidaMin - entradaMin) - effective.intervalo_almoco_min);
+
+        effective.isHoliday = !!holiday;
+        effective.holidayName = holiday ? holiday.name : null;
+        effective.isSunday = dow === 0;
+        return effective;
+    }
+
     function computeDay(franchiseId, staffId, dateStr) {
         var records = getStaffRecordsByDate(franchiseId, staffId, dateStr);
         var staff = (typeof DataStore !== 'undefined')
@@ -434,21 +574,28 @@
             minutosTrabalhados = diffMinutes(entrada.timestamp, saida.timestamp);
         }
 
-        // Carga horaria diaria esperada (ex: 8h = 480min para 44h/semana)
-        var cargaSemanal = (staff && staff.carga_horaria_semanal) || 44;
-        var diasUteis = (staff && staff.jornada && staff.jornada.tipo === '6x1') ? 6 : 5;
-        var cargaDiariaMin = Math.round((cargaSemanal / diasUteis) * 60);
+        // 🎯 Jornada efetiva (considera overrides + domingo/feriado)
+        var effJornada = getEffectiveJornada(franchiseId, staffId, dateStr);
+        var cargaDiariaMin = effJornada
+            ? effJornada.cargaDiariaMin
+            : Math.round((((staff && staff.carga_horaria_semanal) || 44) / ((staff && staff.jornada && staff.jornada.tipo === '6x1') ? 6 : 5)) * 60);
 
-        // Hora extra (se trabalhou alem da carga + tolerancia)
+        // Hora extra (se trabalhou alem da carga + tolerancia) → vai pro BANCO DE HORAS
         var minutosExtras = 0;
         if (minutosTrabalhados > cargaDiariaMin + TOLERANCIA_DIA_MIN) {
             minutosExtras = minutosTrabalhados - cargaDiariaMin;
         }
 
-        // Atraso na entrada (se aplicavel)
+        // 💼 SALDO DO DIA — positivo = vai pro banco, negativo = devedor
+        var saldoDiaMin = 0;
+        if (entrada && saida) {
+            saldoDiaMin = minutosTrabalhados - cargaDiariaMin;
+        }
+
+        // Atraso na entrada (vs jornada efetiva, não padrão)
         var minutosAtraso = 0;
-        if (entrada && staff && staff.jornada && staff.jornada.hora_entrada) {
-            var entradaPrevista = timeToMinutes(staff.jornada.hora_entrada);
+        if (entrada && effJornada && effJornada.hora_entrada) {
+            var entradaPrevista = timeToMinutes(effJornada.hora_entrada);
             var entradaReal = new Date(entrada.timestamp);
             var entradaRealMin = entradaReal.getHours() * 60 + entradaReal.getMinutes();
             if (entradaRealMin > entradaPrevista + TOLERANCIA_MIN) {
@@ -456,16 +603,16 @@
             }
         }
 
-        // Adicional noturno (22h-5h) — se aplicavel
+        // Adicional noturno (22h-5h)
         var minutosNoturnos = 0;
         if (staff && staff.adicional_noturno && entrada && saida) {
             minutosNoturnos = computeNightMinutes(entrada.timestamp, saida.timestamp);
         }
 
-        // Validacao CLT: intervalo intrajornada
+        // Validacao CLT intrajornada
         var avisoIntervalo = '';
         if (minutosTrabalhados > 6 * 60 && minutosAlmoco < 60) {
-            avisoIntervalo = 'Intervalo de almoco menor que 1h (jornada > 6h exige intervalo minimo de 1h conforme CLT art. 71)';
+            avisoIntervalo = 'Intervalo de almoço menor que 1h (jornada > 6h exige intervalo mínimo de 1h conforme CLT art. 71)';
         }
 
         return {
@@ -482,7 +629,11 @@
             minutosExtras: minutosExtras,
             minutosAtraso: minutosAtraso,
             minutosNoturnos: minutosNoturnos,
+            saldoDiaMin: saldoDiaMin,           // ← banco horas do dia (+ saldo / - devedor)
             cargaDiariaEsperadaMin: cargaDiariaMin,
+            jornadaEfetiva: effJornada,         // ← jornada considerando overrides + dom/feriado
+            isHoliday: effJornada && effJornada.isHoliday,
+            isSunday: effJornada && effJornada.isSunday,
             avisoIntervalo: avisoIntervalo,
             horasFormatado: minutesToTime(minutosTrabalhados)
         };
@@ -760,6 +911,16 @@
         addJustification: addJustification,
         adjustRecord: adjustRecord,        // 🛠 admin ajusta hora (mantem auditoria)
         cancelRecord: cancelRecord,        // 🗑 admin cancela registro (soft delete)
+
+        // 📅 Jornada flexível (override pontual por dia)
+        getEffectiveJornada: getEffectiveJornada,
+        getJornadaOverride: getJornadaOverride,
+        setJornadaOverride: setJornadaOverride,
+        removeJornadaOverride: removeJornadaOverride,
+
+        // 🎉 Feriados
+        isHoliday: isHoliday,
+        FERIADOS_NACIONAIS_2026: FERIADOS_NACIONAIS_2026,
 
         // Consultas
         findStaffByPin: findStaffByPin,

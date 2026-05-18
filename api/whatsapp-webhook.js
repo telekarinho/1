@@ -661,7 +661,7 @@ Você é uma agente AUTÔNOMA que faz pedidos de verdade. NÃO simule. Quando cl
 5. NUNCA invente preço — sempre venha de listar_cardapio ou criar_pedido
 
 ### CARDÁPIO REAL (catalog_v2/catalog_config Firestore):
-- Cada produto é um SABOR NOMEADO ÚNICO (Milkshake Amora Apaixonada, Blue Ice — Crush Gelado, Morango Romântico, Açaí Liberdade, Caramelo Derretido, Limão Suíço, Chocolate Apaixonante, Uva da Vovó, Maracujá, Cookies Snow, Ninho da Vovó, Pistache Esmeralda, Peanut Heaven, Cereja Beijada, Ameixa Roxinha, Banana Caramelizada, Capitão Açaí Premium, etc).
+- Cada produto é um SABOR NOMEADO ÚNICO (Milkshake Amora Apaixonada, Blue Ice — Crush Gelado, Morango Romântico, Açaí Liberdade, Caramelo Derretido, Limão Suíço, Chocolate Apaixonante, Uva da Vovó, Maracujá, Cookies Snow, Ninho da Vovó, Pistache Supreme, Amendoim Supremo, Cereja Beijada, Ameixa Roxinha, Banana Caramelizada, Capitão Açaí Premium, etc).
 - Categorias: Milkshakes / Sundaes (mesmos sabores, formato diferente) / Picolés / Casquinhas / Açaí Bowls / Buffet
 - Cada produto tem PREÇO ÚNICO (não tem variação por tamanho aqui — preço já vem definido)
 - Adicionais/Toppings são extras com preço próprio: Pistache R$3,50, M&M R$2,50, Granola, Calda, Chocolate, etc

@@ -26,6 +26,41 @@
     const TIKTOK_PIXEL = meta('mp-tiktok-pixel');
     const GTM_ID      = meta('mp-gtm-id');
     const GA4_ID      = meta('mp-ga4-id');
+    const ATTR_KEY    = 'mp_campaign_attribution';
+
+    function readAttribution() {
+        try {
+            return JSON.parse(localStorage.getItem(ATTR_KEY) || '{}') || {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function writeAttribution() {
+        try {
+            const qs = new URLSearchParams(location.search || '');
+            const keys = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','gclid','fbclid','ttclid'];
+            const hit = {};
+            keys.forEach(function(k) {
+                const v = qs.get(k);
+                if (v) hit[k] = v;
+            });
+            if (!Object.keys(hit).length) return;
+
+            const prev = readAttribution();
+            const now = new Date().toISOString();
+            const next = Object.assign({}, prev, hit, {
+                first_seen_at: prev.first_seen_at || now,
+                last_seen_at: now,
+                landing_page: prev.landing_page || location.href,
+                last_page: location.href,
+                referrer: prev.referrer || document.referrer || ''
+            });
+            localStorage.setItem(ATTR_KEY, JSON.stringify(next));
+        } catch (_) {}
+    }
+
+    writeAttribution();
 
     // ---- Meta (Facebook/Instagram) Pixel ----
     if (META_PIXEL) {
@@ -91,11 +126,14 @@
     global.MPPixel = {
         track(eventName, params) {
             params = params || {};
+            const attribution = readAttribution();
+            if (Object.keys(attribution).length) params = Object.assign({}, attribution, params);
             try { if (global.fbq) global.fbq('track', eventName, params); } catch(_) {}
             try { if (global.ttq && global.ttq.track) global.ttq.track(eventName, params); } catch(_) {}
             try { if (global.gtag) global.gtag('event', eventName, params); } catch(_) {}
             try { if (global.dataLayer) global.dataLayer.push({ event: eventName, ...params }); } catch(_) {}
         },
+        attribution: readAttribution,
         purchase(value, currency, orderId) {
             this.track('Purchase', { value: value, currency: currency || 'BRL', order_id: orderId });
         },

@@ -740,6 +740,9 @@ const CardapioApp = {
         this.cart.push(item);
         this.saveCart();
         this.updateCartCount();
+        try {
+            if (window.MPPixel) window.MPPixel.addToCart(item.total || 0, item.name || 'Produto');
+        } catch (_) {}
         this.showToast(`${item.emoji} ${item.name} adicionado! (${item.nomeCliente})`);
         this.renderHome();
         this.openCart();
@@ -861,6 +864,9 @@ const CardapioApp = {
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             this.renderCheckoutSummary();
+            try {
+                if (window.MPPixel) window.MPPixel.initiateCheckout(this.getMenuCartTotal());
+            } catch (_) {}
         }
     },
 
@@ -953,7 +959,8 @@ const CardapioApp = {
                 total: item.total || 0
             })),
             subtotal: this.getMenuCartTotal(),
-            total: this.getMenuCartTotal()
+            total: this.getMenuCartTotal(),
+            attribution: (window.MPPixel && window.MPPixel.attribution) ? window.MPPixel.attribution() : {}
         };
 
         // Save order
@@ -997,6 +1004,9 @@ const CardapioApp = {
         window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
 
         console.log('Order captured:', order);
+        try {
+            if (window.MPPixel) window.MPPixel.purchase(order.total, 'BRL', order.orderNumber);
+        } catch (_) {}
 
         this.cart = [];
         this.saveCart();

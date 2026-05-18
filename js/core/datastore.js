@@ -491,6 +491,10 @@ const DataStore = {
             docId.startsWith('time_clock_records_') ||
             docId.startsWith('time_clock_justifications_') ||
             docId.startsWith('time_clock_audit_') ||
+            docId.startsWith('jornada_overrides_') ||
+            docId.startsWith('holidays_') ||
+            docId.startsWith('ferias_') ||
+            docId.startsWith('trocas_turno_') ||
             // 📝 Solicitações + 📣 Comunicados — múltiplos devices escrevem
             docId.startsWith('solicitacoes_') ||
             docId.startsWith('comunicados_') ||
@@ -669,7 +673,15 @@ const DataStore = {
             // 📣 COMUNICADOS do gerente → app colaborador exibe na tab Avisos
             'comunicados_' + fid,
             // 🎓 TREINAMENTOS customizados do gerente
-            'treinamentos_' + fid
+            'treinamentos_' + fid,
+            // 📅 Jornada overrides (admin ajusta horario pontual por staff/dia)
+            'jornada_overrides_' + fid,
+            // 🎉 Feriados customizados (alem dos nacionais hardcoded em time-clock.js)
+            'holidays_' + fid,
+            // 🏖️ Marcacao de ferias aprovadas
+            'ferias_' + fid,
+            // 🔄 Trocas de turno aprovadas
+            'trocas_turno_' + fid
         ];
     },
 

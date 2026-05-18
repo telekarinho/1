@@ -38,6 +38,7 @@ const PRECACHE_URLS = [
     '/painel/test-checklist.html',
     '/painel/belinha-learnings.html',
     '/painel/colaboradores-hub.html',
+    '/painel/relatorio-clt.html',
 
 
     '/painel/finance-os.html',
@@ -83,6 +84,7 @@ const PRECACHE_URLS = [
     '/js/core/geofence.js',
     '/js/core/payroll.js',
     '/js/core/push-funcionario.js',
+    '/js/core/face-recognition.js',
     '/js/core/legal-terms.js',
     '/js/core/staff-conduct.js',
     '/js/core/overtime-bank.js',

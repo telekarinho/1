@@ -193,6 +193,14 @@
         return p;
     }
 
+    function _minActiveVariantNumber(variants, field) {
+        const values = (Array.isArray(variants) ? variants : [])
+            .filter(v => v && v.active !== false)
+            .map(v => Number(v[field] || 0))
+            .filter(v => v > 0);
+        return values.length ? Math.min(...values) : 0;
+    }
+
     // ==========================================================
     // TOPPINGS (globais)
     // ==========================================================
@@ -334,9 +342,9 @@
                 });
             })() : [];
 
-            // Buffet: R$ 5,99/100g = R$ 59,90/kg — somente loja
+            // Buffet: R$ 59,99/kg — somente loja
             const buffet = s.cat === 'cat_buffet'
-                ? { ativo: true, precoPorKg: 59.90, toppingsInclusos: allTopIds }
+                ? { ativo: true, precoPorKg: 59.99, toppingsInclusos: allTopIds }
                 : { ativo: false, precoPorKg: 0, toppingsInclusos: [] };
 
             return {
@@ -396,6 +404,7 @@
         // -------------------------------------------------------
         const EXCLUIR_SABORES = ['cat_bebida', 'cat_topping'];
         legacy.sabores = {};
+        let legacyNumero = 1;
 
         cats.forEach(cat => {
             if (EXCLUIR_SABORES.includes(cat.id)) return;
@@ -432,13 +441,12 @@
                 } else {
                     price = Number(p.precos?.loja?.real || p.precos?.loja?.recomendado || 0);
                 }
-                if (!price && p.variantes?.length) {
-                    price = Math.min(...p.variantes.map(v => Number(v.precoLoja || 0)).filter(v => v > 0));
-                }
+                if (!price && p.variantes?.length) price = _minActiveVariantNumber(p.variantes, 'precoLoja');
 
                 // Custo por kg para produtos por peso (pro CMV ficar correto)
                 // Se custoTotal é por porção, o PDV usa isso direto. Buffet: custoTotal já é estimativa por kg.
-                const cost = Number(p.custos?.custoTotal || 0);
+                const cost = Number(p.custos?.custoTotal || 0)
+                    || _minActiveVariantNumber(p.variantes, 'custoExtra');
 
                 // Porções padrão para produtos vendidos por peso (cardápio delivery mostra seletor de tamanho)
                 // - buffet: porções populares (250g/350g/500g/750g/1kg)
@@ -467,6 +475,7 @@
 
                 return {
                     id: p.id,
+                    numero: legacyNumero++,
                     name: p.name,
                     emoji: p.midia?.emoji || cat.icon || '🍨',
                     // Foto real do produto (v237): prioridade
@@ -485,6 +494,7 @@
                     tipoVenda,
                     porcoes: porcoes,  // exposto pro cardápio mobile por peso
                     canalVenda: p.canal || 'ambos',
+                    disponibilidade: p.disponibilidade || { pdv: true, delivery: true, cardapio: true, tv: true },
                     modoMontagem: 'montado',
                     commissionRate: 5,
                     badge: p.badge || '',           // ex: 'PREMIUM' no Capitão Açaí
@@ -502,6 +512,8 @@
                         variantes: p.variantes,
                         toppingsIds: p.toppingsIds,
                         buffet: p.buffet,
+                        categoriaId: p.categoriaId,
+                        picoleFlavors: p.picoleFlavors || [],
                         monteSeuJeito: p.monteSeuJeito || null,
                         tags: p.tags || [],
                         imagem: (p.midia && p.midia.imageUrl) || p.imagem || null
@@ -523,7 +535,8 @@
                 priceDelivery: Number(p.precos?.delivery?.real || p.precos?.delivery?.recomendado || 0),
                 cost: Number(p.custos?.custoTotal || 0),
                 available: p.active !== false,
-                canalVenda: p.canal || 'ambos'
+                canalVenda: p.canal || 'ambos',
+                disponibilidade: p.disponibilidade || { pdv: true, delivery: true, cardapio: true, tv: true }
             }));
         }
 
@@ -561,7 +574,7 @@
         return legacy;
     }
 
-    // Migração única: substitui toppings e reconfigura buffet para R$5,99/100g somente loja
+    // Migração única: substitui toppings e reconfigura buffet para R$59,99/kg somente loja
     function migrateBuffetV1(fid) {
         const d = load(fid);
         if (!d.produtos.length) return { skipped: true, reason: 'sem produtos' };
@@ -597,10 +610,10 @@
         // Atualiza produto buffet existente
         const buffetProd = d.produtos.find(p => p.categoriaId === 'cat_buffet');
         if (buffetProd) {
-            buffetProd.buffet = { ativo: true, precoPorKg: 59.90, toppingsInclusos: allTopIds };
+            buffetProd.buffet = { ativo: true, precoPorKg: 59.99, toppingsInclusos: allTopIds };
             buffetProd.canal = 'loja';
             buffetProd.precos = {
-                loja:     { recomendado: 59.90, real: 59.90 },
+                loja:     { recomendado: 59.99, real: 59.99 },
                 delivery: { recomendado: 0,     real: 0 },
                 ifood:    { recomendado: 0,     real: 0 }
             };
@@ -713,9 +726,9 @@
           desc: 'Branquinho, cremoso, com pedaços de cookie crocante. Tipo neve em Londrina: raríssima, mas gostosa demais.' },
         { name: 'Ninho da Vovó',             emoji: '🥛', cInsumos: 5.20, cAdd: 1.20,
           desc: 'Cremosidade de berço. Aquele cheirinho que lembra colo, pé no sofá e desenho da Disney no domingo de manhã.' },
-        { name: 'Pistache Esmeralda',        emoji: '🟢', cInsumos: 6.20, cAdd: 1.30,
+        { name: 'Pistache Supreme',          emoji: '🟢', cInsumos: 6.20, cAdd: 1.30,
           desc: 'Verdinho gourmet, sofisticado, crocante. Pistache premium com clima italiano — pra quem gosta de chique no copo.' },
-        { name: 'Peanut Heaven',             emoji: '🥜', cInsumos: 5.50, cAdd: 1.30,
+        { name: 'Amendoim Supremo',          emoji: '🥜', cInsumos: 5.50, cAdd: 1.30,
           desc: 'Cremoso, salgadinho, viciante. O peanut butter virou milkshake — e a vida nunca mais foi a mesma.' },
         { name: 'Cereja Beijada',            emoji: '🍒', cInsumos: 4.80, cAdd: 1.20,
           desc: 'Vermelhinha, brincalhona, top de bolo. A cereja que coroou seu milkshake — e provavelmente seu dia.' },
@@ -886,9 +899,9 @@
           desc: 'Branquinho, cremoso, com pedaços de cookie crocante por cima. Tipo neve em Londrina: raríssima, mas gostosa demais.' },
         { name: 'Ninho da Vovó',             emoji: '🥛', cInsumos: 5.20, cAdd: 1.30,
           desc: 'Cremosidade de berço. Aquele cheirinho que lembra colo, pé no sofá e desenho da Disney no domingo de manhã.' },
-        { name: 'Pistache Esmeralda',        emoji: '🟢', cInsumos: 6.20, cAdd: 1.40,
+        { name: 'Pistache Supreme',          emoji: '🟢', cInsumos: 6.20, cAdd: 1.40,
           desc: 'Verdinho gourmet, sofisticado, crocante. Sundae de pistache premium com clima italiano — pra quem gosta de chique no copo.' },
-        { name: 'Peanut Heaven',             emoji: '🥜', cInsumos: 5.50, cAdd: 1.40,
+        { name: 'Amendoim Supremo',          emoji: '🥜', cInsumos: 5.50, cAdd: 1.40,
           desc: 'Cremoso, salgadinho, viciante. O peanut butter virou sundae — e a vida nunca mais foi a mesma.' },
         { name: 'Cereja Beijada',            emoji: '🍒', cInsumos: 4.80, cAdd: 1.30,
           desc: 'Vermelhinha, brincalhona, top de bolo. A cereja que coroou seu sundae — e provavelmente seu dia.' },

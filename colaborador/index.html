@@ -337,6 +337,25 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                     <button class="fn-btn" onclick="fnIndicarAmigo()" style="background:#fff;color:#F59E0B">📲 Compartilhar link</button>
                 </div>
 
+                <!-- 📅 Card "Minha jornada hoje" — mostra jornada efetiva + override se houver -->
+                <div class="fn-card" id="jornadaHojeCard" style="background:linear-gradient(135deg,#DBEAFE,#BFDBFE);border:none;display:none">
+                    <h3 style="color:#1E40AF">📅 Sua jornada hoje</h3>
+                    <div id="jornadaHojeBody" style="font-size:.92rem;color:#1E3A8A;line-height:1.6"></div>
+                </div>
+
+                <!-- 📌 LEMBRETE CLT amigável (responsabilidade do funcionário) -->
+                <div class="fn-card" id="cltReminderCard" style="background:#FEF3C7;border-left:4px solid #F59E0B">
+                    <div style="display:flex;gap:10px;align-items:flex-start">
+                        <span style="font-size:1.5rem">⏰</span>
+                        <div>
+                            <strong style="color:#92400E;font-size:.92rem">Bater ponto é sua responsabilidade!</strong>
+                            <div style="font-size:.78rem;color:#92400E;margin-top:4px;line-height:1.5">
+                                Conforme <b>CLT art. 74</b>, registrar entrada/saída é dever do trabalhador. Bate certinho e ganha pontuação no app + mais segurança no banco de horas 💪🐑
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="fn-card">
                     <h3>📍 Suas marcacoes de hoje</h3>
                     <div class="fn-marcacoes" id="todayMarks"></div>
@@ -345,6 +364,8 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
                         ⏰ Bater Ponto
                         <small id="baterPontoSub">Proximo: Entrada</small>
                     </button>
+                    <!-- 💼 Saldo dia (banco horas) — só aparece após completar jornada -->
+                    <div id="saldoDiaCard" style="display:none;margin-top:12px;padding:10px 14px;background:#F0FDF4;border:1px solid #16A34A;border-radius:10px;text-align:center;font-size:.85rem"></div>
                 </div>
 
                 <div class="fn-card">
@@ -628,6 +649,7 @@ table.fn-table th { background: #F9FAFB; font-size: .7rem; font-weight: 800; col
 <script src="../js/core/geofence.js"></script>
 <script src="../js/core/payroll.js"></script>
 <script src="../js/core/legal-terms.js"></script>
+<script src="../js/core/face-recognition.js"></script>
 <script src="../js/core/staff-conduct.js"></script>
 <script src="../js/core/gamification.js"></script>
 <script src="../js/core/overtime-bank.js"></script>
@@ -1469,6 +1491,46 @@ function fnRenderHoje(session, staff) {
     var dia = TimeClock.computeDay(session.franchiseId, session.staffId, today);
     var staffData = staff || (DataStore.getCollection('staff', session.franchiseId) || []).find(function(x) { return x.id === session.staffId; });
 
+    // 📅 CARD "Minha jornada hoje" — mostra horário efetivo + override se houver
+    var jornCard = document.getElementById('jornadaHojeCard');
+    var jornBody = document.getElementById('jornadaHojeBody');
+    if (jornCard && jornBody && dia.jornadaEfetiva) {
+        var j = dia.jornadaEfetiva;
+        var html = '<div style="font-size:1.1rem;font-weight:800;font-family:\'Baloo 2\',cursive;color:#1E3A8A">⏰ ' + j.hora_entrada + ' → ' + j.hora_saida + '</div>';
+        html += '<div style="font-size:.78rem;margin-top:4px">';
+        html += 'Intervalo almoço/janta: <b>' + (j.intervalo_almoco_min || 0) + 'min</b>';
+        html += ' • Carga prevista: <b>' + Math.floor(j.cargaDiariaMin / 60) + 'h' + (j.cargaDiariaMin % 60 ? (j.cargaDiariaMin % 60) + 'min' : '') + '</b>';
+        html += '</div>';
+        if (j.source === 'override') {
+            html += '<div style="background:#FEF3C7;color:#92400E;padding:6px 10px;border-radius:8px;margin-top:8px;font-size:.78rem">📅 <b>Jornada ajustada pelo seu gerente hoje:</b> ' + Utils.escapeHtml(j.sourceLabel.replace(/^Ajuste pontual:\s*/, '')) + '</div>';
+        } else if (j.source === 'feriado') {
+            html += '<div style="background:#FEE2E2;color:#991B1B;padding:6px 10px;border-radius:8px;margin-top:8px;font-size:.78rem">🎉 ' + Utils.escapeHtml(j.sourceLabel) + '</div>';
+        } else if (j.source === 'domingo') {
+            html += '<div style="background:#EDE9FE;color:#5B21B6;padding:6px 10px;border-radius:8px;margin-top:8px;font-size:.78rem">📿 ' + Utils.escapeHtml(j.sourceLabel) + '</div>';
+        }
+        jornBody.innerHTML = html;
+        jornCard.style.display = 'block';
+    } else if (jornCard) {
+        jornCard.style.display = 'none';
+    }
+
+    // 💼 Saldo do dia (banco horas) — só após completar
+    var saldoCard = document.getElementById('saldoDiaCard');
+    if (saldoCard) {
+        if (dia.completo) {
+            var sgn = dia.saldoDiaMin >= 0 ? '+' : '-';
+            var icon = dia.saldoDiaMin >= 0 ? '🟢' : '🔴';
+            var lbl = dia.saldoDiaMin >= 0 ? 'a favor (vai pro seu banco de horas)' : 'devendo (compensar nos próximos dias)';
+            saldoCard.style.display = 'block';
+            saldoCard.style.background = dia.saldoDiaMin >= 0 ? '#F0FDF4' : '#FEF2F2';
+            saldoCard.style.borderColor = dia.saldoDiaMin >= 0 ? '#16A34A' : '#DC2626';
+            saldoCard.innerHTML = '<div style="font-size:1rem;font-weight:800">' + icon + ' Trabalhado: ' + dia.horasFormatado + ' • Saldo: <b>' + sgn + TimeClock.minutesToTime(Math.abs(dia.saldoDiaMin)) + '</b></div>'
+                + '<small style="color:#6B7280">' + lbl + '</small>';
+        } else {
+            saldoCard.style.display = 'none';
+        }
+    }
+
     var marks = [
         { lbl: 'Entrada', rec: dia.entrada },
         { lbl: 'Almoco', rec: dia.almocoSaida },
@@ -1591,7 +1653,7 @@ async function fnBaterPonto() {
         geoBanner.innerHTML = '⚠️ ' + geoResult.error;
     }
 
-    // 3) Capturar selfie (anti-fraude)
+    // 3) Capturar selfie (anti-fraude visual + biometria)
     btn.innerHTML = '📸 Capturando foto...<small>olhe pra camera</small>';
     var selfie = await fnCaptureSelfie();
     if (!selfie) {
@@ -1602,24 +1664,84 @@ async function fnBaterPonto() {
         }
     }
 
-    // 4) Registrar
+    // 3.5) 🤖 RECONHECIMENTO FACIAL AUTOMATICO (graceful — NUNCA bloqueia)
+    // Compara selfie atual com foto-ref pre-cadastrada. Score < 0.4 = match.
+    // Status possíveis: match / maybe / no_match / no_face / error
+    // - match → registra normal
+    // - maybe / no_match → registra com flagged:true (admin revisa)
+    // - no_face / error → registra normal (admin compara visualmente)
+    // Funcionária NUNCA é bloqueada — só fica flagged pro admin.
+    var faceResult = null;
+    if (selfie && staffData && staffData.referenceDescriptor && typeof FaceRecognition !== 'undefined') {
+        btn.innerHTML = '🤖 Verificando rosto...<small>1 segundo</small>';
+        try {
+            // Carrega face-api se primeira vez (~10MB, leva uns 3-5s na 1a)
+            await FaceRecognition.init();
+            faceResult = await FaceRecognition.checkMatch(
+                null,                              // ref não precisa (usamos descriptor cached)
+                selfie,                            // selfie nova
+                staffData.referenceDescriptor      // descriptor pré-calculado da ref
+            );
+            console.log('[face-match]', faceResult);
+            // Se match falhou (no_match), tenta uma segunda vez antes de flagged
+            if (faceResult.status === 'no_match') {
+                if (confirm('🤔 Não reconheci seu rosto com certeza. Tirar outra foto melhor iluminada?')) {
+                    selfie = await fnCaptureSelfie();
+                    if (selfie) {
+                        faceResult = await FaceRecognition.checkMatch(null, selfie, staffData.referenceDescriptor);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('face-match falhou:', e.message);
+            faceResult = { status: 'error', error: e.message };
+        }
+    }
+
+    // 4) Registrar (com info do face match pra admin)
     btn.innerHTML = '⏳ Registrando...<small>quase la</small>';
+    var faceFlagged = faceResult && (faceResult.status === 'no_match' || faceResult.status === 'maybe');
     var result = await TimeClock.recordPunch(session.franchiseId, staffData.pin, 'pin', {
         channel: 'mobile',
         geolocation: geoResult.coords || null,
-        selfie: selfie
+        selfie: selfie,
+        faceMatch: faceResult ? {
+            status: faceResult.status,
+            distance: faceResult.distance,
+            confidence: faceResult.confidence
+        } : null,
+        flagged: faceFlagged,
+        flaggedReason: faceFlagged ? ('Face match: ' + faceResult.status + ' (distance=' + faceResult.distance + ')') : null
     });
 
     if (result.success) {
-        btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
-        btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + Utils.formatTime(result.timestamp) + ' • NSR ' + result.nsr + '</small>';
+        var faceFeedback = '';
+        if (faceResult) {
+            if (faceResult.status === 'match') {
+                faceFeedback = ' • 🤖✓ rosto OK';
+                btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+            } else if (faceResult.status === 'maybe' || faceResult.status === 'no_match') {
+                faceFeedback = ' • ⚠ admin vai conferir';
+                btn.style.background = 'linear-gradient(135deg,#F59E0B,#D97706)';
+                // Avisa funcionária mas NÃO bloqueia
+                Utils.showToast('Ponto registrado, mas gerente vai conferir o rosto na revisão. ✓', 'warning');
+            } else if (faceResult.status === 'no_face') {
+                faceFeedback = ' • 📸 rosto não detectado';
+                btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+            } else {
+                btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+            }
+        } else {
+            btn.style.background = 'linear-gradient(135deg,#10B981,#059669)';
+        }
+        btn.innerHTML = '✓ Registrado!<small>' + result.typeLabel + ' as ' + Utils.formatTime(result.timestamp) + ' • NSR ' + result.nsr + faceFeedback + '</small>';
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         setTimeout(function() {
             fnRenderHoje(session, staffData);
             fnRenderMes(session);
             btn.style.background = 'linear-gradient(135deg,#16A34A,#10B981)';
             btn.disabled = false;
-        }, 2400);
+        }, 3000);
     } else {
         btn.disabled = false;
         btn.innerHTML = '⏰ Bater Ponto<small>Proximo: --</small>';
