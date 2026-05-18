@@ -1,0 +1,3924 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Desafio 10 MilkyPot Milissegundos | MilkyPot</title>
+<meta name="theme-color" content="#F0F7FF">
+<link rel="manifest" href="/manifest-desafio.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;700;800;900&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow-x:hidden;background:#F0F7FF}
+body{
+font-family:'Nunito',sans-serif;color:#5A4570;
+display:flex;align-items:center;justify-content:center;
+}
+
+/* === FULLSCREEN FILL === */
+.screen{
+width:100vw;min-height:100vh;
+display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+position:relative;overflow:hidden;
+background:linear-gradient(135deg,#F0F7FF 0%,#E8F4FD 30%,#F5E6F0 60%,#EDE0F5 100%);
+}
+
+/* Ambient glow */
+.ambient{
+position:absolute;width:600px;height:600px;border-radius:50%;
+filter:blur(120px);opacity:0.15;pointer-events:none;
+}
+.ambient-1{background:#E8A0BF;top:-200px;left:-100px;opacity:0.2}
+.ambient-2{background:#C8A2E8;bottom:-200px;right:-100px;opacity:0.2}
+.ambient-3{background:#42A5F5;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0;transition:opacity 0.5s}
+.running .ambient-3{opacity:0.08;animation:ambPulse 2s ease infinite}
+@keyframes ambPulse{0%,100%{opacity:0.05}50%{opacity:0.12}}
+
+/* === STEP SCREENS === */
+.step{
+display:none;flex-direction:column;align-items:center;justify-content:center;
+width:100%;height:100vh;position:absolute;inset:0;
+padding:40px;padding-bottom:env(safe-area-inset-bottom,20px);
+overflow-y:auto;overflow-x:hidden;
+}
+.step.active{display:flex}
+.step.attract{overflow:hidden;padding:clamp(16px,3vh,40px) 20px !important;justify-content:space-evenly !important}
+#step2{overflow:hidden}
+
+/* Step0 scrolls from top on small screens */
+#step0{
+justify-content:flex-start;
+padding-top:max(32px,env(safe-area-inset-top,32px));
+padding-left:clamp(16px,5vw,40px);
+padding-right:clamp(16px,5vw,40px);
+}
+@media(min-height:780px){
+  #step0{justify-content:center;padding-top:40px}
+}
+
+/* === STEP 0: IDLE / ATTRACT === */
+.badge-top{
+font-size:clamp(11px,1.5vw,14px);font-weight:800;letter-spacing:3px;text-transform:uppercase;
+color:#9B59B6;
+margin-bottom:8px;
+}
+.logo-img{width:clamp(100px,15vw,180px);margin-bottom:6px;filter:drop-shadow(0 4px 20px rgba(232,160,191,0.4))}
+.main-title{
+font-family:'Baloo 2',cursive;
+font-size:clamp(36px,8vw,80px);
+font-weight:800;line-height:1;
+background:linear-gradient(135deg,#C0392B,#8E44AD,#2980B9);
+background-size:200% 200%;animation:gradShift 4s ease infinite;
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+margin-bottom:8px;
+}
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.main-sub{
+font-size:clamp(14px,2vw,22px);font-weight:600;
+color:#5A4570;margin-bottom:12px;text-align:center;
+}
+
+/* LED Counter */
+.counter-box{
+position:relative;
+background:rgba(255,255,255,0.9);
+border:2px solid rgba(66,165,245,0.3);
+border-radius:24px;
+padding:clamp(24px,4vw,48px) clamp(32px,6vw,80px);
+margin-bottom:24px;
+box-shadow:0 4px 24px rgba(90,69,112,0.08);
+}
+.counter-box::before{
+content:'';position:absolute;inset:-3px;border-radius:26px;
+background:linear-gradient(135deg,#42A5F5,#E8A0BF80,#C8A2E880,#42A5F5);
+background-size:300% 300%;animation:borderGlow 4s ease infinite;
+z-index:-1;opacity:0.4;
+}
+@keyframes borderGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+.counter-label{
+font-size:clamp(10px,1.2vw,13px);font-weight:800;
+letter-spacing:4px;text-transform:uppercase;
+color:rgba(66,165,245,0.7);margin-bottom:8px;text-align:center;
+}
+.counter-num{
+font-family:'Orbitron',monospace;
+font-size:clamp(60px,16vw,160px);
+font-weight:900;line-height:1;
+color:#42A5F5;
+text-shadow:0 0 20px rgba(66,165,245,0.5),0 0 60px rgba(66,165,245,0.2),0 0 120px rgba(66,165,245,0.08);
+animation:ledBlink 1s ease infinite;
+letter-spacing:clamp(2px,0.5vw,8px);
+}
+@keyframes ledBlink{0%,100%{opacity:1}50%{opacity:0.7}}
+.running .counter-num{color:#FF0040;animation:ledRun 0.3s ease infinite}
+@keyframes ledRun{0%,100%{opacity:1;text-shadow:0 0 30px rgba(255,0,64,0.8),0 0 80px rgba(255,0,64,0.4)}50%{opacity:0.85;text-shadow:0 0 40px rgba(255,0,64,1),0 0 100px rgba(255,0,64,0.5)}}
+
+.counter-target{
+font-size:clamp(11px,1.3vw,15px);font-weight:700;
+color:rgba(90,69,112,0.4);margin-top:8px;text-align:center;
+}
+.counter-target span{color:#42A5F5}
+
+.tv-release-status{
+margin:10px 0 12px;
+padding:10px 16px;
+border-radius:18px;
+background:rgba(66,165,245,0.12);
+color:#5A4570;
+font-size:clamp(13px,1.7vw,18px);
+font-weight:800;
+text-align:center;
+max-width:560px;
+}
+.wheel-card{
+display:none;
+background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(245,240,255,0.95));
+border:2px solid rgba(255,0,64,0.18);
+border-radius:20px;
+padding:16px 20px;
+margin:8px 0 12px;
+text-align:center;
+max-width:430px;
+width:100%;
+box-shadow:0 10px 32px rgba(90,69,112,0.12);
+}
+.wheel-title{font-family:'Baloo 2',cursive;font-size:clamp(20px,3vw,30px);font-weight:800;color:#FF0040;line-height:1}
+.wheel-spin{
+width:120px;height:120px;border-radius:50%;margin:12px auto;
+display:flex;align-items:center;justify-content:center;
+font-size:44px;background:conic-gradient(#FFE082 0 25%,#FF8A80 0 45%,#B39DDB 0 70%,#90CAF9 0 100%);
+border:8px solid #fff;box-shadow:0 8px 24px rgba(90,69,112,0.18);
+}
+.wheel-spin.spinning{animation:wheelSpin 1.3s cubic-bezier(.15,.8,.2,1)}
+@keyframes wheelSpin{from{transform:rotate(0deg) scale(.92)}to{transform:rotate(1080deg) scale(1)}}
+.wheel-prize{font-size:clamp(17px,2.5vw,24px);font-weight:900;color:#5A4570}
+.wheel-note{font-size:12px;color:rgba(90,69,112,0.55);margin-top:4px}
+
+/* Player name display */
+.player-name-display{
+font-size:clamp(16px,2.5vw,28px);font-weight:800;
+color:#E8A0BF;margin-bottom:20px;
+}
+
+/* Status */
+.status-msg{
+min-height:40px;
+font-size:clamp(14px,2vw,20px);font-weight:700;
+color:rgba(90,69,112,0.5);margin-bottom:20px;
+text-align:center;
+}
+.running .status-msg{color:#FF0040;animation:fadeInUp 0.4s}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Buttons */
+.btn{
+padding:clamp(14px,2vw,22px) clamp(40px,6vw,80px);
+border:none;border-radius:60px;
+font-family:'Nunito',sans-serif;
+font-size:clamp(16px,2vw,24px);font-weight:800;
+color:#fff;cursor:pointer;
+transition:transform 0.15s,box-shadow 0.15s;
+-webkit-user-select:none;user-select:none;
+}
+.btn:active{transform:scale(0.95)}
+.btn-start{
+background:linear-gradient(135deg,#FF0040,#FF1A5C);
+box-shadow:0 8px 32px rgba(255,0,64,0.4),0 0 60px rgba(255,0,64,0.1);
+animation:btnGlow 2s ease infinite;
+font-size:clamp(18px,3vw,28px) !important;
+padding:clamp(16px,2.5vw,24px) clamp(48px,8vw,100px) !important;
+letter-spacing:1px;
+}
+@keyframes btnGlow{0%,100%{box-shadow:0 8px 32px rgba(255,0,64,0.4)}50%{box-shadow:0 12px 48px rgba(255,0,64,0.6),0 0 80px rgba(255,0,64,0.15)}}
+.btn-stop{
+background:linear-gradient(135deg,#FF0040,#C8A2E8);
+box-shadow:0 8px 32px rgba(255,0,64,0.5);
+animation:btnPulse 0.8s ease infinite;
+}
+@keyframes btnPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+.btn-pink{
+background:linear-gradient(135deg,#E8A0BF,#C8A2E8);
+box-shadow:0 8px 24px rgba(232,160,191,0.3);
+}
+.btn-outline{
+background:transparent;border:2px solid rgba(90,69,112,0.2);
+padding:clamp(10px,1.5vw,16px) clamp(24px,4vw,48px);
+font-size:clamp(13px,1.5vw,18px);color:#5A4570;
+}
+.btn-outline:hover{border-color:rgba(90,69,112,0.4)}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+
+/* Name input */
+.name-input{
+background:rgba(255,255,255,0.9);
+border:2px solid rgba(200,162,232,0.3);
+border-radius:16px;
+padding:clamp(12px,2vw,20px) clamp(20px,3vw,32px);
+font-family:'Nunito',sans-serif;
+font-size:clamp(18px,3vw,28px);font-weight:700;
+color:#5A4570;text-align:center;
+width:clamp(280px,50vw,500px);
+outline:none;
+transition:border-color 0.3s;
+margin-bottom:20px;
+box-shadow:0 2px 12px rgba(90,69,112,0.06);
+}
+.name-input::placeholder{color:rgba(90,69,112,0.35)}
+.name-input:focus{border-color:#E8A0BF}
+
+/* === STEP 2: PHOTO === */
+.photo-area{
+position:relative;
+width:clamp(280px,60vw,500px);height:clamp(280px,60vw,500px);
+border-radius:24px;overflow:hidden;
+border:3px solid rgba(232,160,191,0.5);
+margin-bottom:20px;
+background:#000;
+box-shadow:0 4px 24px rgba(90,69,112,0.1);
+}
+.photo-area video,.photo-area canvas,.photo-area img{
+width:100%;height:100%;object-fit:cover;
+}
+.photo-frame{
+position:absolute;inset:0;
+border:4px solid rgba(255,255,255,0.15);
+border-radius:24px;pointer-events:none;z-index:2;
+}
+.photo-overlay{
+position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
+z-index:3;
+font-size:clamp(11px,1.5vw,14px);font-weight:800;
+color:#fff;background:rgba(0,0,0,0.5);
+padding:6px 16px;border-radius:50px;
+backdrop-filter:blur(8px);
+}
+
+/* === STEP 4: RESULT === */
+.result-value{
+font-family:'Orbitron',monospace;
+font-size:clamp(48px,12vw,100px);
+font-weight:900;line-height:1;margin-bottom:8px;
+}
+.result-value.win{
+color:#FFD700;
+text-shadow:0 0 30px rgba(255,215,0,0.6),0 0 80px rgba(255,215,0,0.3);
+}
+.result-value.close{color:#FF6B9D;text-shadow:0 0 20px rgba(255,107,157,0.4)}
+.result-value.far{color:#C8A2E8;text-shadow:0 0 20px rgba(200,162,232,0.3)}
+.result-diff-badge{
+display:inline-block;
+padding:8px 20px;border-radius:50px;
+font-size:clamp(13px,1.5vw,16px);font-weight:800;
+margin-bottom:12px;
+}
+.result-diff-badge.win{background:rgba(255,215,0,0.2);color:#FFD700}
+.result-diff-badge.close{background:rgba(255,107,157,0.15);color:#FF6B9D}
+.result-diff-badge.far{background:rgba(200,162,232,0.15);color:#C8A2E8}
+.result-msg{
+font-family:'Baloo 2',cursive;
+font-size:clamp(24px,5vw,48px);font-weight:800;
+margin-bottom:4px;
+}
+.result-sub{font-size:clamp(13px,1.5vw,18px);color:rgba(90,69,112,0.6);margin-bottom:20px}
+
+/* Ranking */
+.ranking{
+background:rgba(255,255,255,0.85);
+border:1px solid rgba(200,162,232,0.2);
+border-radius:20px;padding:20px;
+width:clamp(300px,50vw,480px);
+margin-top:16px;
+box-shadow:0 2px 16px rgba(90,69,112,0.06);
+}
+.ranking-title{font-size:14px;font-weight:800;color:#E8A0BF;text-align:center;margin-bottom:12px}
+.ranking-row{
+display:flex;align-items:center;gap:10px;
+padding:8px 0;border-bottom:1px solid rgba(90,69,112,0.08);
+font-size:13px;color:#5A4570;
+}
+.ranking-row:last-child{border:none}
+.ranking-pos{
+width:28px;height:28px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+font-size:14px;font-weight:800;
+}
+.rp1{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff}
+.rp2{background:#C0C0C0;color:#fff}
+.rp3{background:#CD7F32;color:#fff}
+.rp4,.rp5{background:rgba(90,69,112,0.1);color:rgba(90,69,112,0.5)}
+.ranking-name{flex:1;font-weight:700;color:#5A4570}
+.ranking-val{font-family:'Orbitron',monospace;font-size:12px;color:#42A5F5}
+
+/* Webcam pip */
+.webcam-pip{
+position:fixed;bottom:20px;right:20px;
+width:clamp(120px,20vw,220px);
+aspect-ratio:1;
+border-radius:50%;overflow:hidden;
+border:3px solid #E8A0BF;
+box-shadow:0 0 20px rgba(232,160,191,0.3);
+z-index:50;display:none;
+}
+.webcam-pip video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.webcam-pip.recording::after{
+content:'REC';position:absolute;top:8px;left:50%;transform:translateX(-50%);
+font-size:10px;font-weight:800;color:#FF0040;
+background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:10px;
+animation:recBlink 1s ease infinite;
+}
+@keyframes recBlink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* Confetti */
+.confetti-canvas{position:fixed;inset:0;z-index:99;pointer-events:none}
+
+/* Win overlay */
+.win-overlay{
+position:fixed;inset:0;z-index:100;
+display:none;align-items:center;justify-content:center;
+background:rgba(90,69,112,0.6);backdrop-filter:blur(12px);
+}
+.win-overlay.show{display:flex}
+.win-card{
+background:linear-gradient(145deg,#FFFFFF,#F5E6F0);
+border:2px solid rgba(255,215,0,0.4);
+border-radius:32px;padding:clamp(32px,4vw,48px);
+text-align:center;max-width:420px;width:90%;
+box-shadow:0 20px 80px rgba(255,215,0,0.2);
+animation:winIn 0.5s var(--ease-bounce,cubic-bezier(0.175,0.885,0.32,1.275));
+}
+@keyframes winIn{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
+.win-seal{font-size:clamp(48px,8vw,72px);margin-bottom:12px;animation:sealBounce 1s ease infinite}
+@keyframes sealBounce{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.1) rotate(5deg)}}
+.win-title{
+font-family:'Baloo 2',cursive;font-size:clamp(28px,6vw,44px);font-weight:800;
+color:#FFD700;margin-bottom:4px;
+}
+.win-sub{font-size:clamp(13px,1.5vw,16px);color:rgba(90,69,112,0.6);margin-bottom:16px}
+.win-prize{
+background:rgba(255,215,0,0.1);border:2px solid rgba(255,215,0,0.3);
+border-radius:16px;padding:16px;margin-bottom:16px;
+}
+.win-prize-label{font-size:11px;font-weight:800;color:#D4A017;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.win-prize-text{font-size:clamp(16px,2.5vw,22px);font-weight:800;color:#5A4570}
+.win-note{font-size:12px;color:rgba(90,69,112,0.45);margin-bottom:16px}
+
+/* Attempts */
+.attempts-badge{
+position:fixed;top:20px;right:20px;z-index:10;
+font-size:12px;font-weight:700;color:rgba(90,69,112,0.5);
+background:rgba(255,255,255,0.7);padding:6px 14px;border-radius:50px;
+box-shadow:0 2px 8px rgba(90,69,112,0.06);
+}
+
+/* Footer */
+.foot{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(90,69,112,0.3);z-index:10;text-align:center;white-space:nowrap}
+
+/* === SHEEP MASCOT === */
+.sheep{
+position:fixed;bottom:60px;z-index:20;
+font-size:clamp(40px,6vw,64px);
+animation:sheepWalk 12s linear infinite;
+filter:drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+pointer-events:none;
+}
+@keyframes sheepWalk{
+0%{left:-80px;transform:scaleX(1)}
+45%{left:calc(100vw - 80px);transform:scaleX(1)}
+50%{left:calc(100vw - 80px);transform:scaleX(-1)}
+95%{left:-80px;transform:scaleX(-1)}
+100%{left:-80px;transform:scaleX(1)}
+}
+.sheep-bounce{animation:sheepBounce 0.5s ease infinite alternate}
+@keyframes sheepBounce{from{transform:translateY(0)}to{transform:translateY(-6px)}}
+.sheep-bubble{
+position:fixed;bottom:clamp(110px,14vw,140px);
+z-index:21;pointer-events:none;
+background:rgba(255,255,255,0.92);
+backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+border:1px solid rgba(232,160,191,0.3);
+border-radius:16px;padding:10px 16px;
+font-size:clamp(11px,1.4vw,14px);font-weight:700;
+color:#5A4570;
+max-width:280px;text-align:center;
+animation:bubbleIn 0.4s ease;
+display:none;
+box-shadow:0 4px 16px rgba(90,69,112,0.1);
+}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(10px) scale(0.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+.sheep-bubble::after{
+content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);
+width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;
+border-top:8px solid rgba(255,255,255,0.92);
+}
+
+/* === RETURNING PLAYER OVERLAY === */
+.welcome-back{
+position:fixed;inset:0;z-index:90;
+display:none;align-items:center;justify-content:center;
+background:rgba(90,69,112,0.5);backdrop-filter:blur(8px);
+}
+.welcome-back.show{display:flex}
+.welcome-card{
+background:linear-gradient(145deg,#FFFFFF,#F5E6F0);
+border:2px solid rgba(232,160,191,0.35);
+border-radius:28px;padding:clamp(24px,4vw,40px);
+text-align:center;max-width:420px;width:90%;
+animation:winIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+box-shadow:0 12px 48px rgba(90,69,112,0.15);
+}
+.welcome-emoji{font-size:clamp(48px,8vw,72px);margin-bottom:8px}
+.welcome-title{font-family:'Baloo 2',cursive;font-size:clamp(22px,4vw,32px);font-weight:800;color:#E8A0BF;margin-bottom:4px}
+.welcome-sub{font-size:clamp(13px,1.5vw,16px);color:rgba(90,69,112,0.6);margin-bottom:16px}
+.welcome-history{
+background:rgba(240,247,255,0.7);border:1px solid rgba(200,162,232,0.15);
+border-radius:16px;padding:12px;margin-bottom:16px;text-align:left;
+max-height:200px;overflow-y:auto;
+}
+.welcome-history-item{
+display:flex;justify-content:space-between;align-items:center;
+padding:6px 0;border-bottom:1px solid rgba(90,69,112,0.08);
+font-size:clamp(12px,1.3vw,14px);color:#5A4570;
+}
+.welcome-history-item:last-child{border:none}
+.welcome-history-date{color:rgba(90,69,112,0.45);font-weight:600}
+.welcome-history-val{font-family:'Orbitron',monospace;color:#42A5F5;font-weight:700;font-size:clamp(13px,1.5vw,15px)}
+.welcome-best{
+background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.25);
+border-radius:12px;padding:10px;margin-bottom:16px;
+}
+.welcome-best-label{font-size:11px;font-weight:800;color:#FFD700;text-transform:uppercase;letter-spacing:1px}
+.welcome-best-val{font-family:'Orbitron',monospace;font-size:clamp(24px,4vw,36px);font-weight:900;color:#FFD700}
+.welcome-challenge{font-size:clamp(14px,1.8vw,18px);font-weight:800;color:#E8A0BF;margin-bottom:16px}
+
+/* === SCREENSAVER / ATTRACT MODE === */
+.attract{text-align:center}
+.attract-title{
+font-family:'Baloo 2',cursive;
+font-size:clamp(36px,8vw,80px);font-weight:800;
+color:#5A4570;
+margin-bottom:4px;
+text-shadow:0 2px 8px rgba(90,69,112,0.15);
+}
+.attract-sub{
+font-size:clamp(13px,2vw,22px);font-weight:700;
+color:#5A4570;margin-bottom:16px;
+}
+.attract-feed{
+width:clamp(320px,60vw,600px);
+overflow:hidden;position:relative;
+}
+.attract-card{
+background:rgba(255,255,255,0.85);
+border:1px solid rgba(200,162,232,0.2);
+border-radius:20px;padding:clamp(16px,2vw,28px);
+margin-bottom:16px;text-align:center;
+animation:cardSlideIn 0.6s ease;
+box-shadow:0 2px 12px rgba(90,69,112,0.06);
+}
+@keyframes cardSlideIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.attract-card-emoji{font-size:clamp(28px,5vw,48px);margin-bottom:8px}
+.attract-card-name{font-size:clamp(16px,2.5vw,24px);font-weight:800;color:#E8A0BF;margin-bottom:4px}
+.attract-card-msg{font-size:clamp(13px,1.8vw,18px);font-weight:600;color:rgba(90,69,112,0.6);margin-bottom:4px}
+.attract-card-val{
+font-family:'Orbitron',monospace;
+font-size:clamp(20px,4vw,36px);font-weight:900;
+color:#42A5F5;text-shadow:0 0 15px rgba(66,165,245,0.2);
+}
+.attract-card-val.gold{color:#FFD700;text-shadow:0 0 15px rgba(255,215,0,0.4)}
+.attract-cta{
+margin-top:24px;
+font-size:clamp(18px,3vw,32px);font-weight:900;
+color:#FF0040;animation:ctaPulse 2s ease infinite;
+text-shadow:0 2px 8px rgba(255,0,64,0.2);
+}
+@keyframes ctaPulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+.attract-logo{width:clamp(120px,18vw,220px);margin-bottom:8px;filter:drop-shadow(0 4px 24px rgba(232,160,191,0.5))}
+
+/* === DIFFICULTY SELECTOR === */
+.difficulty-wrap{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:24px}
+.diff-btn{
+padding:clamp(10px,1.5vw,16px) clamp(18px,3vw,32px);
+border-radius:16px;border:2px solid rgba(200,162,232,0.2);
+background:rgba(255,255,255,0.8);
+font-family:'Nunito',sans-serif;font-size:clamp(13px,1.5vw,16px);font-weight:800;
+color:rgba(90,69,112,0.6);cursor:pointer;transition:all 0.3s;
+backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;gap:4px;
+box-shadow:0 2px 8px rgba(90,69,112,0.05);
+}
+.diff-btn:hover{border-color:rgba(200,162,232,0.5)}
+.diff-btn.active{border-color:#E8A0BF;color:#5A4570;background:rgba(232,160,191,0.12)}
+.diff-btn .diff-icon{font-size:clamp(20px,3vw,28px)}
+.diff-btn .diff-label{font-size:clamp(10px,1.2vw,12px);color:rgba(90,69,112,0.4)}
+.diff-btn.active .diff-label{color:rgba(232,160,191,0.8)}
+
+/* === WEEKLY TOURNAMENT === */
+.tournament-section{
+background:rgba(255,255,255,0.8);border:1px solid rgba(255,215,0,0.2);
+border-radius:20px;padding:clamp(16px,2vw,24px);
+width:clamp(300px,55vw,520px);margin-bottom:20px;
+box-shadow:0 2px 12px rgba(90,69,112,0.06);
+}
+.tournament-title{font-size:clamp(14px,1.8vw,18px);font-weight:800;color:#FFD700;text-align:center;margin-bottom:8px}
+.tournament-countdown{font-size:clamp(10px,1.3vw,13px);color:rgba(180,150,0,0.6);text-align:center;margin-bottom:10px}
+.tournament-row{
+display:flex;align-items:center;gap:10px;padding:6px 0;
+border-bottom:1px solid rgba(90,69,112,0.08);font-size:13px;color:#5A4570;
+}
+.tournament-row:last-child{border:none}
+.tournament-photo{width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,215,0,0.3)}
+
+/* === STREAK === */
+.streak-badge{
+display:inline-flex;align-items:center;gap:6px;
+background:rgba(255,100,0,0.12);border:1px solid rgba(255,100,0,0.25);
+border-radius:50px;padding:6px 16px;margin-bottom:16px;
+font-size:clamp(12px,1.5vw,15px);font-weight:800;color:#FF6B00;
+}
+.streak-vip{
+background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,100,0,0.1));
+border-color:rgba(255,215,0,0.3);color:#FFD700;
+animation:vipGlow 1.5s ease infinite;
+}
+@keyframes vipGlow{0%,100%{box-shadow:0 0 8px rgba(255,215,0,0.1)}50%{box-shadow:0 0 20px rgba(255,215,0,0.25)}}
+
+/* === PERSONAL RECORD === */
+.pr-celebration{
+position:fixed;inset:0;z-index:95;
+display:flex;align-items:center;justify-content:center;
+background:rgba(90,69,112,0.5);backdrop-filter:blur(8px);
+animation:fadeIn 0.3s;pointer-events:none;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.pr-card{
+background:linear-gradient(145deg,#FFFFFF,#E8F8F0);
+border:2px solid rgba(0,220,130,0.3);border-radius:24px;
+padding:clamp(24px,3vw,40px);text-align:center;
+animation:winIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+box-shadow:0 12px 48px rgba(90,69,112,0.15);
+}
+.pr-emoji{font-size:clamp(36px,6vw,56px);margin-bottom:8px}
+.pr-title{font-family:'Baloo 2',cursive;font-size:clamp(22px,4vw,36px);font-weight:800;color:#00DC82;margin-bottom:4px}
+.pr-detail{font-size:clamp(13px,1.5vw,16px);color:rgba(90,69,112,0.6)}
+
+/* === DIGITAL BADGE === */
+.badge-card{
+background:rgba(255,255,255,0.85);
+border:2px solid rgba(232,160,191,0.25);border-radius:24px;
+padding:clamp(20px,3vw,32px);text-align:center;
+width:clamp(280px,50vw,400px);margin-top:16px;
+box-shadow:0 2px 16px rgba(90,69,112,0.06);
+}
+.badge-card-title{font-size:clamp(14px,1.8vw,18px);font-weight:800;color:#E8A0BF;margin-bottom:8px}
+.badge-card-score{font-family:'Orbitron',monospace;font-size:clamp(24px,5vw,40px);font-weight:900;color:#42A5F5;margin-bottom:8px}
+.badge-card-sub{font-size:clamp(11px,1.3vw,13px);color:rgba(90,69,112,0.45);margin-bottom:12px}
+.badge-save-btn{
+background:linear-gradient(135deg,#E8A0BF,#C8A2E8);
+border:none;border-radius:50px;
+padding:8px 20px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
+color:#fff;cursor:pointer;transition:transform 0.15s;
+}
+.badge-save-btn:active{transform:scale(0.95)}
+
+/* === MONTHLY CHALLENGE === */
+.monthly-banner{
+background:linear-gradient(135deg,rgba(255,0,64,0.1),rgba(200,162,232,0.08));
+border:1px solid rgba(255,0,64,0.2);border-radius:16px;
+padding:10px 20px;margin-bottom:16px;text-align:center;
+font-size:clamp(12px,1.5vw,15px);font-weight:700;color:#FF0040;
+}
+.monthly-banner span{color:#FFD700;font-weight:900}
+
+/* === PRODUCT COMBO === */
+.product-select{
+background:rgba(255,255,255,0.95);border:2px solid rgba(200,162,232,0.3);
+border-radius:16px;padding:clamp(10px,1.5vw,16px) clamp(16px,2vw,24px);
+font-family:'Nunito',sans-serif;font-size:clamp(14px,2vw,20px);font-weight:700;
+color:#5A4570;width:clamp(280px,50vw,500px);outline:none;
+-webkit-appearance:none;appearance:none;cursor:pointer;margin-bottom:12px;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+background-repeat:no-repeat;background-position:right 16px center;
+}
+.product-select option{background:#fff;color:#5A4570}
+
+/* === STAMP CARD === */
+.stamp-card{
+background:rgba(255,255,255,0.9);border:1px solid rgba(200,162,232,0.2);
+border-radius:16px;padding:12px 20px;margin-bottom:16px;text-align:center;
+}
+.stamp-card-title{font-size:clamp(11px,1.3vw,13px);font-weight:800;color:rgba(90,69,112,0.6);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.stamp-stars{font-size:clamp(20px,3vw,28px);letter-spacing:4px;margin-bottom:4px}
+.stamp-count{font-size:clamp(11px,1.3vw,13px);font-weight:700;color:rgba(90,69,112,0.5)}
+
+/* === NOTIFICATION OPT-IN === */
+.notif-optin{
+display:flex;align-items:center;gap:10px;
+background:rgba(255,255,255,0.9);border:1px solid rgba(200,162,232,0.2);
+border-radius:12px;padding:10px 16px;margin-top:12px;
+font-size:clamp(11px,1.3vw,13px);font-weight:700;color:rgba(90,69,112,0.6);
+cursor:pointer;
+}
+.notif-toggle{
+width:36px;height:20px;border-radius:10px;
+background:rgba(90,69,112,0.15);position:relative;
+transition:background 0.3s;flex-shrink:0;
+}
+.notif-toggle::after{
+content:'';position:absolute;top:2px;left:2px;
+width:16px;height:16px;border-radius:50%;
+background:#fff;transition:transform 0.3s;
+}
+.notif-toggle.on{background:#00DC82}
+.notif-toggle.on::after{transform:translateX(16px)}
+
+/* === REACTION VIDEO BUTTON === */
+.video-save-btn{
+background:linear-gradient(135deg,#FF0040,#C8A2E8);
+border:none;border-radius:50px;padding:8px 20px;
+font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
+color:#fff;cursor:pointer;margin-top:8px;transition:transform 0.15s;
+}
+.video-save-btn:active{transform:scale(0.95)}
+
+/* === ATTRACT MEDIA CARDS === */
+.attract-card-photo{
+width:clamp(80px,12vw,120px);height:clamp(80px,12vw,120px);
+border-radius:50%;object-fit:cover;margin:0 auto 10px;
+border:3px solid rgba(232,160,191,0.3);display:block;
+}
+.attract-card-video{
+width:clamp(180px,30vw,280px);height:clamp(100px,18vw,160px);
+border-radius:16px;object-fit:cover;margin:0 auto 10px;display:block;
+}
+
+/* === SMALL SCREEN COMPACTOR === */
+@media(max-height:680px){
+  .badge-top{margin-bottom:4px}
+  .logo-img{width:clamp(64px,12vw,100px)!important;margin-bottom:4px}
+  .main-title{font-size:clamp(28px,7vw,56px)!important;margin-bottom:4px}
+  .main-sub{font-size:clamp(12px,1.8vw,16px)!important;margin-bottom:8px}
+  .voucher-input-wrap{margin-bottom:8px}
+  .voucher-helper{margin-top:4px!important}
+  .btn-start{padding:clamp(12px,2vw,18px) clamp(32px,6vw,72px)!important;font-size:clamp(15px,2.5vw,22px)!important}
+}
+
+/* === VOUCHER INPUT === */
+.voucher-input-wrap{
+position:relative;width:min(100%,460px);margin-bottom:16px;
+}
+.voucher-input{
+background:rgba(255,255,255,0.95);
+border:3px solid rgba(200,162,232,0.3);
+border-radius:20px;
+padding:clamp(16px,2.5vw,24px) clamp(24px,4vw,40px);
+font-family:'Orbitron',monospace;
+font-size:clamp(24px,5vw,40px);font-weight:900;
+color:#5A4570;text-align:center;
+width:100%;outline:none;
+transition:border-color 0.3s,box-shadow 0.3s;
+letter-spacing:4px;
+box-shadow:0 4px 20px rgba(90,69,112,0.08);
+text-transform:uppercase;
+}
+.voucher-input::placeholder{color:rgba(90,69,112,0.25);font-weight:700;letter-spacing:2px}
+.voucher-input:focus{border-color:#E8A0BF;box-shadow:0 4px 24px rgba(232,160,191,0.2)}
+.voucher-input.valid{border-color:#00DC82;box-shadow:0 4px 24px rgba(0,220,130,0.25);animation:voucherValid 0.5s ease}
+.voucher-input.invalid{border-color:#FF0040;animation:voucherShake 0.5s ease}
+@keyframes voucherShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-6px)}20%,40%,60%,80%{transform:translateX(6px)}}
+@keyframes voucherValid{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+.voucher-status{
+min-height:32px;
+font-size:clamp(13px,1.8vw,16px);font-weight:700;
+text-align:center;margin-bottom:12px;
+transition:opacity 0.3s;
+}
+.voucher-status.error{color:#FF0040}
+.voucher-status.success{color:#00DC82}
+.voucher-helper{
+font-size:clamp(12px,1.5vw,14px);color:rgba(90,69,112,0.4);
+text-align:center;margin-bottom:12px;
+}
+.voucher-helper a{color:#E8A0BF;text-decoration:none;font-weight:700}
+.voucher-helper a:hover{text-decoration:underline}
+.voucher-check{
+position:absolute;right:16px;top:50%;transform:translateY(-50%);
+font-size:clamp(24px,4vw,36px);opacity:0;transition:opacity 0.3s;
+}
+.voucher-check.show{opacity:1}
+.voucher-attempts-info{
+font-size:clamp(11px,1.3vw,13px);font-weight:700;
+color:rgba(90,69,112,0.5);margin-bottom:16px;
+background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
+}
+</style>
+</head>
+<body>
+
+<canvas class="confetti-canvas" id="confettiCanvas"></canvas>
+
+<div class="win-overlay" id="winOverlay">
+<div class="win-card">
+<div class="win-seal">&#127942;</div>
+<div class="win-title">VOCE ACERTOU!</div>
+<div class="win-sub" id="winSub">Parou exatamente em 10.000!</div>
+<div class="win-prize">
+<div class="win-prize-label">&#127873; Seu Premio</div>
+<div class="win-prize-text">1 MilkyPot Gratis!</div>
+</div>
+<div class="win-note">Mostre esta tela para o atendente</div>
+<button class="btn btn-start" onclick="closeWin()">Jogar de Novo &#127881;</button>
+</div>
+</div>
+
+<div class="webcam-pip" id="webcamPip"><video id="webcamVid" autoplay muted playsinline></video></div>
+
+<!-- SHEEP MASCOT -->
+<div class="sheep" id="sheepMascot">&#128017;</div>
+<div class="sheep-bubble" id="sheepBubble"></div>
+
+<!-- RETURNING PLAYER WELCOME -->
+<div class="welcome-back" id="welcomeBack">
+<div class="welcome-card">
+<div class="welcome-emoji">&#128017;&#128150;</div>
+<div class="welcome-title" id="welcomeTitle">Que bom te ver de novo!</div>
+<div class="welcome-sub" id="welcomeSub"></div>
+<div class="welcome-history" id="welcomeHistory"></div>
+<div class="welcome-best" id="welcomeBest">
+<div class="welcome-best-label">&#127942; Seu melhor resultado</div>
+<div class="welcome-best-val" id="welcomeBestVal">--</div>
+</div>
+<div class="welcome-challenge" id="welcomeChallenge"></div>
+<button class="btn btn-start" onclick="closeWelcome()">Bora melhorar! &#128170;</button>
+</div>
+</div>
+
+<div class="attempts-badge">Tentativas: <span id="attCount">0</span></div>
+<div class="foot">Desafio oficial MilkyPot &bull; Consulte regras na loja &bull; milkypot.com</div>
+
+<div class="screen" id="screen">
+
+<!-- AMBIENT -->
+<div class="ambient ambient-1"></div>
+<div class="ambient ambient-2"></div>
+<div class="ambient ambient-3"></div>
+
+<!-- STEP ATTRACT: SCREENSAVER -->
+<div class="step active attract" id="stepAttract">
+<!-- PROMO ROTATOR: ocupa a tela inteira como overlay quando ativo (modo TV).
+     Renderiza propagandas virais (Raspadinha, MilkyClube, Influencer, Combo
+     Monstro, Buffet 5,99, Desafio Balança) rotacionando a cada N segundos.
+     Click no overlay = fecha e mostra o desafio (ou aceita touch pra jogar). -->
+<div id="promoRotator" class="promo-rotator" onclick="window.dismissPromoOverlay && window.dismissPromoOverlay()"></div>
+
+<img src="images/logo-milkypot.png" alt="MilkyPot" class="attract-logo">
+<div class="attract-title">Desafio 10 MilkyPot</div>
+<div class="attract-sub">Pare o cronometro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong> e ganhe premio!</div>
+<!-- Demo counter preview -->
+<div class="counter-box" style="margin:12px 0;padding:clamp(16px,3vw,32px) clamp(24px,5vw,60px)">
+<div class="counter-label">CRONOMETRO</div>
+<div class="counter-num" id="attractCounter" style="color:#42A5F5;font-size:clamp(48px,12vw,120px)">00:00.000</div>
+<div style="display:flex;justify-content:center;gap:clamp(8px,2vw,16px);margin-top:8px;font-size:clamp(11px,1.3vw,14px);font-weight:700">
+<span style="background:rgba(76,175,80,0.15);color:#4CAF50;padding:4px 12px;border-radius:20px">&#128994; 5s</span>
+<span style="background:rgba(255,152,0,0.15);color:#FF9800;padding:4px 12px;border-radius:20px">&#128993; 10s</span>
+<span style="background:rgba(244,67,54,0.15);color:#F44336;padding:4px 12px;border-radius:20px">&#128308; 30s</span>
+</div>
+</div>
+<div class="attract-feed" id="attractFeed"></div>
+<div class="attract-cta" id="attractCta">&#128073; Toque na tela para jogar!</div>
+<!-- Hidden containers for JS -->
+<div id="tournamentSection" style="display:none"><div id="tournamentCountdown"></div><div id="tournamentList"></div></div>
+<div id="attractGlobalRanking" style="display:none"><div id="attractGlobalList"></div></div>
+</div>
+
+<!-- STEP 0: VOUCHER VALIDATION -->
+<div class="step" id="step0">
+<div class="badge-top">&#127942; Desafio Oficial MilkyPot</div>
+<img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
+<h1 class="main-title" id="mainTitle">Desafio 10 MilkyPot</h1>
+<p class="main-sub" id="mainSub">Pare o cronometro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong> e ganhe premio!</p>
+<div class="tv-release-status" id="tvReleaseStatus" style="display:none">Aguardando liberacao do PDV...</div>
+
+<!-- Free Mode Banner (mostrado quando admin libera acesso sem codigo) -->
+<div id="freeModeBanner" style="display:none;max-width:520px;width:100%;background:linear-gradient(135deg,#FFF5E8 0%,#FFE8D1 100%);border:2px dashed #FF9F43;border-radius:16px;padding:16px 20px;margin:8px 0 16px;text-align:center;box-shadow:0 4px 16px rgba(255,159,67,0.15)">
+<div style="font-size:clamp(14px,2vw,18px);font-weight:800;color:#B8651F;margin-bottom:6px" id="freeModeBannerText">&#127873; Promocao: jogue gratis!</div>
+<div style="font-size:clamp(11px,1.3vw,13px);color:#7A4F1F;line-height:1.4" id="freeModeBannerNote">Premio valido apenas na compra de hoje na loja.</div>
+</div>
+
+<!-- Voucher code input -->
+<div class="voucher-input-wrap" id="voucherCodeWrap">
+<input type="text" class="voucher-input" id="voucherInput" placeholder="MP-XXXXXX" maxlength="15" autocomplete="off" inputmode="text">
+<div class="voucher-check" id="voucherCheck">&#9989;</div>
+</div>
+<div class="voucher-status" id="voucherStatus"></div>
+<div class="voucher-helper" id="voucherHelper" style="line-height:1.4;margin-top:8px">
+<strong style="color:#5A4570;font-size:clamp(12px,1.4vw,15px)">&#127846; Compre um MilkyPot &rarr; Codigo no cupom &rarr; Jogue!</strong><br>
+<a href="/cardapio.html" style="color:#FF0040;font-weight:800;font-size:clamp(12px,1.4vw,15px)">&#128722; Pedir online e ganhar codigo!</a>
+</div>
+
+<!-- Name/phone (pre-filled from voucher, shown after validation) -->
+<div id="voucherPlayerInfo" style="display:none;width:100%;max-width:500px">
+<input type="text" class="name-input" id="playerName" placeholder="Seu nome" maxlength="20" autocomplete="off">
+<input type="tel" class="name-input" id="playerPhone" placeholder="WhatsApp (11) 99999-9999" maxlength="15" autocomplete="off" style="font-size:clamp(16px,2.5vw,24px)">
+<div class="voucher-attempts-info" id="voucherAttemptsInfo"></div>
+<!-- Product combo (feature 9) -->
+<select class="product-select" id="productSelect" style="display:none">
+<option value="">Qual MilkyPot voce comprou? (opcional)</option>
+<option value="shake_morango">Shake Morango</option>
+<option value="shake_ninho">Shake Ninho</option>
+<option value="shake_oreo">Shake Oreo</option>
+<option value="shake_nutella">Shake Nutella</option>
+<option value="sundae_nutella">Sundae Nutella</option>
+<option value="acai_tradicional">Acai Tradicional</option>
+<option value="acai_premium">Acai Premium</option>
+<option value="milkypot_especial">MilkyPot Especial</option>
+<option value="outro">Outro</option>
+</select>
+<!-- Stamp card (feature 10) -->
+<div class="stamp-card" id="stampCard" style="display:none">
+<div class="stamp-card-title">Cartela de Compras</div>
+<div class="stamp-stars" id="stampStars"></div>
+<div class="stamp-count" id="stampCount"></div>
+</div>
+</div>
+
+<button class="btn btn-start" id="btnValidateVoucher" onclick="validateVoucher()">Validar Codigo &#128274;</button>
+<button class="btn btn-start" id="btnGoToPhoto" onclick="goToPhoto()" style="display:none">Comecar &#9889;</button>
+</div>
+
+<!-- STEP 1: PHOTO WITH PRODUCT -->
+<div class="step" id="step1">
+<div class="badge-top">&#128248; Foto com seu MilkyPot!</div>
+<p class="main-sub" style="margin-bottom:16px">Segure seu potinho e sorria!</p>
+<div class="photo-area" id="photoArea">
+<video id="photoVideo" autoplay muted playsinline></video>
+<div class="photo-frame"></div>
+<div class="photo-overlay" id="photoOverlay">Toque para tirar foto</div>
+</div>
+<canvas id="photoCanvas" style="display:none"></canvas>
+<div id="photoPreview" style="display:none">
+<img id="photoImg" style="width:clamp(200px,40vw,360px);border-radius:16px;margin-bottom:16px">
+</div>
+<button class="btn btn-pink" id="photoBtn" onclick="takePhoto()">&#128248; Tirar Foto</button>
+<button class="btn btn-outline" id="photoSkip" onclick="skipMedia()" style="margin-top:12px;">Não quero filmar/foto &#128584;</button>
+<button class="btn btn-outline" id="photoNext" onclick="goToDifficulty()" style="display:none">Bora pro Desafio! &#128293;</button>
+</div>
+
+<!-- STEP DIFFICULTY: DIFFICULTY SELECTOR (feature 1) -->
+<div class="step" id="stepDiff">
+<div class="badge-top">Escolha a Dificuldade</div>
+<img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img" style="width:clamp(60px,8vw,90px)">
+<p class="main-sub" style="margin-bottom:20px">Quanto mais dificil, maior o premio!</p>
+<!-- Streak badge shows here -->
+<div id="streakDisplay" style="display:none"></div>
+<!-- Monthly challenge banner -->
+<div class="monthly-banner" id="monthlyBanner" style="display:none"></div>
+<div class="difficulty-wrap" id="diffWrap">
+<button class="diff-btn" data-diff="easy" onclick="selectDifficulty('easy')">
+<div class="diff-icon">&#128994;</div>
+<div>Molezinha</div>
+<div class="diff-label">5 segundos</div>
+</button>
+<button class="diff-btn active" data-diff="medium" onclick="selectDifficulty('medium')">
+<div class="diff-icon">&#128993;</div>
+<div>Suadinho</div>
+<div class="diff-label">10 segundos</div>
+</button>
+<button class="diff-btn" data-diff="hard" onclick="selectDifficulty('hard')">
+<div class="diff-icon">&#128308;</div>
+<div>Modo Lenda</div>
+<div class="diff-label">30 segundos</div>
+</button>
+</div>
+<button class="btn btn-start" onclick="goToGame()">Iniciar &#9889;</button>
+</div>
+
+<!-- STEP 2: THE GAME -->
+<div class="step" id="step2">
+<div class="player-name-display" id="playerDisplay"></div>
+<div class="counter-box">
+<div class="counter-label">Cronometro</div>
+<div class="counter-num" id="counter">00:00.000</div>
+<div class="counter-target" id="counterTarget">Alvo: <span>10.000ms</span> (10 segundos)</div>
+</div>
+<div class="status-msg" id="statusMsg">Preparado? Toque para iniciar!</div>
+<button class="btn btn-start" id="gameBtn" onclick="handleGame()">Iniciar Desafio &#9889;</button>
+</div>
+
+<!-- STEP 3: RESULT -->
+<div class="step" id="step3">
+<div class="player-name-display" id="resultName"></div>
+<div class="result-value" id="resultValue">00:00.000</div>
+<div class="result-diff-badge" id="resultDiffBadge"></div>
+<div class="result-msg" id="resultMsg"></div>
+<div class="result-sub" id="resultSub"></div>
+<div class="wheel-card" id="wheelCard">
+<div class="wheel-title">Roda da Ovelhinha</div>
+<div class="wheel-spin" id="wheelSpin">&#127873;</div>
+<div class="wheel-prize" id="wheelPrizeText"></div>
+<div class="wheel-note" id="wheelPrizeNote">Mostre para o atendente validar o premio.</div>
+</div>
+<!-- Prize won display -->
+<div id="prizeWonDisplay" style="display:none;background:rgba(255,255,255,0.9);border:2px solid rgba(200,162,232,0.3);border-radius:16px;padding:14px 20px;margin:8px 0 12px;text-align:center;max-width:400px;width:100%">
+<div style="font-size:11px;font-weight:800;color:#9B59B6;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">&#127873; Voce Ganhou</div>
+<div id="prizeWonText" style="font-size:clamp(16px,2.5vw,22px);font-weight:800;color:#5A4570"></div>
+<div id="prizeWonNote" style="font-size:11px;color:rgba(90,69,112,0.5);margin-top:4px">Mostre esta tela para o atendente</div>
+</div>
+<!-- Instagram bonus -->
+<div id="instagramBonus" style="display:none;background:linear-gradient(135deg,rgba(193,53,132,0.1),rgba(131,58,180,0.08));border:2px solid rgba(193,53,132,0.2);border-radius:16px;padding:14px 20px;margin:8px 0 12px;text-align:center;max-width:400px;width:100%">
+<div style="font-size:clamp(13px,1.8vw,16px);font-weight:800;color:#C13584;margin-bottom:4px">&#128248; Quer mais chances?</div>
+<div id="instagramBonusText" style="font-size:clamp(12px,1.5vw,14px);color:#5A4570;line-height:1.4">Poste o video da tentativa no Instagram,<br>marque <strong id="instagramHandleDisplay">@milkypot</strong> e ganhe <strong id="instagramChancesDisplay">+3</strong> tentativas!</div>
+<button id="instagramClaimBtn" onclick="claimInstagramBonus()" style="margin-top:10px;background:linear-gradient(135deg,#C13584,#833AB4);color:#fff;border:none;padding:10px 24px;border-radius:50px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer">Ja postei! Liberar tentativas</button>
+<div id="instagramClaimStatus" style="font-size:12px;margin-top:6px;color:#C13584;display:none"></div>
+</div>
+<!-- Personal record display (feature 4) -->
+<div id="prDisplay" style="display:none"></div>
+<div class="btn-row">
+<button class="btn btn-start" onclick="restart()">Tentar de Novo &#128260;</button>
+<button class="btn btn-pink" onclick="shareWA()">&#128172; Compartilhar</button>
+<button class="btn btn-outline" onclick="copyPhrase()">&#128203; Copiar</button>
+</div>
+<!-- Reaction video save (feature 7) -->
+<button class="video-save-btn" id="videoSaveBtn" onclick="saveReactionVideo()" style="display:none">&#127909; Salvar Video da Reacao</button>
+<!-- Digital badge (feature 5) -->
+<div class="badge-card" id="badgeCard" style="display:none">
+<div class="badge-card-title">&#127941; Eu tentei o Desafio MilkyPot!</div>
+<canvas id="badgeCanvas" style="display:none"></canvas>
+<div class="badge-card-score" id="badgeScore"></div>
+<div class="badge-card-sub">Desafio 10 MilkyPot Milissegundos</div>
+<button class="badge-save-btn" onclick="saveBadgeImage()">&#128190; Salvar Imagem</button>
+</div>
+<!-- WhatsApp notification opt-in (feature 11) -->
+<div class="notif-optin" id="notifOptin" onclick="toggleNotifOptin()" style="display:none">
+<div class="notif-toggle" id="notifToggle"></div>
+<span>&#128276; Quer ser avisado quando alguem bater seu recorde?</span>
+</div>
+<div class="ranking" id="rankingBox" style="margin-bottom:12px">
+<div class="ranking-title">&#127942; Ranking da Semana</div>
+<div id="rankingList"></div>
+</div>
+<div class="ranking" id="globalRankingBox">
+<div class="ranking-title" style="color:#FFD700">&#11088; Top 10 Global - Todos os Tempos</div>
+<div id="globalRankingList"></div>
+</div>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script>
+if(!firebase.apps.length){firebase.initializeApp({apiKey:"AIzaSyAbQ1fe0pK4prhfzYJypod2ie4DyNsq6BA",authDomain:"milkypot-ad945.firebaseapp.com",projectId:"milkypot-ad945",storageBucket:"milkypot-ad945.firebasestorage.app",messagingSenderId:"859364650620",appId:"1:859364650620:web:aecf11f4cf99b7792463f9"});}
+</script>
+<!-- Anti-fraude: 1 desafio gratuito por dia por dispositivo (fingerprint).
+     Cliente desbloqueio extra fazendo pedido no catalogo/Belinha. -->
+<script src="/js/core/anti-fraud.js"></script>
+<script>
+(function(){
+/* ========== FEATURE 12: GAMIFICATION CONFIG (loaded from Firebase) ========== */
+var gameConfig = {
+enabled:true,
+difficulty:true,
+tournament:true,
+streak:true,
+badge:true,
+monthlyChallenge:null,
+comboProduct:true,
+stampCard:true,
+notifications:true,
+reactionVideo:true
+};
+
+/* ========== STATE ========== */
+var playerN='';
+var playerPhone='';
+var playerProduct='';
+var playerPhotoData=null;
+var timer=null;
+var startT=0;
+var elapsed=0;
+var gameState='idle';
+var gameTarget=10000;
+var gameDifficulty='medium';
+var attempts=parseInt(localStorage.getItem('mp_d_att')||'0');
+var best=JSON.parse(localStorage.getItem('mp_d_rank')||'[]');
+var photoStream=null;
+var activeVoucher=null; /* holds validated voucher data */
+var activeVoucherCode=null;
+var webcamStream=null;
+var mediaRecorder=null;
+var recordedChunks=[];
+var reactionVideoBlob=null;
+var notifOptedIn=false;
+var db=null;
+var storage=null;
+var tvAutoStart=false;
+var lastWheelPrize=null;
+var audioCtx=null;
+var tensionTimer=null;
+var catalogPrizeContext=null;
+var tvVoucherUnsub=null;
+var tvClaimingVoucher=false;
+var urlParams=new URLSearchParams(window.location.search||'');
+/* TV mode opt-in EXPLICITO via ?tv=1 (ou ?kiosk=1).
+   Detectar por largura de tela quebrava clientes em desktop em casa. */
+var isStoreTvMode=(urlParams.has('tv')||urlParams.has('kiosk'))
+   &&!urlParams.has('manual')&&!urlParams.has('delivery')&&!urlParams.has('gratis');
+var tvFranchiseId=urlParams.get('franchise')||urlParams.get('fid')||'';
+
+/* CLIENTE CELULAR (escaneou QR da TV) — NAO e TV indoor mas tem fonte
+   "tv-desafio" no params. Ativa fluxo de desafio gratuito diario com
+   anti-fraude (1 play/dia/device). */
+var clientFid=urlParams.get('fid')||urlParams.get('franchise')||'muffato-quintino';
+var isMobileChallengeMode=!isStoreTvMode && (
+    urlParams.get('source')==='tv-desafio' ||
+    urlParams.get('promo')==='desafio10s' ||
+    urlParams.has('unlock')
+);
+/* Marca como freeMode forcado no celular (libera UI sem precisar voucher) */
+if (isMobileChallengeMode) {
+    prizeConfig.requireVoucher = false;
+}
+
+document.getElementById('attCount').textContent=attempts;
+
+/* Difficulty settings */
+var DIFF={easy:{target:5000,label:'5.000ms',sec:'5 segundos'},medium:{target:10000,label:'10.000ms',sec:'10 segundos'},hard:{target:30000,label:'30.000ms',sec:'30 segundos'}};
+/* Load custom difficulty from Firebase */
+function updateDiffFromConfig(c){
+if(c.diffEasy){DIFF.easy.target=c.diffEasy;DIFF.easy.label=fmt(c.diffEasy);DIFF.easy.sec=(c.diffEasy/1000)+' segundos'}
+if(c.diffMedium){DIFF.medium.target=c.diffMedium;DIFF.medium.label=fmt(c.diffMedium);DIFF.medium.sec=(c.diffMedium/1000)+' segundos'}
+if(c.diffHard){DIFF.hard.target=c.diffHard;DIFF.hard.label=fmt(c.diffHard);DIFF.hard.sec=(c.diffHard/1000)+' segundos'}
+/* Update buttons text if they exist */
+var btns=document.querySelectorAll('[data-diff]');
+btns.forEach(function(b){var d=b.dataset.diff;if(DIFF[d]){var lbl=b.querySelector('.diff-label');if(lbl) lbl.textContent=DIFF[d].sec}});
+}
+
+/* ========== FIREBASE INIT ========== */
+var prizeConfig={exact:'1 MilkyPot Gratis!',close50:'10% de desconto no proximo pedido!',close200:'5% de desconto no proximo pedido!',enabled:true,instagramBonus:true,instagramHandle:'@milkypot',instagramExtraChances:3,attemptsPerPurchase:1,requireVoucher:true,freeMaxPerDay:1,freeConditionNote:'Premio valido APENAS com a compra de hoje na loja',freeBannerText:'🎁 Promocao: jogue gratis! Se ganhar, traga sua compra hoje pra resgatar.',freeExact:'',freeClose50:'',freeClose200:''};
+var isFreeMode=false;
+var wheelPrizes=[
+{tier:'baixo',weight:45,name:'Copinho de sorvete na proxima compra acima de R$ 20',note:'Baixo custo, puxa retorno rapido',rule:{type:'bonus_item',category:'sorvete',minOrder:20}},
+{tier:'baixo',weight:25,name:'Compre 2 picoles e ganhe +1',note:'Aumenta ticket e mantem margem',rule:{type:'buy_x_get_y',category:'picole',buyQty:2,freeQty:1,minOrder:20}},
+{tier:'medio',weight:10,name:'100g de buffet na proxima compra acima de R$ 30',note:'Premio medio com compra obrigatoria',rule:{type:'buffet_grams',grams:100,minOrder:30}},
+{tier:'medio',weight:10,name:'Compre um Milkshake G e ganhe um P',note:'Cliente compra o maior para ganhar o menor',rule:{type:'variant_bonus',category:'milkshake',paidVariant:'G',freeVariant:'P',minOrder:30}},
+{tier:'alto',weight:4,name:'150g de buffet na proxima compra acima de R$ 35',note:'Premio raro, com ticket minimo',rule:{type:'buffet_grams',grams:150,minOrder:35}},
+{tier:'alto',weight:3,name:'30% OFF na proxima compra acima de R$ 40',note:'Raro, desconto limitado para proteger margem',rule:{type:'percent_discount',percent:30,minOrder:40,maxDiscount:10}},
+{tier:'alto',weight:3,name:'Compra em dobro: compre 1 item e leve outro de menor valor',note:'Raro, valido para item de menor valor ate R$ 10',rule:{type:'double_purchase',minOrder:35,maxFreeValue:10}}
+];
+
+if(typeof firebase!=='undefined'){
+if(firebase.firestore) db=firebase.firestore();
+if(firebase.storage) try{storage=firebase.storage()}catch(e){}
+}
+
+/* Load gamification config from Firebase (feature 12) */
+function loadGameConfig(){
+if(!db) return;
+try{
+db.collection('config').doc('desafio_config').get().then(function(doc){
+if(doc.exists){
+var d=doc.data();
+Object.keys(gameConfig).forEach(function(k){if(typeof d[k]!=='undefined') gameConfig[k]=d[k]});
+updateDiffFromConfig(d);
+applyConfig();
+}
+});
+db.collection('config').doc('desafio_premios').get().then(function(doc){
+if(doc.exists){
+var d=doc.data();
+if(d.exact) prizeConfig.exact=d.exact;
+if(d.close50) prizeConfig.close50=d.close50;
+if(d.close200) prizeConfig.close200=d.close200;
+if(typeof d.enabled!=='undefined') prizeConfig.enabled=d.enabled;
+if(typeof d.instagramBonus!=='undefined') prizeConfig.instagramBonus=d.instagramBonus;
+if(d.instagramHandle) prizeConfig.instagramHandle=d.instagramHandle;
+if(d.instagramExtraChances) prizeConfig.instagramExtraChances=d.instagramExtraChances;
+if(d.attemptsPerPurchase) prizeConfig.attemptsPerPurchase=d.attemptsPerPurchase;
+if(d.targetOverride) gameConfig.monthlyChallenge={target:d.targetOverride,name:d.monthlyName||'Este Mes'};
+/* Free access mode */
+if(typeof d.requireVoucher!=='undefined') prizeConfig.requireVoucher=d.requireVoucher;
+if(d.freeMaxPerDay) prizeConfig.freeMaxPerDay=d.freeMaxPerDay;
+if(d.freeConditionNote) prizeConfig.freeConditionNote=d.freeConditionNote;
+if(d.freeBannerText) prizeConfig.freeBannerText=d.freeBannerText;
+if(typeof d.freeExact!=='undefined') prizeConfig.freeExact=d.freeExact;
+if(typeof d.freeClose50!=='undefined') prizeConfig.freeClose50=d.freeClose50;
+if(typeof d.freeClose200!=='undefined') prizeConfig.freeClose200=d.freeClose200;
+document.querySelector('.win-prize-text').textContent=prizeConfig.exact;
+applyConfig();
+applyAccessMode();
+}
+});
+}catch(e){}
+}
+
+/* Apply config to show/hide features */
+function applyConfig(){
+toggleEl('diffWrap',gameConfig.difficulty);
+toggleEl('productSelect',gameConfig.comboProduct);
+toggleEl('stampCard',gameConfig.stampCard);
+toggleEl('badgeCard',gameConfig.badge);
+toggleEl('notifOptin',gameConfig.notifications);
+toggleEl('tournamentSection',gameConfig.tournament);
+if(gameConfig.monthlyChallenge&&gameConfig.monthlyChallenge.target){
+var b=document.getElementById('monthlyBanner');
+if(b){b.style.display='';b.innerHTML='&#127775; Desafio do Mes: Acerte <span>'+fmtTarget(gameConfig.monthlyChallenge.target)+'</span>!'}
+}
+if(gameConfig.tournament) loadWeeklyTournament();
+}
+function toggleEl(id,show){var e=document.getElementById(id);if(e) e.style.display=show?'':'none'}
+function fmtTarget(ms){return (ms/1000).toFixed(3).replace(/\.?0+$/,'')+'.'+String(ms%1000).padStart(3,'0')}
+
+/* ========== FREE MODE HELPERS ========== */
+/* todayKey em horario local Brasilia (compensa timezone do browser) */
+function todayKey(){
+var d=new Date();
+var local=new Date(d.getTime()-d.getTimezoneOffset()*60000);
+return local.toISOString().slice(0,10);
+}
+function freeAttemptsUsedToday(phone){
+if(!phone) return 0;
+return parseInt(localStorage.getItem('mp_d_free_'+phone+'_'+todayKey())||'0');
+}
+function consumeFreeAttempt(phone){
+if(!phone) return;
+var k='mp_d_free_'+phone+'_'+todayKey();
+localStorage.setItem(k,freeAttemptsUsedToday(phone)+1);
+/* Tambem registra no Firebase pra analytics + protecao server-side */
+if(db){
+try{
+var docId=phone+'_'+todayKey();
+db.collection('desafio_free_plays').doc(docId).set({
+phone:phone,name:playerN||'',date:todayKey(),
+count:firebase.firestore.FieldValue.increment(1),
+updatedAt:new Date().toISOString()
+},{merge:true});
+}catch(e){}
+}
+}
+
+/* Aplica o modo de acesso (com codigo vs gratis) na UI */
+function applyAccessMode(){
+isFreeMode=(prizeConfig.requireVoucher===false);
+var voucherWrap=document.getElementById('voucherCodeWrap');
+var voucherStatus=document.getElementById('voucherStatus');
+var voucherHelper=document.getElementById('voucherHelper');
+var btnValidate=document.getElementById('btnValidateVoucher');
+var btnGoToPhoto=document.getElementById('btnGoToPhoto');
+var playerInfo=document.getElementById('voucherPlayerInfo');
+var banner=document.getElementById('freeModeBanner');
+var bannerText=document.getElementById('freeModeBannerText');
+var bannerNote=document.getElementById('freeModeBannerNote');
+var attInfo=document.getElementById('voucherAttemptsInfo');
+
+if(isStoreTvMode){
+if(voucherWrap) voucherWrap.style.display='none';
+if(voucherStatus) voucherStatus.style.display='';
+if(voucherHelper) voucherHelper.style.display='none';
+if(btnValidate) btnValidate.style.display='none';
+if(btnGoToPhoto) btnGoToPhoto.style.display='none';
+if(playerInfo) playerInfo.style.display='none';
+if(banner) banner.style.display='none';
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+return;
+}
+
+if(isFreeMode){
+/* Esconde voucher input, status, helper e botao validar */
+if(voucherWrap) voucherWrap.style.display='none';
+if(voucherStatus) voucherStatus.style.display='none';
+if(voucherHelper) voucherHelper.style.display='none';
+if(btnValidate) btnValidate.style.display='none';
+/* Mostra banner + nome/telefone diretamente + botao "Jogar Gratis" */
+if(banner){
+banner.style.display='';
+if(bannerText && prizeConfig.freeBannerText) bannerText.innerHTML=prizeConfig.freeBannerText;
+if(bannerNote && prizeConfig.freeConditionNote) bannerNote.textContent='⚠️ '+prizeConfig.freeConditionNote;
+}
+if(playerInfo) playerInfo.style.display='';
+if(btnGoToPhoto){
+btnGoToPhoto.style.display='';
+btnGoToPhoto.innerHTML='Jogar Gratis &#127881;';
+}
+if(attInfo) attInfo.textContent='🎁 '+ (prizeConfig.freeMaxPerDay||1)+' tentativa'+((prizeConfig.freeMaxPerDay||1)>1?'s':'')+' gratis hoje';
+} else {
+/* Modo padrao: mostra voucher input, esconde banner */
+if(voucherWrap) voucherWrap.style.display='';
+if(voucherStatus) voucherStatus.style.display='';
+if(voucherHelper) voucherHelper.style.display='';
+if(btnValidate) btnValidate.style.display='';
+if(banner) banner.style.display='none';
+}
+}
+
+loadGameConfig();
+
+/* ========== EMOTIONAL AUDIO (no external files) ========== */
+function ensureAudio(){
+try{
+if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+if(audioCtx.state==='suspended') audioCtx.resume();
+}catch(e){}
+}
+function tone(freq,dur,type,gain,delay){
+if(!audioCtx) return;
+var t0=audioCtx.currentTime+(delay||0);
+var osc=audioCtx.createOscillator();
+var g=audioCtx.createGain();
+osc.type=type||'sine';
+osc.frequency.setValueAtTime(freq,t0);
+g.gain.setValueAtTime(0.0001,t0);
+g.gain.exponentialRampToValueAtTime(gain||0.08,t0+0.02);
+g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+osc.connect(g);g.connect(audioCtx.destination);
+osc.start(t0);osc.stop(t0+dur+0.03);
+}
+function playStartSound(){ensureAudio();tone(392,0.08,'triangle',0.08,0);tone(523,0.1,'triangle',0.08,0.09)}
+function playStopSound(){tone(220,0.08,'square',0.05,0);tone(330,0.12,'triangle',0.06,0.08)}
+function playNearSound(){tone(660,0.08,'triangle',0.08,0);tone(740,0.08,'triangle',0.08,0.1);tone(880,0.12,'triangle',0.08,0.2)}
+function playWinSound(){ensureAudio();[523,659,784,1046].forEach(function(f,i){tone(f,0.18,'triangle',0.1,i*0.1)});tone(1318,0.28,'sine',0.08,0.45)}
+function startTensionSound(){
+stopTensionSound();
+tensionTimer=setInterval(function(){
+var remaining=Math.max(0,gameTarget-elapsed);
+var ratio=1-(remaining/gameTarget);
+var freq=360+Math.min(520,ratio*520);
+tone(freq,0.045,'square',0.025);
+if(remaining<1200) tone(freq*1.5,0.04,'triangle',0.035,0.05);
+},520);
+}
+function stopTensionSound(){if(tensionTimer){clearInterval(tensionTimer);tensionTimer=null}}
+
+function formatMoneyBR(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',')}
+function cleanProductName(name){return String(name||'').replace(/^\d+\.\s*/,'').trim()}
+function productPrice(p){
+var prices=[];
+if(p&&p.precos&&p.precos.loja) prices.push(Number(p.precos.loja.real||p.precos.loja.recomendado||0));
+(p&&p.variantes||[]).forEach(function(v){prices.push(Number(v.precoLoja||0))});
+(p&&p.kits||[]).forEach(function(k){prices.push(Number(k.precoLoja||0))});
+prices=prices.filter(function(n){return n>0});
+return prices.length?Math.min.apply(null,prices):0;
+}
+function readDataStoreDocValue(doc){
+if(!doc||!doc.exists) return null;
+var d=doc.data()||{};
+if(typeof d.value==='string'){
+try{return JSON.parse(d.value)}catch(e){return null}
+}
+return d;
+}
+function buildCatalogPrizeContext(catalog){
+var products=((catalog&&catalog.produtos)||[]).filter(function(p){return p&&p.active!==false});
+var byCat=function(cat){return products.filter(function(p){return p.categoriaId===cat})};
+var milkshakes=byCat('cat_milkshake');
+var picoles=byCat('cat_picole');
+var buffet=byCat('cat_buffet').filter(function(p){return p.buffet&&p.buffet.ativo});
+var milkG=milkshakes.find(function(p){return (p.variantes||[]).some(function(v){return /\bG\b|500|600/i.test(v.name||'')})})||milkshakes[0]||null;
+var milkP=milkshakes.find(function(p){return (p.variantes||[]).some(function(v){return /\bP\b|250/i.test(v.name||'')})})||milkG;
+var picole=picoles[0]||null;
+var buffetProduct=buffet[0]||null;
+return {
+milkshakeName: cleanProductName(milkG&&milkG.name)||'Milkshake',
+milkshakeSmallName: cleanProductName(milkP&&milkP.name)||'Milkshake P',
+picoleName: cleanProductName(picole&&picole.name)||'picole',
+buffetName: cleanProductName(buffetProduct&&buffetProduct.name)||'buffet',
+picolePrice: productPrice(picole)||3,
+hasBuffet: !!buffetProduct,
+hasPicole: !!picole,
+hasMilkshake: !!milkG
+};
+}
+function applyCatalogToPrize(p){
+var ctx=catalogPrizeContext||{};
+var prize=Object.assign({},p,{rule:Object.assign({},p.rule||{})});
+if(prize.rule.category==='picole'){
+prize.name=prize.name.replace(/picoles/ig,ctx.picoleName?ctx.picoleName+'s':'picoles').replace(/picole/ig,ctx.picoleName||'picole');
+}
+if(prize.rule.category==='milkshake'){
+prize.name='Compre um '+(ctx.milkshakeName||'Milkshake')+' G e ganhe um P';
+}
+if(prize.rule.type==='buffet_grams' && ctx.buffetName){
+prize.name=prize.rule.grams+'g de '+ctx.buffetName+' na proxima compra acima de '+formatMoneyBR(prize.rule.minOrder);
+}
+if(prize.rule.type==='percent_discount'){
+prize.name=prize.rule.percent+'% OFF na proxima compra acima de '+formatMoneyBR(prize.rule.minOrder);
+prize.note='Desconto limitado a '+formatMoneyBR(prize.rule.maxDiscount)+' para proteger margem';
+}
+if(prize.rule.type==='double_purchase'){
+prize.name='Compra em dobro: compre 1 item e leve outro de menor valor';
+prize.note='Valido para item de menor valor ate '+formatMoneyBR(prize.rule.maxFreeValue);
+}
+return prize;
+}
+function getWheelPrizes(){
+return wheelPrizes.map(applyCatalogToPrize);
+}
+function loadCatalogPrizeContext(franchiseId){
+catalogPrizeContext=null;
+if(!db||!franchiseId) return Promise.resolve(null);
+return db.collection('datastore').doc('catalog_v2_'+franchiseId).get()
+.then(function(doc){
+var catalog=readDataStoreDocValue(doc);
+if(catalog&&catalog.produtos&&catalog.produtos.length){
+catalogPrizeContext=buildCatalogPrizeContext(catalog);
+return catalogPrizeContext;
+}
+return db.collection('datastore').doc('catalog_config').get().then(function(doc2){
+var legacy=readDataStoreDocValue(doc2);
+var products=[];
+if(legacy&&legacy.sabores){
+Object.keys(legacy.sabores).forEach(function(k){
+((legacy.sabores[k]&&legacy.sabores[k].items)||[]).forEach(function(item){
+products.push({name:item.name,categoriaId:k.indexOf('milk')!==-1?'cat_milkshake':k.indexOf('picole')!==-1?'cat_picole':k.indexOf('buffet')!==-1?'cat_buffet':'cat_'+k,active:item.active!==false,precos:{loja:{real:item.price||item.preco||0}},buffet:{ativo:k.indexOf('buffet')!==-1}});
+});
+});
+}
+catalogPrizeContext=buildCatalogPrizeContext({produtos:products});
+return catalogPrizeContext;
+});
+}).catch(function(e){
+console.warn('Catalog prize context unavailable:',e);
+return null;
+});
+}
+function rollWheelPrize(){
+var prizes=getWheelPrizes();
+var total=prizes.reduce(function(s,p){return s+p.weight},0);
+var r=Math.random()*total;
+for(var i=0;i<prizes.length;i++){
+r-=prizes[i].weight;
+if(r<=0) return prizes[i];
+}
+return prizes[0];
+}
+function showWheelPrize(prize){
+lastWheelPrize=prize;
+var card=document.getElementById('wheelCard');
+var spin=document.getElementById('wheelSpin');
+var text=document.getElementById('wheelPrizeText');
+var note=document.getElementById('wheelPrizeNote');
+if(!card||!spin||!text)return;
+card.style.display='';
+spin.classList.remove('spinning');void spin.offsetWidth;spin.classList.add('spinning');
+text.textContent='Girando...';
+note.textContent='Todo mundo sai com alguma coisa.';
+setTimeout(function(){
+spin.classList.remove('spinning');
+text.textContent=prize.name;
+note.textContent=prize.note||'Mostre para o atendente validar o premio.';
+if(prize.tier==='alto') playWinSound(); else playNearSound();
+},1250);
+}
+
+/* ========== PHONE MASK ========== */
+document.getElementById('playerPhone').addEventListener('input',function(e){
+var v=e.target.value.replace(/\D/g,'');
+if(v.length>11)v=v.substring(0,11);
+if(v.length>7)v='('+v.substring(0,2)+') '+v.substring(2,7)+'-'+v.substring(7);
+else if(v.length>2)v='('+v.substring(0,2)+') '+v.substring(2);
+else if(v.length>0)v='('+v;
+e.target.value=v;
+});
+
+/* ========== VOUCHER INPUT AUTO-FORMAT ========== */
+document.getElementById('voucherInput').addEventListener('input',function(e){
+var v=e.target.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+if(v.length>=3 && v.substring(0,3)==='VIP'){
+/* VIP-XXXXXXX format, max 15 chars */
+v='VIP-'+v.substring(3);
+if(v.length>15) v=v.substring(0,15);
+} else if(v.length>=2 && v.substring(0,2)==='MP'){
+/* MP-XXXXXX format, max 9 chars */
+v='MP-'+v.substring(2);
+if(v.length>9) v=v.substring(0,9);
+} else if(v.length>=1 && v[0]==='V'){
+/* partial VIP — leave as-is */
+} else if(v.length>=1 && v[0]==='M'){
+/* partial MP — leave as-is */
+}
+/* Otherwise leave as typed */
+e.target.value=v;
+});
+document.getElementById('voucherInput').addEventListener('keydown',function(e){
+if(e.key==='Enter'){e.preventDefault();validateVoucher()}
+});
+
+/* ========== VOUCHER VALIDATION ========== */
+window.validateVoucher=function(){
+var input=document.getElementById('voucherInput');
+var status=document.getElementById('voucherStatus');
+var check=document.getElementById('voucherCheck');
+var raw=input.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+if(raw.length<4){
+status.className='voucher-status error';
+status.textContent='Digite o codigo do voucher!';
+input.classList.remove('valid');input.classList.add('invalid');
+setTimeout(function(){input.classList.remove('invalid')},600);
+return;
+}
+/* Normalize: remove MP prefix for doc lookup */
+var docId=raw;
+var displayCode='MP-'+raw.replace(/^MP/,'');
+status.className='voucher-status';
+status.textContent='Validando...';
+if(!db){
+status.className='voucher-status error';
+status.textContent='Erro de conexao. Tente novamente.';
+return;
+}
+db.collection('desafio_vouchers').doc(docId).get().then(function(doc){
+if(!doc.exists){
+/* Try with MP prefix stripped */
+var altId=raw.replace(/^MP/,'');
+return db.collection('desafio_vouchers').doc(altId).get().then(function(doc2){
+if(!doc2.exists){
+/* Try searching by code field */
+return db.collection('desafio_vouchers').where('code','==',displayCode).limit(1).get().then(function(snap){
+if(snap.empty){
+status.className='voucher-status error';
+status.textContent='Codigo invalido. Compre um MilkyPot para jogar!';
+input.classList.remove('valid');input.classList.add('invalid');
+setTimeout(function(){input.classList.remove('invalid')},600);
+check.classList.remove('show');
+activeVoucher=null;activeVoucherCode=null;
+} else {
+var found=null;var foundId=null;
+snap.forEach(function(d){found=d.data();foundId=d.id});
+processVoucherResult(found,foundId);
+}
+});
+}
+processVoucherResult(doc2.data(),altId);
+});
+}
+processVoucherResult(doc.data(),docId);
+}).catch(function(err){
+console.error('Voucher lookup error:',err);
+status.className='voucher-status error';
+status.textContent='Erro ao validar. Tente novamente.';
+});
+};
+
+function processVoucherResult(data,docId,opts){
+opts=opts||{};
+var input=document.getElementById('voucherInput');
+var status=document.getElementById('voucherStatus');
+var check=document.getElementById('voucherCheck');
+if(!data){
+status.className='voucher-status error';
+status.textContent='Codigo invalido. Compre um MilkyPot para jogar!';
+input.classList.remove('valid');input.classList.add('invalid');
+setTimeout(function(){input.classList.remove('invalid')},600);
+check.classList.remove('show');
+activeVoucher=null;activeVoucherCode=null;
+return;
+}
+var remaining=data.attempts-(data.attemptsUsed||0);
+if(remaining<=0){
+status.className='voucher-status error';
+status.textContent='Codigo ja utilizado. Compre outro MilkyPot!';
+input.classList.remove('valid');input.classList.add('invalid');
+setTimeout(function(){input.classList.remove('invalid')},600);
+check.classList.remove('show');
+activeVoucher=null;activeVoucherCode=null;
+return;
+}
+/* Valid voucher! */
+activeVoucher=data;
+activeVoucherCode=docId;
+status.className='voucher-status success';
+status.textContent='Codigo valido! '+remaining+' tentativa'+(remaining>1?'s':'')+' disponivel'+(remaining>1?'is':'')+'!';
+input.classList.remove('invalid');input.classList.add('valid');
+check.classList.add('show');
+/* Pre-fill name and phone */
+if(data.customerName) document.getElementById('playerName').value=data.customerName;
+if(data.customerPhone){
+var ph=data.customerPhone.replace(/\D/g,'');
+if(ph.length>=10){
+var formatted='('+ph.substring(0,2)+') '+ph.substring(2,7)+'-'+ph.substring(7);
+document.getElementById('playerPhone').value=formatted;
+}
+}
+/* Show player info and switch buttons */
+if(isStoreTvMode){
+document.getElementById('voucherPlayerInfo').style.display='none';
+document.getElementById('btnValidateVoucher').style.display='none';
+document.getElementById('btnGoToPhoto').style.display='none';
+setTvReleaseStatus('Liberado para '+(data.customerName||'cliente')+'!');
+if(opts.autoStart){
+tvAutoStart=true;
+startValidatedChallenge(true);
+}
+return;
+}
+document.getElementById('voucherPlayerInfo').style.display='';
+document.getElementById('voucherAttemptsInfo').textContent='🎟️ '+remaining+' tentativa'+(remaining>1?'s':'')+' restante'+(remaining>1?'s':'');
+document.getElementById('btnValidateVoucher').style.display='none';
+document.getElementById('btnGoToPhoto').style.display='';
+if(opts.autoStart){
+tvAutoStart=true;
+startValidatedChallenge(true);
+} else {
+document.getElementById('playerName').focus();
+}
+}
+
+/* ========== NAV ========== */
+function showStep(n){
+document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+var el=document.getElementById('step'+n)||document.getElementById('stepDiff');
+if(n==='Diff') el=document.getElementById('stepDiff');
+if(n==='Attract') el=document.getElementById('stepAttract');
+if(el) el.classList.add('active');
+}
+
+function startValidatedChallenge(skipMediaStep){
+/* Em modo gratis, pula a validacao de voucher mas exige nome/telefone + checa limite diario */
+if(isFreeMode){
+playerN=document.getElementById('playerName').value.trim()||'Jogador';
+playerPhone=document.getElementById('playerPhone').value.replace(/\D/g,'');
+if(playerPhone.length<10){
+document.getElementById('playerPhone').style.borderColor='#FF0040';
+document.getElementById('playerPhone').setAttribute('placeholder','WhatsApp obrigatorio!');
+return;
+}
+/* Checa limite de tentativas gratis hoje */
+var maxFree=prizeConfig.freeMaxPerDay||1;
+var usedToday=freeAttemptsUsedToday(playerPhone);
+if(usedToday>=maxFree){
+var s=document.getElementById('voucherStatus');
+s.style.display='';
+s.className='voucher-status error';
+s.textContent='Voce ja jogou '+usedToday+' vez'+(usedToday>1?'es':'')+' hoje. Volte amanha ou faca uma compra pra jogar mais!';
+return;
+}
+playerProduct=document.getElementById('productSelect').value||'';
+var existing=best.filter(function(b){return b.phone===playerPhone});
+if(existing.length>0){
+playerN=existing[0].name;
+document.getElementById('playerName').value=playerN;
+showReturningWelcome(existing);
+}
+if(gameConfig.streak) loadStreak();
+if(skipMediaStep){
+localStorage.setItem('mp_skip_media','true');
+goToDifficulty();
+return true;
+}
+showStep(1);
+startCamera('photoVideo');
+return true;
+}
+/* Modo voucher (padrao) */
+if(!activeVoucher||!activeVoucherCode){
+document.getElementById('voucherStatus').className='voucher-status error';
+document.getElementById('voucherStatus').textContent='Valide seu codigo primeiro!';
+return false;
+}
+var remaining=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
+if(remaining<=0){
+document.getElementById('voucherStatus').className='voucher-status error';
+document.getElementById('voucherStatus').textContent='Codigo ja utilizado. Compre outro MilkyPot!';
+return false;
+}
+playerN=document.getElementById('playerName').value.trim()||'Jogador';
+playerPhone=document.getElementById('playerPhone').value.replace(/\D/g,'');
+if(playerPhone.length<10){
+document.getElementById('playerPhone').style.borderColor='#FF0040';
+document.getElementById('playerPhone').setAttribute('placeholder','WhatsApp obrigatorio!');
+return false;
+}
+playerProduct=document.getElementById('productSelect').value||'';
+var existing=best.filter(function(b){return b.phone===playerPhone});
+if(existing.length>0){
+playerN=existing[0].name;
+document.getElementById('playerName').value=playerN;
+/* === RETURNING PLAYER WELCOME === */
+showReturningWelcome(existing);
+}
+/* Update stamp card (feature 10) */
+if(gameConfig.stampCard) updateStampCard();
+/* Update streak (feature 3) */
+if(gameConfig.streak) loadStreak();
+if(skipMediaStep){
+localStorage.setItem('mp_skip_media','true');
+goToDifficulty();
+return true;
+}
+localStorage.removeItem('mp_skip_media');
+showStep(1);
+startCamera('photoVideo');
+return true;
+}
+
+/* ========== STEP 0 -> 1: Photo ========== */
+window.goToPhoto=function(){
+startValidatedChallenge(false);
+};
+
+/* ========== CAMERA ========== */
+function startCamera(vidId){
+var v=document.getElementById(vidId);
+navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:720},height:{ideal:720}},audio:false})
+.then(function(s){photoStream=s;v.srcObject=s}).catch(function(){
+document.getElementById('photoOverlay').textContent='Camera indisponivel';
+});
+}
+
+/* ========== TAKE PHOTO ========== */
+window.takePhoto=function(){
+var v=document.getElementById('photoVideo');
+var c=document.getElementById('photoCanvas');
+c.width=v.videoWidth||640;c.height=v.videoHeight||640;
+var ctx=c.getContext('2d');ctx.drawImage(v,0,0,c.width,c.height);
+playerPhotoData=c.toDataURL('image/jpeg',0.85);
+document.getElementById('photoImg').src=playerPhotoData;
+document.getElementById('photoPreview').style.display='block';
+v.style.display='none';
+document.getElementById('photoBtn').style.display='none';
+document.getElementById('photoNext').style.display='';
+if(photoStream) photoStream.getTracks().forEach(function(t){t.stop()});
+};
+
+/* ========== FEATURE 1: DIFFICULTY SELECTOR ========== */
+window.goToDifficulty=function(){
+if(!gameConfig.difficulty){goToGame();return}
+showStep('Diff');
+/* Show streak on difficulty screen */
+if(gameConfig.streak) renderStreakBadge();
+};
+
+window.selectDifficulty=function(d){
+gameDifficulty=d;
+document.querySelectorAll('.diff-btn').forEach(function(b){b.classList.remove('active')});
+document.querySelector('[data-diff="'+d+'"]').classList.add('active');
+};
+
+function getActiveTarget(){
+/* Feature 6: monthly challenge overrides */
+if(gameConfig.monthlyChallenge&&gameConfig.monthlyChallenge.target) return gameConfig.monthlyChallenge.target;
+return DIFF[gameDifficulty].target;
+}
+
+/* ========== STEP -> GAME ========== */
+window.goToGame=function(){
+gameTarget=getActiveTarget();
+/* Update UI target display */
+var sec=(gameTarget/1000);
+var tEl=document.getElementById('counterTarget');
+if(tEl) tEl.innerHTML='Alvo: <span>'+(gameTarget/1000)+'s</span> (pare em '+fmt(gameTarget)+')';
+showStep(2);
+document.getElementById('playerDisplay').textContent=playerN;
+startWebcam();
+};
+
+/* ========== WEBCAM PIP ========== */
+window.skipMedia=function(){
+playerPhotoData=null;
+localStorage.setItem('mp_skip_media','true');
+if(photoStream) photoStream.getTracks().forEach(function(t){t.stop()});
+goToDifficulty();
+};
+
+function startWebcam(){
+if(localStorage.getItem('mp_skip_media')==='true') return;
+var pip=document.getElementById('webcamPip');
+var v=document.getElementById('webcamVid');
+navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:320}},audio:false})
+.then(function(s){
+webcamStream=s;v.srcObject=s;
+pip.style.display='block';pip.classList.add('recording');
+}).catch(function(){});
+}
+
+/* ========== FORMAT ========== */
+function fmt(ms){var s=Math.floor(ms/1000);var milli=ms%1000;var min=Math.floor(s/60);var sec=s%60;return String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+String(milli).padStart(3,'0')}
+
+/* ========== GAME LOOP ========== */
+function tick(){elapsed=Date.now()-startT;document.getElementById('counter').textContent=fmt(elapsed);timer=requestAnimationFrame(tick)}
+
+var runMsgs=['Concentre...','Sinta o tempo...','Sera agora?','Confia!','Nao pense...','VAI!','Respira...','Agora?!'];
+var msgI=0;var msgTimer;
+
+window.handleGame=function(){
+var screen=document.getElementById('screen');
+var btn=document.getElementById('gameBtn');
+if(gameState==='idle'){
+ensureAudio();
+playStartSound();
+gameState='running';
+screen.classList.add('running');
+startT=Date.now();elapsed=0;
+btn.className='btn btn-stop';
+btn.innerHTML='PARAR EM '+fmt(gameTarget)+' &#9899;';
+document.getElementById('statusMsg').textContent=runMsgs[0];
+msgI=0;
+msgTimer=setInterval(function(){
+msgI=(msgI+1)%runMsgs.length;
+var el=document.getElementById('statusMsg');
+el.textContent=runMsgs[msgI];
+el.style.animation='none';void el.offsetWidth;el.style.animation='fadeInUp 0.3s';
+},1800);
+tick();
+startTensionSound();
+if(navigator.vibrate) navigator.vibrate(30);
+/* Feature 7: start recording reaction video */
+if(gameConfig.reactionVideo&&webcamStream) startReactionRecording();
+} else if(gameState==='running'){
+cancelAnimationFrame(timer);clearInterval(msgTimer);
+stopTensionSound();
+playStopSound();
+gameState='done';
+document.getElementById('screen').classList.remove('running');
+if(navigator.vibrate) navigator.vibrate([50,30,80]);
+/* Feature 7: stop recording */
+if(gameConfig.reactionVideo&&mediaRecorder&&mediaRecorder.state==='recording') mediaRecorder.stop();
+attempts++;localStorage.setItem('mp_d_att',attempts);
+document.getElementById('attCount').textContent=attempts;
+
+/* ANTI-FRAUDE: marca o desafio gratuito do dia como JOGADO (mobile mode).
+   Bloqueia replay no mesmo dispositivo ate amanha (ou ate unlock token via
+   compra). */
+if(isMobileChallengeMode && window.AntiFraud){
+    try {
+        window.AntiFraud.markPlayed(clientFid, {
+            elapsed: elapsed,
+            target: gameTarget,
+            playerName: playerN || null
+        }, window._mobileUnlockToken).catch(function(e){console.warn('markPlayed:',e)});
+    } catch(e){ console.warn('AntiFraud.markPlayed:',e); }
+}
+
+/* === UPDATE VOUCHER ATTEMPTS USED === */
+if(isFreeMode){
+/* Modo gratis: conta tentativa diaria por telefone */
+consumeFreeAttempt(playerPhone);
+var maxFree2=prizeConfig.freeMaxPerDay||1;
+var usedAfter=freeAttemptsUsedToday(playerPhone);
+var attInfoF=document.getElementById('voucherAttemptsInfo');
+if(attInfoF) attInfoF.textContent='🎁 '+Math.max(0,maxFree2-usedAfter)+' tentativa'+((maxFree2-usedAfter)!==1?'s':'')+' gratis restante'+((maxFree2-usedAfter)!==1?'s':'')+' hoje';
+} else if(activeVoucher&&activeVoucherCode&&db){
+activeVoucher.attemptsUsed=(activeVoucher.attemptsUsed||0)+1;
+try{
+db.collection('desafio_vouchers').doc(activeVoucherCode).update({
+attemptsUsed:activeVoucher.attemptsUsed,
+lastUsedAt:new Date().toISOString(),
+used:activeVoucher.attemptsUsed>=activeVoucher.attempts
+});
+}catch(e){console.warn('Voucher update error:',e)}
+/* Update remaining display */
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
+var attInfo=document.getElementById('voucherAttemptsInfo');
+if(attInfo) attInfo.textContent='🎟️ '+Math.max(0,rem)+' tentativa'+(rem!==1?'s':'')+' restante'+(rem!==1?'s':'');
+}
+
+var diff=elapsed-gameTarget;
+var abs=Math.abs(diff);
+var wheelPrize=rollWheelPrize();
+
+/* Feature 4: check personal record before saving */
+var prevBest=getPersonalBest();
+
+/* Save ranking */
+var entry={name:playerN,phone:playerPhone,val:elapsed,date:new Date().toISOString(),target:gameTarget,difficulty:gameDifficulty};
+if(playerPhotoData) entry.photo=playerPhotoData;
+if(playerProduct) entry.product=playerProduct;
+best.push(entry);
+best.sort(function(a,b){return Math.abs(gameTarget-a.val)-Math.abs(gameTarget-b.val)});
+best=best.slice(0,50);
+localStorage.setItem('mp_d_rank',JSON.stringify(best));
+
+/* Save to Firebase */
+if(db){
+try{
+var fbEntry={name:playerN,phone:playerPhone,elapsed:elapsed,target:gameTarget,difficulty:gameDifficulty,
+diff:Math.abs(gameTarget-elapsed),won:abs===0,attempts:attempts,date:new Date().toISOString(),
+prizeName:wheelPrize.name,prizeTier:wheelPrize.tier,prizeSource:'roda_ovelinha'};
+if(wheelPrize.rule) fbEntry.prizeRule=wheelPrize.rule;
+if(playerProduct) fbEntry.product=playerProduct;
+if(notifOptedIn) fbEntry.notifyOnBeat=true;
+if(isFreeMode){fbEntry.freeMode=true;fbEntry.prizeConditional=true}
+db.collection('desafio_10000').add(fbEntry);
+if(activeVoucherCode){
+db.collection('desafio_vouchers').doc(activeVoucherCode).update({
+lastPrizeName:wheelPrize.name,
+lastPrizeTier:wheelPrize.tier,
+lastPrizeRule:wheelPrize.rule||null,
+lastPrizeAt:new Date().toISOString()
+});
+}
+}catch(e){}
+}
+
+/* Feature 3: update streak */
+if(gameConfig.streak) updateStreak();
+
+/* Show result */
+showStep(3);
+/* MODO TV: depois de 30s mostrando o resultado, volta automaticamente
+   pro attract pra liberar a TV pro proximo cliente. Sem isso, a TV ficava
+   travada na tela de resultado ate o idleTimer de 60s.
+   30s e tempo suficiente pra ler o ranking 1o ao 10o + recorde do cliente. */
+if(isStoreTvMode){
+clearTimeout(window._tvResultAutoBack);
+window._tvResultAutoBack=setTimeout(function(){
+if(document.getElementById('step3').classList.contains('active')){
+document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+var att=document.getElementById('stepAttract');
+if(att) att.classList.add('active');
+if(typeof startAttract==='function') startAttract();
+if(typeof setTvReleaseStatus==='function') setTvReleaseStatus('Aguardando liberacao do PDV...');
+activeVoucher=null;activeVoucherCode=null;gameState='idle';
+}
+},30000);
+}
+document.getElementById('resultName').textContent=playerN;
+var rv=document.getElementById('resultValue');
+var dbg=document.getElementById('resultDiffBadge');
+var rm=document.getElementById('resultMsg');
+var rs=document.getElementById('resultSub');
+rv.textContent=fmt(elapsed);
+
+if(abs===0){
+rv.className='result-value win';
+dbg.className='result-diff-badge win';dbg.textContent='EXATAMENTE '+fmt(gameTarget)+'!';
+rm.textContent='IMPOSSIVEL!';rm.style.color='#FFD700';
+rs.textContent='Voce e uma lenda do timing!';
+showWin();
+} else if(abs<=50){
+rv.className='result-value close';
+dbg.className='result-diff-badge close';dbg.textContent=(diff>0?'+':'')+diff+'ms';
+rm.textContent='FOI POR UM FIO!';rm.style.color='#FF6B9D';
+rs.textContent='Diferenca de apenas '+abs+' milesimos. Tenta mais uma!';
+if(navigator.vibrate) navigator.vibrate([30,20,30,20,60]);
+} else if(abs<=200){
+rv.className='result-value close';
+dbg.className='result-diff-badge close';dbg.textContent=(diff>0?'+':'')+diff+'ms';
+rm.textContent='Muito perto!';rm.style.color='#E8A0BF';
+rs.textContent='Voce parou em '+fmt(elapsed)+'. Quase la!';
+} else if(abs<=1000){
+rv.className='result-value far';
+dbg.className='result-diff-badge far';dbg.textContent=(diff>0?'+ ':'- ')+(abs/1000).toFixed(3)+'s';
+rm.textContent='Ta chegando!';rm.style.color='#C8A2E8';
+rs.textContent='Diferenca de '+(abs/1000).toFixed(3)+' segundos';
+} else {
+rv.className='result-value far';
+dbg.className='result-diff-badge far';dbg.textContent=(diff>0?'Passou ':'Faltaram ')+(abs/1000).toFixed(3)+'s';
+rm.textContent=diff>0?'Eita, passou do ponto!':'Cedo demais!';rm.style.color='#C8A2E8';
+rs.textContent='Seu tempo: '+fmt(elapsed);
+}
+
+/* Feature 4: personal record celebration */
+if(gameConfig.streak || gameConfig.badge) checkPersonalRecord(prevBest,abs);
+/* Feature 5: digital badge */
+if(gameConfig.badge) renderBadge();
+/* Feature 7: show video save if available */
+if(gameConfig.reactionVideo&&recordedChunks.length>0) document.getElementById('videoSaveBtn').style.display='';
+/* Feature 11: notification opt-in */
+if(gameConfig.notifications) document.getElementById('notifOptin').style.display='';
+
+/* === PRIZE DISPLAY === */
+/* Premio agora vem da Roda da Ovelhinha (todo mundo ganha algo).
+   prizeWonDisplay (premio fixo por proximidade) fica oculto — substituido pela roda. */
+showWheelPrize(wheelPrize);
+var prizeDisplay=document.getElementById('prizeWonDisplay');
+prizeDisplay.style.display='none';
+/* Nota de condicao (so aparece em modo gratis com premio) */
+var prizeNote=document.getElementById('prizeWonNote');
+if(prizeNote){
+if(isFreeMode && prizeDisplay.style.display!=='none'){
+prizeNote.innerHTML='⚠️ '+(prizeConfig.freeConditionNote||'Premio valido apenas na compra de hoje na loja');
+prizeNote.style.color='#FF6B35';
+prizeNote.style.fontWeight='800';
+prizeNote.style.fontSize='clamp(11px,1.4vw,13px)';
+prizeNote.style.lineHeight='1.4';
+prizeNote.style.marginTop='8px';
+} else {
+prizeNote.textContent='Mostre esta tela para o atendente';
+prizeNote.style.color='';
+prizeNote.style.fontWeight='';
+prizeNote.style.fontSize='11px';
+}
+}
+
+/* === INSTAGRAM BONUS (show when NOT exact win) === */
+var igBonus=document.getElementById('instagramBonus');
+igBonus.style.display='none';
+if(abs>0 && prizeConfig.instagramBonus){
+igBonus.style.display='';
+document.getElementById('instagramHandleDisplay').textContent=prizeConfig.instagramHandle||'@milkypot';
+document.getElementById('instagramChancesDisplay').textContent='+'+(prizeConfig.instagramExtraChances||3);
+if(activeVoucher && activeVoucher.instagramBonusUsed){
+document.getElementById('instagramClaimBtn').disabled=true;
+document.getElementById('instagramClaimBtn').textContent='Bonus ja resgatado!';
+document.getElementById('instagramClaimBtn').style.opacity='0.5';
+}
+}
+
+renderRanking();
+}
+};
+
+/* ========== FEATURE 4: PERSONAL RECORD ========== */
+function getPersonalBest(){
+var mine=best.filter(function(b){return b.phone===playerPhone});
+if(mine.length===0) return null;
+return mine.reduce(function(best,b){
+var d=Math.abs(gameTarget-b.val);var db=Math.abs(gameTarget-best.val);
+return d<db?b:best;
+});
+}
+
+function checkPersonalRecord(prevBest,currentDiff){
+if(!prevBest) return;
+var prevDiff=Math.abs(gameTarget-prevBest.val);
+if(currentDiff<prevDiff){
+var improvement=prevDiff-currentDiff;
+var prDiv=document.getElementById('prDisplay');
+prDiv.style.display='';
+prDiv.innerHTML='<div class="pr-celebration" onclick="this.remove()">'+
+'<div class="pr-card"><div class="pr-emoji">&#128200;</div>'+
+'<div class="pr-title">Novo Recorde Pessoal!</div>'+
+'<div class="pr-detail">Melhorou '+improvement+'ms!</div></div></div>';
+setTimeout(function(){var el=document.querySelector('.pr-celebration');if(el)el.remove()},3500);
+}
+}
+
+/* ========== FEATURE 3: STREAK SYSTEM ========== */
+var playerStreak=0;
+function loadStreak(){
+if(!db) return;
+try{
+db.collection('desafio_streaks').doc(playerPhone).get().then(function(doc){
+if(doc.exists){
+var d=doc.data();
+playerStreak=d.count||0;
+/* Check if last visit was recent (within 14 days) */
+if(d.lastVisit){
+var last=new Date(d.lastVisit);
+var now=new Date();
+var daysDiff=Math.floor((now-last)/(1000*60*60*24));
+if(daysDiff>14) playerStreak=0;
+}
+} else {playerStreak=0}
+});
+}catch(e){}
+}
+
+function updateStreak(){
+playerStreak++;
+if(!db) return;
+try{
+db.collection('desafio_streaks').doc(playerPhone).set({
+phone:playerPhone,name:playerN,count:playerStreak,lastVisit:new Date().toISOString()
+},{merge:true});
+}catch(e){}
+}
+
+function renderStreakBadge(){
+var el=document.getElementById('streakDisplay');
+if(!el) return;
+if(playerStreak<=0){el.style.display='none';return}
+el.style.display='';
+var isVip=playerStreak>=3;
+el.innerHTML='<div class="streak-badge'+(isVip?' streak-vip':'')+'">'+
+'&#128293; Streak: '+playerStreak+' visita'+(playerStreak>1?'s':'')+(isVip?' seguida'+(playerStreak>1?'s':'')+'! Tentativa VIP desbloqueada!':' seguida'+(playerStreak>1?'s':'')+'!')+'</div>';
+}
+
+/* ========== FEATURE 10: STAMP CARD ========== */
+function updateStampCard(){
+if(!db) return;
+try{
+db.collection('desafio_stamps').doc(playerPhone).get().then(function(doc){
+var count=0;
+if(doc.exists) count=doc.data().count||0;
+count++;
+db.collection('desafio_stamps').doc(playerPhone).set({phone:playerPhone,name:playerN,count:count,lastPurchase:new Date().toISOString()},{merge:true});
+renderStamps(count);
+});
+}catch(e){}
+}
+
+function renderStamps(count){
+var el=document.getElementById('stampStars');
+var ct=document.getElementById('stampCount');
+if(!el) return;
+var full=Math.min(count%5||5,5);
+var empty=5-full;
+var stars='';
+for(var i=0;i<full;i++) stars+='\u2B50';
+for(var i=0;i<empty;i++) stars+='\u2606';
+el.textContent=stars;
+ct.textContent=full+'/5 compras'+(count>=5?' - Tentativa VIP!':'');
+if(count>=5) ct.style.color='#FFD700';
+}
+
+/* ========== FEATURE 7: REACTION VIDEO RECORDING ========== */
+function startReactionRecording(){
+recordedChunks=[];reactionVideoBlob=null;
+try{
+mediaRecorder=new MediaRecorder(webcamStream,{mimeType:'video/webm;codecs=vp9'});
+}catch(e){
+try{mediaRecorder=new MediaRecorder(webcamStream,{mimeType:'video/webm'})}
+catch(e2){mediaRecorder=null;return}
+}
+mediaRecorder.ondataavailable=function(e){if(e.data&&e.data.size>0) recordedChunks.push(e.data)};
+mediaRecorder.onstop=function(){
+reactionVideoBlob=new Blob(recordedChunks,{type:'video/webm'});
+};
+mediaRecorder.start();
+}
+
+window.saveReactionVideo=function(){
+if(!reactionVideoBlob) return;
+var url=URL.createObjectURL(reactionVideoBlob);
+var a=document.createElement('a');
+a.href=url;a.download='reacao-milkypot-'+playerN.replace(/\s/g,'_')+'.webm';
+a.click();URL.revokeObjectURL(url);
+/* Also try uploading to Firebase Storage */
+if(storage){
+try{
+var ref=storage.ref('desafio_reactions/'+playerPhone+'_'+Date.now()+'.webm');
+ref.put(reactionVideoBlob).then(function(snap){
+snap.ref.getDownloadURL().then(function(downloadURL){
+if(db){
+db.collection('desafio_10000').where('phone','==',playerPhone).orderBy('date','desc').limit(1).get().then(function(q){
+q.forEach(function(doc){doc.ref.update({reactionVideo:downloadURL})});
+});
+}
+});
+});
+}catch(e){}
+}
+};
+
+/* ========== FEATURE 5: DIGITAL BADGE ========== */
+function renderBadge(){
+var el=document.getElementById('badgeCard');
+var sc=document.getElementById('badgeScore');
+if(!el||!sc) return;
+el.style.display='';
+sc.textContent=fmt(elapsed)+'ms';
+}
+
+window.saveBadgeImage=function(){
+var cv=document.getElementById('badgeCanvas');
+cv.width=600;cv.height=400;
+var ctx=cv.getContext('2d');
+/* Background */
+var grd=ctx.createLinearGradient(0,0,600,400);
+grd.addColorStop(0,'#1a0a2e');grd.addColorStop(1,'#200a30');
+ctx.fillStyle=grd;ctx.beginPath();
+roundRect(ctx,0,0,600,400,24);ctx.fill();
+/* Border */
+ctx.strokeStyle='rgba(232,160,191,0.4)';ctx.lineWidth=3;
+ctx.beginPath();roundRect(ctx,2,2,596,396,22);ctx.stroke();
+/* Trophy emoji */
+ctx.font='48px serif';ctx.textAlign='center';ctx.fillText('\uD83C\uDFC5',300,70);
+/* Title */
+ctx.font='bold 22px Nunito,sans-serif';ctx.fillStyle='#E8A0BF';
+ctx.fillText('Eu tentei o Desafio MilkyPot!',300,120);
+/* Score */
+ctx.font='bold 56px Orbitron,monospace';ctx.fillStyle='#FF0040';
+ctx.fillText(fmt(elapsed)+'ms',300,200);
+/* Player name */
+ctx.font='bold 20px Nunito,sans-serif';ctx.fillStyle='rgba(255,255,255,0.6)';
+ctx.fillText(playerN,300,250);
+/* Difficulty */
+ctx.font='bold 14px Nunito,sans-serif';ctx.fillStyle='rgba(255,255,255,0.3)';
+ctx.fillText('Alvo: '+fmt(gameTarget)+'ms | Dificuldade: '+(gameDifficulty==='easy'?'Molezinha':gameDifficulty==='hard'?'Modo Lenda':'Suadinho'),300,290);
+/* Footer */
+ctx.font='bold 12px Nunito,sans-serif';ctx.fillStyle='rgba(255,255,255,0.2)';
+ctx.fillText('milkypot.com/desafio.html',300,370);
+/* Download */
+var link=document.createElement('a');
+link.download='badge-milkypot-'+playerN.replace(/\s/g,'_')+'.png';
+link.href=cv.toDataURL('image/png');link.click();
+};
+
+function roundRect(ctx,x,y,w,h,r){
+ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);
+}
+
+/* ========== FEATURE 11: NOTIFICATION OPT-IN ========== */
+window.toggleNotifOptin=function(){
+notifOptedIn=!notifOptedIn;
+var t=document.getElementById('notifToggle');
+if(t){t.classList.toggle('on',notifOptedIn)}
+if(db&&playerPhone){
+try{db.collection('desafio_notifications').doc(playerPhone).set({phone:playerPhone,name:playerN,optedIn:notifOptedIn,date:new Date().toISOString()},{merge:true})}catch(e){}
+}
+};
+
+/* ========== INSTAGRAM BONUS CLAIM ========== */
+window.claimInstagramBonus=function(){
+var btn=document.getElementById('instagramClaimBtn');
+var statusEl=document.getElementById('instagramClaimStatus');
+if(!activeVoucher||!activeVoucherCode||!db){
+statusEl.style.display='';statusEl.textContent='Erro: voucher nao encontrado.';
+return;
+}
+if(activeVoucher.instagramBonusUsed){
+statusEl.style.display='';statusEl.textContent='Bonus ja resgatado neste voucher!';
+btn.disabled=true;btn.style.opacity='0.5';
+return;
+}
+var extraChances=prizeConfig.instagramExtraChances||3;
+activeVoucher.attempts=(activeVoucher.attempts||1)+extraChances;
+activeVoucher.instagramBonusUsed=true;
+try{
+db.collection('desafio_vouchers').doc(activeVoucherCode).update({
+attempts:activeVoucher.attempts,
+instagramBonusUsed:true,
+used:false /* re-open since we added attempts */
+});
+}catch(e){console.warn('Instagram bonus update error:',e)}
+statusEl.style.display='';statusEl.textContent='+'+extraChances+' tentativas liberadas! Total agora: '+(activeVoucher.attempts-(activeVoucher.attemptsUsed||0));
+btn.disabled=true;btn.style.opacity='0.5';btn.textContent='Bonus resgatado!';
+/* Update attempts badge */
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
+var attInfo=document.getElementById('voucherAttemptsInfo');
+if(attInfo) attInfo.textContent='🎟️ '+rem+' tentativa'+(rem!==1?'s':'')+' restante'+(rem!==1?'s':'');
+};
+
+/* ========== WIN ========== */
+function showWin(){
+document.getElementById('winOverlay').classList.add('show');
+var ws=document.getElementById('winSub');
+if(ws) ws.textContent='Parou exatamente em '+fmt(gameTarget)+'!';
+launchConfetti();
+playWinSound();
+if(navigator.vibrate) navigator.vibrate([100,50,200,50,300]);
+}
+window.closeWin=function(){document.getElementById('winOverlay').classList.remove('show')};
+
+/* ========== CONFETTI ========== */
+function launchConfetti(){
+var cv=document.getElementById('confettiCanvas');
+var ctx=cv.getContext('2d');
+cv.width=window.innerWidth;cv.height=window.innerHeight;
+var p=[];
+var cols=['#FF0040','#E8A0BF','#C8A2E8','#FFD700','#A0D2F5','#FF6B9D','#FFA500'];
+for(var i=0;i<150;i++){
+p.push({x:cv.width/2,y:cv.height/2,vx:(Math.random()-0.5)*18,vy:Math.random()*-16-4,
+w:Math.random()*8+3,h:Math.random()*6+3,c:cols[Math.floor(Math.random()*cols.length)],
+r:Math.random()*360,rv:(Math.random()-0.5)*14,g:0.22+Math.random()*0.08,life:1});
+}
+var f=0;
+function draw(){
+ctx.clearRect(0,0,cv.width,cv.height);
+var alive=false;
+p.forEach(function(q){
+if(q.life<=0)return;alive=true;
+q.x+=q.vx;q.y+=q.vy;q.vy+=q.g;q.r+=q.rv;q.life-=0.005;q.vx*=0.99;
+ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.r*Math.PI/180);
+ctx.globalAlpha=Math.max(0,q.life);ctx.fillStyle=q.c;
+ctx.fillRect(-q.w/2,-q.h/2,q.w,q.h);ctx.restore();
+});
+if(alive&&f<500){f++;requestAnimationFrame(draw)}else ctx.clearRect(0,0,cv.width,cv.height);
+}
+draw();
+}
+
+/* ========== RANKING ========== */
+function renderRanking(){
+/* Weekly ranking (resets every Monday) - top 10 numerado */
+var list=document.getElementById('rankingList');
+var weekStart=getWeekStart();
+var weekItems=best.filter(function(r){return r.date&&new Date(r.date)>=weekStart}).slice(0,10);
+// medals: 3 primeiros emoji ouro/prata/bronze, 4-10 com "Xº" pra ficar legivel a 3m
+var medals=['&#129351;','&#129352;','&#129353;','4&ordm;','5&ordm;','6&ordm;','7&ordm;','8&ordm;','9&ordm;','10&ordm;'];
+if(!weekItems.length){list.innerHTML='<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa esta semana</div>';}
+else{
+var html='';
+weekItems.forEach(function(r,i){
+var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
+var d=Math.abs((r.target||gameTarget)-r.val);
+html+='<div class="ranking-row">';
+if(r.photo) html+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
+else html+='<div class="ranking-pos '+cls+'">'+medals[i]+'</div>';
+html+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
+});
+list.innerHTML=html;
+}
+
+/* Global ranking (ALL TIME - never resets) - top 10 numerado */
+var globalList=document.getElementById('globalRankingList');
+var globalItems=best.slice(0,10);
+if(!globalItems.length){globalList.innerHTML='<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa ainda</div>';return}
+var ghtml='';
+globalItems.forEach(function(r,i){
+var cls=i===0?'rp1':i===1?'rp2':i===2?'rp3':'rp'+(i+1);
+var d=Math.abs((r.target||10000)-r.val);
+ghtml+='<div class="ranking-row">';
+if(r.photo) ghtml+='<img src="'+r.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
+else ghtml+='<div class="ranking-pos '+cls+'">'+medals[i]+'</div>';
+ghtml+='<span class="ranking-name">'+r.name+'</span><span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
+});
+globalList.innerHTML=ghtml;
+// Atualiza com dados reais do Firebase (substitui os locais)
+loadRankingFromFirebase();
+}
+
+function renderRankingWithData(items, listId, isGlobal) {
+var list = document.getElementById(listId);
+if (!list) return;
+if (!items.length) {
+list.innerHTML = '<div style="text-align:center;color:rgba(90,69,112,0.4);font-size:13px;padding:12px">Nenhuma tentativa ainda \u2014 seja o primeiro!</div>';
+return;
+}
+// medals: 3 primeiros emoji ouro/prata/bronze, 4-10 com "X\u00BA" pra leitura clara
+var medals = ['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49','4\u00BA','5\u00BA','6\u00BA','7\u00BA','8\u00BA','9\u00BA','10\u00BA'];
+var html = '';
+items.forEach(function(r, i) {
+var cls = i === 0 ? 'rp1' : i === 1 ? 'rp2' : i === 2 ? 'rp3' : 'rp' + (i+1);
+var d = Math.abs((r.target||10000) - r.val);
+html += '<div class="ranking-row">';
+if (r.photo) html += '<img src="' + r.photo + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover">';
+else html += '<div class="ranking-pos ' + cls + '">' + medals[i] + '</div>';
+html += '<span class="ranking-name">' + r.name + '</span>';
+html += '<span class="ranking-val">' + (d === 0 ? 'EXATO!' : d + 'ms') + '</span></div>';
+});
+list.innerHTML = html;
+}
+
+function loadRankingFromFirebase() {
+if (!db) { renderRanking(); return; }
+var weekStart = getWeekStart();
+
+// Ranking semanal: query dos últimos 7 dias, ordenado por diff (menor = melhor)
+db.collection('desafio_10000')
+.where('date', '>=', weekStart.toISOString())
+.orderBy('date', 'desc')
+.limit(50)
+.get()
+.then(function(snap) {
+var weekItems = [];
+snap.forEach(function(doc) {
+var d = doc.data();
+weekItems.push({ name: d.name, phone: d.phone, val: d.elapsed, target: d.target || 10000, date: d.date, photo: d.photo || null });
+});
+// Ordenar por proximidade ao target
+weekItems.sort(function(a, b) {
+return Math.abs((a.target||10000) - a.val) - Math.abs((b.target||10000) - b.val);
+});
+renderRankingWithData(weekItems.slice(0, 10), 'rankingList', false);
+})
+.catch(function() { renderRanking(); }); // fallback para localStorage
+
+// Ranking global: top 10 de todos os tempos
+db.collection('desafio_10000')
+.orderBy('diff', 'asc')
+.limit(10)
+.get()
+.then(function(snap) {
+var globalItems = [];
+snap.forEach(function(doc) {
+var d = doc.data();
+globalItems.push({ name: d.name, phone: d.phone, val: d.elapsed, target: d.target || 10000, date: d.date, photo: d.photo || null });
+});
+renderRankingWithData(globalItems, 'globalRankingList', true);
+})
+.catch(function() {}); // falha silenciosa, localStorage já foi renderizado
+}
+
+/* ========== RESTART ========== */
+window.restart=function(){
+stopTensionSound();
+gameState='idle';
+document.getElementById('counter').textContent='00:00.000';
+document.getElementById('gameBtn').className='btn btn-start';
+document.getElementById('gameBtn').innerHTML='Iniciar Desafio &#9889;';
+document.getElementById('statusMsg').textContent='Preparado? Toque para iniciar!';
+document.getElementById('videoSaveBtn').style.display='none';
+var wc=document.getElementById('wheelCard');if(wc)wc.style.display='none';
+recordedChunks=[];reactionVideoBlob=null;
+/* Modo gratis: checa limite diario antes de permitir nova tentativa */
+if(isFreeMode){
+var maxFreeR=prizeConfig.freeMaxPerDay||1;
+var usedR=freeAttemptsUsedToday(playerPhone);
+if(usedR>=maxFreeR){
+var s=document.getElementById('voucherStatus');
+s.style.display='';
+s.className='voucher-status error';
+s.textContent='Voce ja usou suas tentativas gratis hoje! Volte amanha ou faca uma compra na loja para jogar mais.';
+showStep(0);
+return;
+}
+showStep(2);
+return;
+}
+/* Modo voucher: checa tentativas restantes do voucher */
+if(activeVoucher){
+var rem=activeVoucher.attempts-(activeVoucher.attemptsUsed||0);
+if(rem<=0){
+/* No more attempts */
+activeVoucher=null;activeVoucherCode=null;
+/* TV mode: marca voucher como usado e volta pra attract pra proxima liberacao do PDV */
+if(isStoreTvMode){
+showStep('Attract');
+startAttract();
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+return;
+}
+document.getElementById('voucherInput').value='';
+document.getElementById('voucherInput').classList.remove('valid');
+document.getElementById('voucherCheck').classList.remove('show');
+document.getElementById('voucherStatus').className='voucher-status error';
+document.getElementById('voucherStatus').textContent='Suas tentativas acabaram! Use outro codigo.';
+document.getElementById('voucherPlayerInfo').style.display='none';
+document.getElementById('btnValidateVoucher').style.display='';
+document.getElementById('btnGoToPhoto').style.display='none';
+showStep(0);
+return;
+}
+}
+showStep(2);
+};
+
+/* ========== SHARE ========== */
+window.shareWA=function(){
+var t=encodeURIComponent('Eu fiz '+fmt(elapsed)+' no Desafio '+fmt(gameTarget)+' da MilkyPot! Voce consegue? https://milkypot.com/desafio.html');
+window.open('https://wa.me/?text='+t,'_blank');
+};
+window.copyPhrase=function(){
+navigator.clipboard.writeText('Eu fiz '+fmt(elapsed)+' no Desafio '+fmt(gameTarget)+' da MilkyPot. Voce consegue? milkypot.com/desafio.html');
+};
+
+/* ========== FEATURE 2: WEEKLY TOURNAMENT ========== */
+function getWeekStart(){
+var now=new Date();var day=now.getDay();
+var diff=now.getDate()-day+(day===0?-6:1);
+var mon=new Date(now.setDate(diff));
+mon.setHours(0,0,0,0);return mon;
+}
+
+function getDaysUntilReset(){
+var now=new Date();var day=now.getDay();
+return day===0?1:(8-day);
+}
+
+function loadWeeklyTournament(){
+var section=document.getElementById('tournamentSection');
+var countdown=document.getElementById('tournamentCountdown');
+var list=document.getElementById('tournamentList');
+if(!section) return;
+section.style.display='';
+var daysLeft=getDaysUntilReset();
+countdown.textContent='Faltam '+daysLeft+' dia'+(daysLeft>1?'s':'')+' para o ranking zerar!';
+var weekStart=getWeekStart();
+/* Filter local data for this week */
+var weekEntries=best.filter(function(b){return new Date(b.date)>=weekStart});
+weekEntries.sort(function(a,b){return Math.abs((a.target||10000)-a.val)-Math.abs((b.target||10000)-b.val)});
+var top3=weekEntries.slice(0,3);
+if(top3.length===0){
+list.innerHTML='<div style="text-align:center;color:rgba(255,215,0,0.3);font-size:12px;padding:8px">Nenhum jogador esta semana</div>';
+} else {
+var html='';
+var medals=['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'];
+top3.forEach(function(r,i){
+var d=Math.abs((r.target||10000)-r.val);
+html+='<div class="tournament-row">';
+if(r.photo) html+='<img src="'+r.photo+'" class="tournament-photo">';
+else html+='<span style="font-size:20px">'+medals[i]+'</span>';
+html+='<span class="ranking-name" style="flex:1;color:#FFD700">'+r.name+'</span>';
+html+='<span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
+});
+list.innerHTML=html;
+}
+// Busca dados reais do Firebase para o torneio
+if(db){
+var weekStart2=getWeekStart();
+db.collection('desafio_10000')
+.where('date','>=',weekStart2.toISOString())
+.orderBy('date','desc')
+.limit(50)
+.get()
+.then(function(snap){
+var entries=[];
+snap.forEach(function(doc){
+var d=doc.data();
+entries.push({name:d.name,val:d.elapsed,target:d.target||10000,photo:d.photo||null});
+});
+entries.sort(function(a,b){
+return Math.abs((a.target||10000)-a.val)-Math.abs((b.target||10000)-b.val);
+});
+var top3fb=entries.slice(0,3);
+if(top3fb.length){
+var medals2=['\uD83E\uDD47','\uD83E\uDD48','\uD83E\uDD49'];
+var html2='';
+top3fb.forEach(function(r,i){
+var d=Math.abs((r.target||10000)-r.val);
+html2+='<div class="tournament-row">';
+if(r.photo) html2+='<img src="'+r.photo+'" class="tournament-photo">';
+else html2+='<span style="font-size:20px">'+medals2[i]+'</span>';
+html2+='<span class="ranking-name" style="flex:1;color:#FFD700">'+r.name+'</span>';
+html2+='<span class="ranking-val">'+(d===0?'EXATO!':d+'ms')+'</span></div>';
+});
+list.innerHTML=html2;
+}
+})
+.catch(function(){}); // fallback já foi renderizado
+}
+}
+
+/* ========== FEATURE 8: SCREENSAVER WITH MEDIA ========== */
+var attractTimer=null;
+var attractIdx=0;
+
+function buildAttractCards(){
+var cards=[];
+cards.push({emoji:'&#127873;',name:'ACERTOU GANHOU',msg:'Acerte 300g no peso e NAO PAGUE!',val:'PROMO',cls:'gold',copy:'Pese 300 gramas exatos e o MilkyPot e na faixa!'});
+
+best.forEach(function(b){
+var d=Math.abs((b.target||10000)-b.val);
+var card={name:b.name,val:fmt(b.val),cls:'',photo:b.photo||null,video:b.reactionVideo||null};
+if(d===0){card.emoji='&#127942;';card.msg='ACERTOU!';card.cls='gold';card.copy='Ganhou 1 MilkyPot gratis!'}
+else if(d<=50){card.emoji='&#128293;';card.msg='Quase acertou!';card.copy='Diferenca de apenas '+d+'ms!'}
+else if(d<=500){card.emoji='&#128170;';card.msg='Chegou perto!';card.copy='Fez '+fmt(b.val)+'. Voce faz melhor?'}
+else{card.emoji='&#129321;';card.msg='Tentou o desafio!';card.copy='Bora superar?'}
+cards.push(card);
+});
+if(cards.length===1){
+cards=[
+{emoji:'&#127873;',name:'ACERTOU GANHOU',msg:'Acerte 300g no peso e NAO PAGUE!',val:'PROMO',cls:'gold',copy:'Mostre que voce tem olho clinico!'},
+{emoji:'&#9201;',name:'10 segundos',msg:'Voce consegue acertar?',val:'10.000ms',cls:'',copy:'Parece facil, mas nao e!'},
+{emoji:'&#128170;',name:'Desafio',msg:'Toque na tela e tente!',val:'JOGAR',cls:'gold',copy:'Sera que voce tem o timing?'},
+{emoji:'&#128293;',name:'Ranking',msg:'Ninguem jogou ainda!',val:'1o lugar',cls:'',copy:'Seja o primeiro do ranking!'},
+{emoji:'&#128017;',name:'MilkyPot',msg:'A ovelhinha ta esperando!',val:'Beeee!',cls:'',copy:'Vem jogar!'}
+];
+}
+return cards;
+}
+
+function rotateAttract(){
+var feed=document.getElementById('attractFeed');
+if(!feed) return;
+var cards=buildAttractCards();
+if(cards.length===0) return;
+var c=cards[attractIdx%cards.length];
+attractIdx++;
+var mediaHtml='';
+/* Show photo or video - NEVER phone numbers */
+if(c.video){
+mediaHtml='<video class="attract-card-video" autoplay muted loop playsinline><source src="'+c.video+'" type="video/webm"></video>';
+} else if(c.photo){
+mediaHtml='<img class="attract-card-photo" src="'+c.photo+'" alt="">';
+}
+feed.innerHTML='<div class="attract-card">'+
+mediaHtml+
+'<div class="attract-card-emoji">'+c.emoji+'</div>'+
+'<div class="attract-card-name">'+c.name+'</div>'+
+'<div class="attract-card-msg">'+c.msg+'</div>'+
+'<div class="attract-card-val '+(c.cls||'')+'">'+c.val+'</div>'+
+'<div style="font-size:clamp(11px,1.5vw,14px);color:rgba(90,69,112,0.4);margin-top:6px">'+c.copy+'</div>'+
+'</div>';
+var ctas=isStoreTvMode
+?['Toque quando o atendente liberar!','Desafio liberado pelo PDV','Sem teclado na TV: so toque!','Quem sera o proximo?','Peca sua liberacao no caixa!']
+:['Toque na tela para jogar!','Voce consegue acertar?','Desafie seus amigos!','Quem sera o proximo?','Toque aqui e tente!'];
+document.getElementById('attractCta').textContent=ctas[attractIdx%ctas.length];
+}
+
+/* ========== RETURNING PLAYER WELCOME ========== */
+function showReturningWelcome(records){
+records.sort(function(a,b){return new Date(b.date)-new Date(a.date)});
+var bestRecord=records.reduce(function(min,r){
+return Math.abs((r.target||10000)-r.val)<Math.abs((min.target||10000)-min.val)?r:min;
+});
+var bestDiff=Math.abs((bestRecord.target||10000)-bestRecord.val);
+
+document.getElementById('welcomeTitle').textContent='Que bom te ver de novo, '+playerN+'!';
+document.getElementById('welcomeSub').textContent='Voce ja tentou '+records.length+' vez'+(records.length>1?'es':'')+'. Vamos melhorar?';
+
+/* History */
+var hhtml='';
+records.slice(0,8).forEach(function(r){
+var d=new Date(r.date);
+var dateStr=d.getDate()+'/'+(d.getMonth()+1);
+var diff=Math.abs((r.target||10000)-r.val);
+var emoji=diff===0?'&#127942;':diff<=50?'&#128293;':diff<=200?'&#128170;':'&#127919;';
+hhtml+='<div class="welcome-history-item"><span class="welcome-history-date">'+emoji+' '+dateStr+'</span><span class="welcome-history-val">'+fmt(r.val)+' ('+diff+'ms)</span></div>';
+});
+document.getElementById('welcomeHistory').innerHTML=hhtml;
+
+/* Best */
+document.getElementById('welcomeBestVal').textContent=fmt(bestRecord.val);
+
+/* Challenge message */
+var msgs;
+if(bestDiff===0){
+msgs='Voce ja acertou! Consegue de novo?';
+} else if(bestDiff<=50){
+msgs='Faltaram apenas '+bestDiff+'ms! Hoje voce acerta!';
+} else if(bestDiff<=200){
+msgs='Seu melhor foi '+fmt(bestRecord.val)+'. Da pra chegar mais perto!';
+} else if(bestDiff<=1000){
+msgs='Voce fez '+fmt(bestRecord.val)+'. Bora quebrar esse recorde!';
+} else {
+msgs='Seu recorde e '+fmt(bestRecord.val)+'. Concentre e melhore!';
+}
+document.getElementById('welcomeChallenge').textContent=msgs;
+
+document.getElementById('welcomeBack').classList.add('show');
+sheepSay('Eeei '+playerN+'! Voltou pro desafio! Beeee! &#128017;');
+}
+window.closeWelcome=function(){
+document.getElementById('welcomeBack').classList.remove('show');
+showStep(1);
+startCamera('photoVideo');
+};
+
+/* ========== SHEEP MASCOT LOGIC ========== */
+var sheepMsgs=[
+'Beeee! Desafio 10 MilkyPot! &#127942;',
+'Eu acredito em voce! &#128155;',
+'Concentra! O potinho depende de voce!',
+'Vai, vai, vai! &#128293;',
+'Quase la! Mais uma vez!',
+'Sera que voce consegue? &#129300;',
+'Tic-tac, tic-tac... &#9201;',
+'O recorde ta esperando!',
+'Beeee! Toca na tela! &#128017;',
+'Quem acerta ganha MilkyPot! &#127846;'
+];
+var sheepMsgIdx=0;
+
+function sheepSay(msg){
+var bubble=document.getElementById('sheepBubble');
+bubble.innerHTML=msg;
+bubble.style.display='block';
+bubble.style.animation='none';
+void bubble.offsetWidth;
+bubble.style.animation='bubbleIn 0.4s ease';
+clearTimeout(bubble._timer);
+bubble._timer=setTimeout(function(){bubble.style.display='none'},4000);
+}
+
+/* Sheep talks periodically in attract mode */
+var sheepTalkTimer;
+function startSheepTalk(){
+sheepTalkTimer=setInterval(function(){
+if(document.getElementById('stepAttract').classList.contains('active')){
+sheepSay(sheepMsgs[sheepMsgIdx%sheepMsgs.length]);
+sheepMsgIdx++;
+}
+},8000);
+}
+startSheepTalk();
+
+function renderAttractGlobalRanking(){
+var gl=document.getElementById('attractGlobalList');
+if(!gl)return;
+
+// Mostra dados locais imediatamente como placeholder
+var localItems=best.slice(0,10);
+if(localItems.length) renderRankingWithData(localItems,'attractGlobalList',true);
+
+// Busca dados reais do Firebase
+if(db){
+db.collection('desafio_10000')
+.orderBy('diff','asc')
+.limit(10)
+.get()
+.then(function(snap){
+var items=[];
+snap.forEach(function(doc){
+var d=doc.data();
+items.push({name:d.name,val:d.elapsed,target:d.target||10000,photo:d.photo||null});
+});
+if(items.length) renderRankingWithData(items,'attractGlobalList',true);
+})
+.catch(function(){});
+}
+}
+
+/* Demo counter animation in attract */
+var demoTimer=null;
+var demoStart=0;
+var demoTarget=10000;
+var demoCycleTimer=null;
+function fmtDemo(ms){
+var s=Math.floor(ms/1000);
+var m=ms%1000;
+var min=Math.floor(s/60);
+var sec=s%60;
+return String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+String(m).padStart(3,'0');
+}
+function runDemoCounter(){
+var el=document.getElementById('attractCounter');
+if(!el)return;
+var now=Date.now()-demoStart;
+if(now>=demoTarget+500){
+/* Show final number briefly then restart */
+el.textContent=fmtDemo(demoTarget);
+el.style.color='#4CAF50';
+setTimeout(function(){
+el.style.color='#42A5F5';
+demoStart=Date.now();
+demoTarget=[5000,10000,30000][Math.floor(Math.random()*3)];
+},2000);
+return;
+}
+if(now>demoTarget){now=demoTarget}
+el.textContent=fmtDemo(now);
+el.style.color=now>=demoTarget?'#4CAF50':'#FF0040';
+demoTimer=requestAnimationFrame(runDemoCounter);
+}
+function startDemoCounter(){
+demoStart=Date.now();
+demoTarget=[5000,10000][Math.floor(Math.random()*2)];
+runDemoCounter();
+/* Cycle: run for target+2s, pause 1s, repeat */
+demoCycleTimer=setInterval(function(){
+cancelAnimationFrame(demoTimer);
+demoStart=Date.now();
+demoTarget=[5000,10000,30000][Math.floor(Math.random()*3)];
+var el=document.getElementById('attractCounter');
+if(el){el.style.color='#42A5F5';el.textContent='00:00.000'}
+setTimeout(function(){runDemoCounter()},800);
+},15000);
+}
+function stopDemoCounter(){
+cancelAnimationFrame(demoTimer);
+if(demoCycleTimer){clearInterval(demoCycleTimer);demoCycleTimer=null}
+}
+
+function startAttract(){
+if(gameConfig.tournament) loadWeeklyTournament();
+renderAttractGlobalRanking();
+rotateAttract();
+attractTimer=setInterval(rotateAttract,5000);
+startDemoCounter();
+}
+
+function stopAttract(){
+if(attractTimer){clearInterval(attractTimer);attractTimer=null}
+stopDemoCounter();
+}
+
+function setTvReleaseStatus(msg,isError){
+var el=document.getElementById('tvReleaseStatus');
+if(!el)return;
+el.style.display='';
+el.textContent=msg;
+el.style.background=isError?'rgba(255,0,64,0.10)':'rgba(66,165,245,0.12)';
+el.style.color=isError?'#FF0040':'#5A4570';
+}
+
+function claimNextTvVoucher(){
+ensureAudio();
+if(!db){
+showStep(0);
+setTvReleaseStatus('Sem conexao com o PDV. Aguardando sincronizar...',true);
+return;
+}
+if(tvClaimingVoucher) return;
+tvClaimingVoucher=true;
+showStep(0);
+setTvReleaseStatus('Procurando liberacao do PDV...');
+db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(20).get().then(function(snap){
+var picked=null,pickedId=null;
+snap.forEach(function(doc){
+if(picked)return;
+var d=doc.data();
+var remaining=(d.attempts||0)-(d.attemptsUsed||0);
+/* Multi-tenancy: so aceita vouchers da propria franquia da TV */
+if(tvFranchiseId && d.franchiseId && d.franchiseId!==tvFranchiseId) return;
+if(d.tvReady===true && d.status==='ready' && !d.used && remaining>0){
+picked=d;pickedId=doc.id;
+}
+});
+if(!picked){
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+tvClaimingVoucher=false;
+return;
+}
+setTvReleaseStatus('Liberado para '+(picked.customerName||'cliente')+'!');
+try{
+db.collection('desafio_vouchers').doc(pickedId).update({status:'in_progress',tvAcceptedAt:new Date().toISOString()});
+picked.status='in_progress';
+}catch(e){}
+loadCatalogPrizeContext(picked.franchiseId).then(function(){
+processVoucherResult(picked,pickedId,{autoStart:true});
+tvClaimingVoucher=false;
+});
+}).catch(function(err){
+console.error('TV voucher lookup error:',err);
+setTvReleaseStatus('Nao consegui buscar a liberacao. Aguardando PDV...',true);
+tvClaimingVoucher=false;
+});
+}
+
+function watchTvVoucherRelease(){
+if(!isStoreTvMode||!db||tvVoucherUnsub) return;
+try{
+tvVoucherUnsub=db.collection('desafio_vouchers').orderBy('createdAt','desc').limit(10).onSnapshot(function(snap){
+/* Se desafio ESTA EM ANDAMENTO (cliente jogando agora), nao interrompe */
+if(gameState==='running') return;
+
+/* Procura voucher novo pronto pra TV (mesma logica do claim) */
+var picked=null, pickedId=null;
+try{
+snap.forEach(function(doc){
+if(picked) return;
+var d=doc.data();
+var remaining=(d.attempts||0)-(d.attemptsUsed||0);
+if(tvFranchiseId && d.franchiseId && d.franchiseId!==tvFranchiseId) return;
+if(d.tvReady===true && d.status==='ready' && !d.used && remaining>0){
+picked=d; pickedId=doc.id;
+}
+});
+}catch(e){console.warn('TV voucher scan:',e); return}
+
+if(!picked) return;
+
+/* BUG FIX: depois do 1o desafio, gameState='done' e activeVoucher ficava
+   travado ate o idleTimer de 60s. Se chegou um voucher NOVO (id diferente
+   do que ta ativo OU nenhum ativo), forca reset imediato pra atender o
+   proximo cliente em segundos, nao em minuto.
+   Cobre os casos:
+     1. activeVoucher=null + gameState=idle → liberacao normal (1o cliente)
+     2. activeVoucher antigo + gameState=done → reset e atende novo
+     3. activeVoucher diferente + qualquer estado nao-running → reset
+*/
+if(activeVoucher && activeVoucherCode===pickedId){
+/* Mesmo voucher de antes — ja foi processado, nao reativa */
+return;
+}
+
+if(gameState==='done' || (activeVoucher && activeVoucherCode!==pickedId)){
+/* Reset rapido pra liberar novo cliente sem esperar 60s de idle */
+try{
+activeVoucher=null;
+activeVoucherCode=null;
+gameState='idle';
+var c=document.getElementById('counter'); if(c) c.textContent='00:00.000';
+var gb=document.getElementById('gameBtn');
+if(gb){gb.className='btn btn-start'; gb.innerHTML='Iniciar Desafio &#9889;'}
+var st=document.getElementById('statusMsg'); if(st) st.textContent='';
+document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+var s0=document.getElementById('step0'); if(s0) s0.classList.add('active');
+}catch(e){console.warn('Quick reset:',e)}
+}
+
+claimNextTvVoucher();
+},function(err){console.warn('TV voucher watch:',err)});
+setTvReleaseStatus('Aguardando liberacao do PDV...');
+}catch(e){console.warn('watchTvVoucherRelease:',e)}
+}
+
+/* Touch to start */
+document.getElementById('stepAttract').addEventListener('click',function(){
+stopAttract();
+if(isStoreTvMode){showStep(0);setTvReleaseStatus('Aguardando liberacao do PDV...');watchTvVoucherRelease();return}
+showStep(0);document.getElementById('playerName').focus();
+});
+
+/* Start attract mode */
+startAttract();
+watchTvVoucherRelease();
+
+/* ============================================
+   MOBILE CHALLENGE — escaneou QR da TV no celular.
+   Anti-fraude: 1 desafio grátis/dia/dispositivo (fingerprint).
+   Se bloqueado: modal com convite pra fazer pedido.
+   ============================================ */
+if (isMobileChallengeMode && window.AntiFraud) {
+    (async function(){
+        try {
+            var check = await window.AntiFraud.canPlayFree(clientFid);
+            if (!check.allowed) {
+                showLockoutModal();
+            } else {
+                /* Libera modo livre — usuario joga sem voucher */
+                isFreeMode = true;
+                window._mobileUnlockToken = check.unlockToken || null;
+                /* Vai direto pra escolha de dificuldade pulando voucher */
+                setTimeout(function(){
+                    document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+                    var stepDiff = document.getElementById('stepDiff');
+                    if (stepDiff) stepDiff.classList.add('active');
+                    else document.getElementById('step0').classList.add('active');
+                }, 600);
+            }
+        } catch(e){ console.warn('Anti-fraud check:', e); }
+    })();
+}
+
+/* Modal de bloqueio diario com call-to-action pra fazer pedido. */
+function showLockoutModal(){
+    var existing = document.getElementById('lockoutModal');
+    if (existing) return;
+    var fid = encodeURIComponent(clientFid);
+    var cardapioUrl = 'https://milkypot.com/cardapio.html?source=desafio-lockout&fid=' + fid;
+    var whatsUrl = 'https://wa.me/554399919777?text=' + encodeURIComponent('Quero pedir agora e desbloquear o desafio!');
+    var html =
+      '<div id="lockoutModal" style="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);'+
+      'display:flex;align-items:center;justify-content:center;padding:24px;'+
+      'font-family:\'Baloo 2\',\'Nunito\',sans-serif">'+
+        '<div style="background:#fff;border-radius:22px;max-width:440px;width:100%;'+
+          'padding:32px 26px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.4);'+
+          'animation:lockoutIn .4s ease-out">'+
+          '<div style="font-size:64px;margin-bottom:8px">🐑✋</div>'+
+          '<h2 style="font-family:\'Baloo 2\',cursive;color:#7E57C2;margin:0 0 8px;font-size:26px">Você já jogou hoje!</h2>'+
+          '<p style="color:#6B7280;font-size:15px;margin:0 0 22px;line-height:1.4">'+
+            'O desafio gratuito é <strong>1 vez por dia</strong> por dispositivo.<br>'+
+            'Quer jogar de novo? Faça um pedido e a ovelhinha te libera. 🍦'+
+          '</p>'+
+          '<a href="'+ cardapioUrl +'" style="display:block;background:linear-gradient(135deg,#7E57C2,#FF4F8A);'+
+            'color:#fff;text-decoration:none;padding:14px 18px;border-radius:14px;font-weight:800;'+
+            'font-size:15px;margin-bottom:10px;box-shadow:0 10px 28px rgba(126,87,194,.35)">'+
+            '🛒 Fazer pedido no cardápio'+
+          '</a>'+
+          '<a href="'+ whatsUrl +'" target="_blank" style="display:block;background:#25D366;'+
+            'color:#fff;text-decoration:none;padding:12px 18px;border-radius:14px;font-weight:800;'+
+            'font-size:14px;margin-bottom:10px">'+
+            '💬 Pedir pela Belinha no WhatsApp'+
+          '</a>'+
+          '<button onclick="document.getElementById(\'lockoutModal\').remove()" '+
+            'style="background:transparent;border:0;color:#9CA3AF;font-weight:700;'+
+            'font-size:13px;padding:10px;cursor:pointer">Volto amanhã</button>'+
+          '<div style="margin-top:18px;font-size:11px;color:#9CA3AF">'+
+            'Fez pedido? A confirmação libera novo desafio na hora.'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<style>@keyframes lockoutIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}</style>';
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+/* Auto-return to attract after 60s inactivity */
+var idleTimer;
+function resetIdle(){
+clearTimeout(idleTimer);
+idleTimer=setTimeout(function(){
+if(document.getElementById('step0').classList.contains('active')||document.getElementById('step3').classList.contains('active')){
+document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
+document.getElementById('stepAttract').classList.add('active');
+startAttract();
+}
+},60000);
+}
+document.addEventListener('click',resetIdle);
+document.addEventListener('touchstart',resetIdle);
+
+/* Fullscreen on first touch */
+document.addEventListener('click',function fs(){
+if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){});
+document.removeEventListener('click',fs);
+},{once:true});
+
+/* Resize */
+window.addEventListener('resize',function(){
+var cv=document.getElementById('confettiCanvas');
+if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
+});
+})();
+</script>
+
+<!-- Offline indicator + Service Worker registration -->
+<style>
+#mpOfflineBar{position:fixed;bottom:0;left:0;right:0;background:#FF9800;color:#fff;text-align:center;padding:8px 12px;font-size:14px;font-weight:700;z-index:99999;transform:translateY(100%);transition:transform .3s;box-shadow:0 -2px 8px rgba(0,0,0,.2)}
+#mpOfflineBar.show{transform:translateY(0)}
+#mpOfflineBar.online{background:#4CAF50}
+</style>
+<div id="mpOfflineBar">📡 Voce esta offline — o jogo continua funcionando!</div>
+<script>
+(function(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/sw.js').then(function(reg){
+      console.log('[Desafio] SW registered:', reg.scope);
+      window.addEventListener('online', function(){ reg.active && reg.active.postMessage({type:'REPLAY_OFFLINE_QUEUE'}); });
+    }).catch(function(e){ console.warn('[Desafio] SW failed:', e); });
+  }
+  var bar=document.getElementById('mpOfflineBar');
+  function update(){
+    if(navigator.onLine){
+      bar.textContent='✅ Conectado de volta';
+      bar.classList.add('online');bar.classList.add('show');
+      setTimeout(function(){bar.classList.remove('show');bar.classList.remove('online')},2000);
+    } else {
+      bar.textContent='📡 Voce esta offline — o jogo continua funcionando!';
+      bar.classList.remove('online');bar.classList.add('show');
+    }
+  }
+  window.addEventListener('online',update);
+  window.addEventListener('offline',update);
+  if(!navigator.onLine) update();
+})();
+</script>
+
+<!-- ============================================================
+     PROMO ROTATOR + ÁUDIO ÉPICO — TV Desafio v2
+     Aditivo puro (REGRA #0). Coexiste com tudo que já existe.
+     6 propagandas virais rotacionando no attract + música épica
+     durante o desafio.
+     ============================================================ -->
+<style>
+/* AUTO-FIT layout — usa Grid + clamp(vmin) pra adaptar a qualquer
+   tela (TV horizontal 16:9, vertical 9:16, monitor ultrawide).
+   vmin = menor entre vw/vh, escala IGUAL nas duas orientacoes. */
+.promo-rotator{
+  position:fixed; inset:0; z-index:50;
+  display:none;
+  pointer-events:auto; cursor:pointer;
+  font-family:'Baloo 2',cursive;
+  overflow:hidden;
+}
+.promo-rotator.on{display:block}
+.promo-slide{
+  width:100%; height:100%;
+  display:grid;
+  grid-template-rows:
+    minmax(min-content, auto)   /* eyebrow */
+    minmax(min-content, 1fr)    /* emoji (flex) */
+    minmax(min-content, auto)   /* headline */
+    minmax(min-content, auto)   /* subtext */
+    minmax(min-content, auto)   /* cta */
+    minmax(min-content, auto);  /* qr */
+  justify-items:center; align-items:center;
+  gap:clamp(6px, 1.2vh, 18px);
+  padding: clamp(12px, 3vh, 40px) clamp(20px, 4vw, 60px);
+  padding-bottom: clamp(46px, 6vh, 80px);
+  text-align:center;
+  animation:promoIn .6s cubic-bezier(.2,.8,.2,1) both;
+  position:relative;
+  box-sizing:border-box;
+}
+@keyframes promoIn{
+  from{opacity:0; transform:scale(.94)}
+  to{opacity:1; transform:scale(1)}
+}
+.promo-eyebrow{
+  font-size:clamp(10px, 1.6vmin, 16px); font-weight:800;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.9);
+  padding:6px 18px;
+  background:rgba(0,0,0,.22); border-radius:30px;
+  white-space:nowrap; max-width:90vw; overflow:hidden; text-overflow:ellipsis;
+}
+.promo-emoji{
+  font-size:clamp(50px, 14vmin, 160px);
+  line-height:1;
+  animation:promoBounce 2.4s ease-in-out infinite;
+  filter:drop-shadow(0 10px 30px rgba(0,0,0,.3));
+}
+@keyframes promoBounce{
+  0%,100%{transform:translateY(0) rotate(-3deg)}
+  50%{transform:translateY(-12px) rotate(3deg)}
+}
+.promo-headline{
+  font-size:clamp(28px, 6.5vmin, 100px); font-weight:900;
+  line-height:1.02; color:#fff; margin:0;
+  text-shadow:0 4px 24px rgba(0,0,0,.35);
+  max-width:94vw;
+  word-wrap:break-word;
+}
+.promo-subtext{
+  font-size:clamp(14px, 2.4vmin, 28px); font-weight:700;
+  color:rgba(255,255,255,.94); margin:0;
+  max-width:88vw; line-height:1.3;
+}
+.promo-cta{
+  display:inline-flex; align-items:center; gap:12px;
+  background:rgba(255,255,255,.95); color:#1A1A2E;
+  padding:clamp(8px,1.4vmin,16px) clamp(16px,3vmin,32px);
+  border-radius:clamp(14px,2vmin,24px);
+  font-size:clamp(13px, 2vmin, 22px); font-weight:800;
+  box-shadow:0 10px 32px rgba(0,0,0,.25);
+  max-width:90vw;
+}
+.promo-qr{
+  width:clamp(110px, 22vmin, 220px); height:auto;
+  border-radius:14px;
+  padding:clamp(6px, 1vmin, 14px);
+  background:#fff;
+  box-shadow:0 10px 36px rgba(0,0,0,.28), 0 0 0 3px rgba(255,255,255,.5);
+  animation:promoQrPulse 2.2s ease-in-out infinite;
+  display:block;
+}
+@keyframes promoQrPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.04)}
+}
+.promo-tap{
+  position:absolute; bottom:clamp(10px, 1.8vh, 22px);
+  left:50%; transform:translateX(-50%);
+  color:rgba(255,255,255,.78);
+  font-size:clamp(10px, 1.4vmin, 14px); font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  animation:promoTap 1.6s ease-in-out infinite;
+  white-space:nowrap;
+  text-shadow:0 2px 6px rgba(0,0,0,.4);
+  max-width:96vw; overflow:hidden; text-overflow:ellipsis;
+}
+@keyframes promoTap{
+  0%,100%{opacity:.55}
+  50%{opacity:1; transform:translateX(-50%) scale(1.04)}
+}
+/* Portrait estreito (TV vertical / celular) — empilha mais compacto */
+@media (orientation:portrait) and (max-aspect-ratio: 3/4) {
+  .promo-slide{
+    grid-template-rows:
+      minmax(min-content, auto)
+      minmax(min-content, .8fr)
+      minmax(min-content, auto)
+      minmax(min-content, auto)
+      minmax(min-content, auto)
+      minmax(min-content, 1fr);
+    gap:clamp(4px, .8vh, 12px);
+  }
+  .promo-headline{ font-size:clamp(26px, 7vw, 64px); }
+  .promo-subtext{ font-size:clamp(13px, 3.4vw, 22px); }
+}
+/* Landscape ultrawide — centraliza melhor */
+@media (orientation:landscape) and (min-aspect-ratio: 16/9) {
+  .promo-slide{ padding-left:8vw; padding-right:8vw; }
+}
+.promo-progress{
+  position:absolute; top:0; left:0; right:0; height:4px;
+  background:rgba(255,255,255,.18);
+}
+.promo-progress::after{
+  content:''; display:block; height:100%;
+  background:#fff; width:0;
+  animation:promoTick var(--promo-dur,8s) linear forwards;
+}
+@keyframes promoTick{from{width:0}to{width:100%}}
+
+/* RASPADINHA DEMO — simula a raspadinha real do app raspando sozinha
+   em loop, mostrando os 11 premios possiveis. Pra cliente entender
+   visualmente o fluxo: "toda compra ganha algo". */
+.rasp-demo{
+  display:flex; flex-direction:column; align-items:center;
+  gap:clamp(8px, 1.5vh, 18px);
+}
+.rasp-card{
+  position:relative;
+  width:clamp(240px, 36vmin, 360px);
+  aspect-ratio: 16 / 10;
+  background:linear-gradient(135deg,#FFF 0%,#FFE4F0 100%);
+  border-radius:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.35), 0 0 0 4px rgba(255,255,255,.4);
+  overflow:hidden;
+}
+.rasp-card-inner{
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.rasp-prize{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; padding:14px;
+  opacity:0;
+  animation:raspPrizeIn 11s linear infinite;
+}
+.rasp-prize-emoji{
+  font-size:clamp(38px, 6.5vmin, 70px); line-height:1;
+}
+.rasp-prize-label{
+  font-family:'Baloo 2',cursive; font-weight:900;
+  font-size:clamp(13px, 2.2vmin, 22px);
+  color:#1A1A2E; letter-spacing:.5px; text-align:center;
+}
+.rasp-prize-sub{
+  font-size:clamp(10px, 1.4vmin, 14px); color:#6B7280;
+  font-weight:600; text-align:center;
+}
+/* Cada premio fica visivel ~1s do ciclo de 11s (delay = i*1s da JS).
+   Janela: 0%-1% aparece, 1%-8% visivel, 8%-9% desaparece. */
+@keyframes raspPrizeIn{
+  0%       { opacity:0; transform:scale(.7); }
+  1%       { opacity:1; transform:scale(1); }
+  8%       { opacity:1; transform:scale(1.04); }
+  9%, 100% { opacity:0; transform:scale(1.1); }
+}
+.rasp-overlay{
+  position:absolute; inset:0;
+  background:linear-gradient(135deg,#C0C0C0 0%,#9E9E9E 50%,#C0C0C0 100%);
+  display:flex; align-items:center; justify-content:center;
+  animation:raspOverlay 1s ease-in-out infinite;
+  pointer-events:none;
+}
+.rasp-overlay-text{
+  font-family:'Baloo 2',cursive; font-weight:900;
+  font-size:clamp(16px, 2.6vmin, 26px);
+  color:#fff; letter-spacing:2px;
+  text-shadow:0 2px 6px rgba(0,0,0,.4);
+  animation:raspOverlayShake 1.2s ease-in-out infinite;
+}
+@keyframes raspOverlay{
+  /* Loop 1s: cobre (0%) → raspa rapido (5%-15%) → revelado (15%-85%)
+     → volta cobrir (95%-100%) sincronizado com keyframe do premio. */
+  0%   { clip-path:inset(0 0 0 0); }
+  10%  { clip-path:inset(0 50% 0 0); }
+  15%  { clip-path:inset(0 100% 0 0); }
+  85%  { clip-path:inset(0 100% 0 0); }
+  95%  { clip-path:inset(0 50% 0 0); }
+  100% { clip-path:inset(0 0 0 0); }
+}
+@keyframes raspOverlayShake{
+  0%,100%{ transform:translate(0,0) }
+  25%   { transform:translate(-2px,1px) }
+  50%   { transform:translate(2px,-1px) }
+  75%   { transform:translate(-1px,2px) }
+}
+.rasp-caption{
+  font-size:clamp(11px, 1.6vmin, 16px); font-weight:800;
+  color:rgba(255,255,255,.85); letter-spacing:2px;
+  text-transform:uppercase;
+}
+/* No slide da raspadinha, escondemos o emoji default pra dar lugar ao card */
+.promo-slide-rasp .promo-emoji{ display:none; }
+
+/* ===== HALL DA FAMA LIVE ===== */
+.promo-slide-hall .promo-emoji{ display:none; }
+.hall-fama-carousel{
+  position:relative;
+  width:clamp(220px, 32vmin, 360px);
+  aspect-ratio:9/16;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 18px 50px rgba(0,0,0,.4), 0 0 0 4px rgba(255,255,255,.5);
+  background:#1A1A2E;
+}
+.hall-fama-photo{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  opacity:0;
+  animation:hallFamaIn var(--hf-dur,12s) ease-in-out infinite;
+}
+.hall-fama-photo img{
+  width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+}
+.hall-fama-legend{
+  position:absolute; bottom:0; left:0; right:0;
+  padding:12px 14px 14px;
+  background:linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.6) 60%, transparent 100%);
+  color:#fff; font-family:'Baloo 2',cursive; font-weight:800;
+  font-size:clamp(13px, 2vmin, 18px); line-height:1.2;
+  text-align:center;
+}
+@keyframes hallFamaIn{
+  /* Cada foto fica visivel ~2.4s do ciclo total (animation-delay
+     escalona via JS: 0s, 2.4s, 4.8s, 7.2s, 9.6s).
+     Janela: 0%-2% aparece, 2%-18% visivel, 18%-22% desaparece. */
+  0%       { opacity:0; transform:scale(1.04); }
+  2%, 18%  { opacity:1; transform:scale(1); }
+  22%,100% { opacity:0; transform:scale(.98); }
+}
+.hall-empty-hint{
+  margin-top:6px;
+  font-size:clamp(11px, 1.6vmin, 16px);
+  color:rgba(255,255,255,.7);
+  font-style:italic; font-weight:600;
+}
+/* No slide hall fama, QR fica pequeno e flutua no canto pra nao roubar
+   atencao das fotos */
+.promo-slide-hall .promo-qr{
+  width:clamp(70px, 11vmin, 120px);
+  position:absolute; right:clamp(14px, 2vw, 28px); bottom:clamp(60px, 8vh, 100px);
+}
+</style>
+
+<script>
+(function(){
+  'use strict';
+
+  // ---------- PROMO ROTATOR ----------
+  // Só ativa em modo TV indoor (URL ?tv=… ou ?kiosk=…)
+  var urlP = new URLSearchParams(location.search);
+  var isTvMode = urlP.has('tv') || urlP.has('kiosk');
+  if (!isTvMode) return;
+
+  // 10 slides — cada um vinculado a uma promocao REAL do sistema,
+  // com QR code apontando pra URL funcional + UTM tracking pro admin
+  // medir scans em painel/tv-promo-metrics.html.
+  // Copies pelo Whimsy Injector (humor BR autoironico, ovelhinha psico).
+  // URL params: ?source=tv-desafio&promo=<id>&fid=<franchiseId>
+  var fidParam = (urlP.get('franchise') || urlP.get('f') || 'muffato-quintino');
+  function qrUrl(path, promoId){
+    var sep = path.indexOf('?') >= 0 ? '&' : '?';
+    var url = 'https://milkypot.com' + path + sep + 'source=tv-desafio&promo=' + promoId + '&fid=' + encodeURIComponent(fidParam);
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&color=1A1A2E&bgcolor=FFFFFF&data=' + encodeURIComponent(url);
+  }
+  function qrExternal(rawUrl, promoId){
+    // URLs externas (Google review, Instagram) — passa pelo /go.html
+    // proxy que conta o scan antes do redirect.
+    var proxy = 'https://milkypot.com/go.html?to=' + encodeURIComponent(rawUrl) + '&promo=' + promoId + '&fid=' + encodeURIComponent(fidParam) + '&source=tv-desafio';
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&color=1A1A2E&bgcolor=FFFFFF&data=' + encodeURIComponent(proxy);
+  }
+
+  // Copies em portugues popular BR — frases simples, humor obvio,
+  // ZERO meme de Twitter. O cliente da loja em Londrina le na TV em
+  // 1 segundo e entende DE PRIMEIRA. Cada slide diz: o que é, qual
+  // a regra, o que faz. Sem firula.
+  var SLIDES = [
+    { id:'raspadinha', emoji:'🎫', eyebrow:'TODA COMPRA PREMIA',
+      headline:'Pediu? Já ganhou alguma coisa.',
+      subtext:'Cada compra acima de R$ 15 sai com seu QR ÚNICO no recibo.\nVocê raspa pelo celular e leva o prêmio. Validade 7 dias.',
+      cta:'Pede no caixa que sai seu QR na hora',
+      // SEM QR no slide: o QR é UNICO e impresso na nota da compra.
+      // Cada cliente recebe o SEU codigo individual ao pagar.
+      qr: null,
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#7E57C2 100%)', dur:30000,
+      // Demo visual: simula a raspadinha real raspando sozinha em loop,
+      // mostrando os 11 premios reais que estao ATIVOS no admin agora.
+      raspDemo: true },
+    { id:'milkyclube', emoji:'🐑', eyebrow:'PROGRAMA MILKYCLUBE',
+      headline:'Gasta agora, ganha desconto depois.',
+      subtext:'Cada R$1 que você paga vira moedinha pro próximo sorvete.\nDe graça. Tipo o cashback do banco.',
+      cta:'Cadastra rapidinho — só precisa do email',
+      qr: qrUrl('/clube.html', 'milkyclube'),
+      bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)', dur:30000 },
+    { id:'roleta', emoji:'🎰', eyebrow:'ROLETA DA SORTE',
+      headline:'Pagou? Gira a roleta.',
+      subtext:'Aparece sozinha na sua tela quando você termina o pedido.\nPode sair 20% off, topping grátis ou moedinha extra.',
+      cta:'É automático — só aceitar e girar quando aparecer',
+      // SEM QR: roleta abre sozinha apos o pagamento (modal no checkout).
+      qr: null,
+      bg:'linear-gradient(135deg,#FFD700 0%,#FF4F8A 100%)', dur:30000 },
+    { id:'desafio10s', emoji:'⏱️', eyebrow:'DESAFIO 10 SEGUNDOS',
+      headline:'Para o cronômetro em 10s cravado e ganha.',
+      subtext:'Margem de 0,3 segundo. Acertou? Sorvete por nossa conta.\nDá pra jogar aqui mesmo, dessa tela.',
+      cta:'Toca a tela ou escaneia pra jogar do celular',
+      qr: qrUrl('/desafio.html', 'desafio10s'),
+      bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)', dur:30000 },
+    { id:'acerta300', emoji:'⚖️', eyebrow:'ACERTOU 300g, NÃO PAGA',
+      headline:'Montou 300g no buffet? A casa paga.',
+      subtext:'Você monta seu pote, a gente pesa. Bateu 300g (margem 3g)\né de graça. Errou? Paga normal R$5,99/100g.',
+      cta:'Pega o pote e vai no buffet — desafio é ao vivo',
+      // SEM QR: desafio e fisico (cliente monta no buffet da loja).
+      qr: null,
+      bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:30000 },
+    { id:'googlereview', emoji:'⭐', eyebrow:'AVALIA NO GOOGLE',
+      headline:'5 estrelas vale raspadinha premium + 50 moedas.',
+      subtext:'Foi bom o sorvete? Conta pro Google.\nA gente te recompensa por isso.',
+      cta:'Aponta a câmera e cai direto no Google',
+      qr: qrExternal('https://g.page/r/CXrthQS1rgPdEAE/review', 'googlereview'),
+      bg:'linear-gradient(135deg,#4285F4 0%,#FFD700 100%)', dur:30000 },
+    { id:'instagram', emoji:'📸', eyebrow:'POSTA NO INSTA',
+      headline:'Posta marcando @milkypotbr e ganha 150 moedas.',
+      subtext:'Pode ser foto, vídeo, story, qualquer coisa.\nMarcou a gente? 150 moedinhas pro próximo pedido.',
+      cta:'Hashtag: #PrimeiraMordidaMilky',
+      qr: qrExternal('https://instagram.com/milkypotbr', 'instagram'),
+      bg:'linear-gradient(135deg,#E1306C 0%,#FCAF45 100%)', dur:30000 },
+    { id:'influencer', emoji:'💸', eyebrow:'INDICA E GANHA',
+      headline:'Indica um amigo, ganha cada vez que ele vem.',
+      subtext:'Cadastra, pega seu link, manda no Whats da galera.\nCada amigo que pede com seu link: você ganha moeda.',
+      cta:'Não precisa ser famoso — só ter amigos guloso',
+      qr: qrUrl('/influencer.html', 'influencer'),
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#FF8A65 100%)', dur:30000 },
+    { id:'streak', emoji:'🔥', eyebrow:'CLIENTE FIEL GANHA MAIS',
+      headline:'Veio 3 dias seguidos? +25 moedas.',
+      subtext:'7 dias = sundae GRÁTIS. 14 dias = +100 moedas.\n30 dias seguidos = camiseta exclusiva LENDÁRIO.',
+      cta:'É automático, só não pular dia — entre no MilkyClube',
+      // SEM QR: streak e automatico pra quem ta no MilkyClube.
+      // Se cliente quer entrar no clube, ja tem o slide MilkyClube com QR.
+      qr: null,
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#FFD700 100%)', dur:30000 },
+    { id:'milkypass', emoji:'📱', eyebrow:'CARTÃO NO CELULAR',
+      headline:'Teu cartão do clube mora no celular.',
+      subtext:'Salva no Apple Wallet ou Google Wallet — sem app pra baixar.\nNa hora de pagar, mostra o QR. Pronto.',
+      cta:'Entra no clube e clica em "Adicionar ao Wallet"',
+      qr: qrUrl('/clube.html#pass', 'milkypass'),
+      bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:30000 },
+    { id:'ganhadores', emoji:'🏆', eyebrow:'HALL DA FAMA',
+      headline:'Vê quem ganhou ontem.',
+      subtext:'Todo cliente que acerta 300g ou ganha o desafio\nvai pro Hall da Fama. Pode ser você amanhã.',
+      cta:'Escaneia e vê os stories + segue a gente',
+      qr: qrExternal('https://www.instagram.com/stories/highlights/18075880883645372/', 'ganhadores'),
+      bg:'linear-gradient(135deg,#FFD700 0%,#E1306C 50%,#7E57C2 100%)', dur:30000,
+      // Live: carrega fotos do Firestore (admin sobe em painel/hall-fama.html)
+      // e mostra rotacionando em mini-carousel + QR Insta no canto.
+      hallFamaLive: true },
+    { id:'compartilha', emoji:'📲', eyebrow:'CHAMA UM AMIGO',
+      headline:'Manda o cardápio pra galera.',
+      subtext:'Aponta o celular, pega o link da loja\ne joga no grupo do WhatsApp. Bora dividir esse sorvete?',
+      cta:'milkypot.com — só apontar a câmera',
+      qr: qrUrl('/cardapio.html', 'compartilha'),
+      bg:'linear-gradient(135deg,#25D366 0%,#42A5F5 100%)', dur:30000 }
+  ];
+
+  var rotEl = document.getElementById('promoRotator');
+  if (!rotEl) return;
+  // CRITICO: move pro body. O rotator nasce dentro de #stepAttract,
+  // mas quando outro step fica ativo (step0/stepDiff/etc), stepAttract
+  // vira display:none e leva o rotator junto — mesmo com position:fixed,
+  // parent hidden invalida renderizacao. Movendo pro <body>, ele fica
+  // independente dos steps e cobre a tela em TODAS as fases.
+  if (rotEl.parentElement !== document.body) {
+    document.body.appendChild(rotEl);
+  }
+  var promoIdx = -1;
+  var promoTimer = null;
+  var promoActive = false;
+
+  // Telemetria: registra view de cada slide em tv_promo_events.
+  // painel/tv-promo-metrics.html agrega esses eventos por dia/promocao.
+  function trackEvent(type, slideId){
+    try {
+      if (typeof firebase === 'undefined' || !firebase.firestore) return;
+      var today = new Date();
+      today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+      var dayKey = today.toISOString().slice(0,10);
+      firebase.firestore().collection('tv_promo_events').add({
+        type: type,
+        slideId: slideId,
+        franchiseId: fidParam,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        dayKey: dayKey
+      }).catch(function(){});
+    } catch(_) {}
+  }
+
+  // Premios REAIS da raspinha — todos no formato "comprou X, leva Y junto"
+  // pra MAXIMIZAR upsell e MINIMIZAR prejuizo (Y sempre tem custo bem
+  // menor que X). Sem mostrar probabilidades — cliente so precisa saber
+  // QUE ganha.
+  // Ideia: cada premio condiciona a recompra a uma categoria especifica,
+  // virando motor de cross-sell.
+  var RASP_DEMO_PRIZES = [
+    { emoji:'🥛➕🍦', label:'COMPROU MILK SHAKE? LEVA CASQUINHA',
+      sub:'Casquinha de leite ninho de brinde no próximo' },
+    { emoji:'🍨➕🍧', label:'COMPROU SUNDAE? LEVA COPINHO',
+      sub:'Copinho de sorvete grátis no próximo sundae' },
+    { emoji:'🍦➕🍦', label:'CASCÃO? LEVA CASQUINHA',
+      sub:'Casquinha de brinde no próximo cascão' },
+    { emoji:'⚖️➕🍡', label:'BUFFET 250g+? LEVA PICOLÉ',
+      sub:'1 picolé de graça acima de 250g' },
+    { emoji:'⬆️',    label:'UPGRADE MILK SHAKE',
+      sub:'P vira M ou M vira G de graça' },
+    { emoji:'⬆️',    label:'UPGRADE SUNDAE',
+      sub:'P vira M ou M vira G de graça' },
+    { emoji:'➕⚖️',  label:'+50g BUFFET',
+      sub:'no próximo buffet acima de R$ 15' },
+    { emoji:'🍫',    label:'TOPPING PREMIUM GRÁTIS',
+      sub:'Nutella, Ovomaltine ou Oreo no próximo' },
+    { emoji:'👯',    label:'VOLTE COM UM AMIGO',
+      sub:'os dois ganham 1 casquinha' },
+    { emoji:'🥤',    label:'DOSE DUPLA MILK SHAKE',
+      sub:'comprou G ou Monster? leva 1 P pra dividir' },
+    { emoji:'🎁',    label:'COMBO SURPRESA',
+      sub:'casquinha + picolé no próximo Milk Shake M+' }
+  ];
+
+  // Hall da Fama: fotos LIVE do Firestore. Admin sobe em painel/hall-fama.html,
+  // a TV escuta via onSnapshot e renderiza mini-carousel rotando 1 por 2.4s.
+  // Slide dura 12s → cabe ~5 fotos por exibicao. Se vazio, fallback pra
+  // mensagem motivacional ("seja o primeiro").
+  var hallPhotos = [];
+  var hallConfig = { enabled: true, showQr: true };
+  var hallUnsub = null;
+  function subscribeHallFama(){
+    if (hallUnsub) return;
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      hallUnsub = firebase.firestore().collection('datastore')
+        .doc('hall_da_fama_' + fidParam)
+        .onSnapshot(function(snap){
+          try {
+            if (!snap.exists) { hallPhotos = []; return; }
+            var raw = snap.data().value || '{}';
+            var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            hallPhotos = Array.isArray(parsed.photos) ? parsed.photos : [];
+            hallConfig = parsed.config || { enabled: true, showQr: true };
+          } catch (e) {
+            console.warn('Hall da Fama parse:', e);
+          }
+        }, function(err){ console.warn('Hall da Fama snap err:', err); });
+    } catch (e) { console.warn('subscribeHallFama:', e); }
+  }
+  subscribeHallFama();
+
+  // Toggle por slide — admin gerencia em painel/tv-desafio-slides.html
+  // Doc: tv_desafio_slides_<fid> { value: JSON.stringify({ raspadinha: true, ... }) }
+  // Default (sem config): TODOS slides ativos (undefined !== false).
+  var slidesEnabledConfig = {};
+  var slidesUnsub = null;
+  function subscribeSlideToggles(){
+    if (slidesUnsub) return;
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      slidesUnsub = firebase.firestore().collection('datastore')
+        .doc('tv_desafio_slides_' + fidParam)
+        .onSnapshot(function(snap){
+          try {
+            if (!snap.exists) { slidesEnabledConfig = {}; return; }
+            var raw = snap.data().value || '{}';
+            slidesEnabledConfig = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            console.log('[slides toggle] config atualizado:', slidesEnabledConfig);
+          } catch (e) { console.warn('slidesToggle parse:', e); }
+        }, function(err){ console.warn('slidesToggle err:', err); });
+    } catch (e) { console.warn('subscribeSlideToggles:', e); }
+  }
+  subscribeSlideToggles();
+
+  // ===== CONTADOR AO VIVO (prova social) =====
+  // Conta eventos do dia em tv_promo_events + desafio_results + scratches
+  // pra mostrar em overlay no canto da TV: 'Hoje: 47 rasparam · 3 ganharam
+  // sundae grátis'. Atualiza a cada 90s.
+  var liveStats = { rasparam: 0, ganharam: 0, jogaram: 0 };
+  var liveStatsUnsub = null;
+  function todayKeyTV(){
+    var d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,10);
+  }
+  async function refreshLiveStats(){
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      var db = firebase.firestore();
+      var dayKey = todayKeyTV();
+      // Quantos scans em raspinha hoje?
+      var scratchesSnap = await db.collection('scratches')
+        .where('franchiseId', '==', fidParam)
+        .where('scratchedAt', '>=', dayKey)
+        .limit(500).get().catch(function(){return null});
+      if (scratchesSnap) {
+        liveStats.rasparam = scratchesSnap.size;
+        liveStats.ganharam = scratchesSnap.docs.filter(function(d){
+          var data = d.data() || {};
+          return data.prizeTier && data.prizeTier !== 'none';
+        }).length;
+      }
+      // Quantos jogaram desafio hoje?
+      var desafioSnap = await db.collection('desafio_results')
+        .where('franchiseId', '==', fidParam)
+        .where('date', '==', dayKey)
+        .limit(500).get().catch(function(){return null});
+      if (desafioSnap) liveStats.jogaram = desafioSnap.size;
+      renderLiveStatsOverlay();
+    } catch (e) { console.warn('liveStats:', e); }
+  }
+  function renderLiveStatsOverlay(){
+    if (!isTvMode) return;
+    var existing = document.getElementById('liveStatsOverlay');
+    // Sem dados? esconde
+    if (liveStats.rasparam === 0 && liveStats.jogaram === 0) {
+      if (existing) existing.remove();
+      return;
+    }
+    var html =
+      '<div style="display:flex;gap:14px;align-items:center">' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#fff">'+ liveStats.rasparam +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">rasparam hoje</div></div>' +
+        '<div style="width:1px;height:30px;background:rgba(255,255,255,.2)"></div>' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#FFD700">'+ liveStats.ganharam +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">ganharam</div></div>' +
+        '<div style="width:1px;height:30px;background:rgba(255,255,255,.2)"></div>' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#FF4F8A">'+ liveStats.jogaram +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">jogaram desafio</div></div>' +
+      '</div>';
+    if (existing) { existing.innerHTML = html; return; }
+    var div = document.createElement('div');
+    div.id = 'liveStatsOverlay';
+    div.style.cssText = 'position:fixed;top:14px;left:14px;z-index:60;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);padding:10px 16px;border-radius:14px;pointer-events:none;animation:lsFadeIn .6s ease-out;font-family:Nunito,sans-serif';
+    div.innerHTML = html;
+    document.body.appendChild(div);
+    var css = document.createElement('style');
+    css.textContent = '@keyframes lsFadeIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}';
+    document.head.appendChild(css);
+  }
+  if (isTvMode) {
+    setTimeout(refreshLiveStats, 4000);
+    setInterval(refreshLiveStats, 90000);
+  }
+
+  // Filtra os SLIDES baseado no config admin. Chamado em cada nextPromo
+  // pra refletir mudancas ao vivo sem precisar recarregar a TV.
+  function getEnabledSlides(){
+    return SLIDES.filter(function(s){
+      return slidesEnabledConfig[s.id] !== false;
+    });
+  }
+
+  function renderHallFamaLive(slide){
+    // Se admin desativou OU nao tem fotos, fallback elegante
+    if (hallConfig.enabled === false || !hallPhotos.length) {
+      return '<div class="promo-emoji">'+ slide.emoji +'</div>' +
+             '<div class="hall-empty-hint">Seja o primeiro a aparecer aqui 🏆</div>';
+    }
+    // Mini-carousel: max 6 fotos, rotacionam via CSS animation-delay
+    var fotos = hallPhotos.slice(0, 6);
+    var dur = fotos.length * 2.4; // 2.4s por foto
+    var html = '<div class="hall-fama-carousel" style="--hf-dur:'+ dur +'s">';
+    fotos.forEach(function(p, i){
+      html += '<div class="hall-fama-photo" style="animation-delay:'+ (i*2.4) +'s">' +
+                '<img src="'+ p.dataUrl +'" alt="Ganhador">' +
+                (p.legenda ? '<div class="hall-fama-legend">'+ escapeText(p.legenda) +'</div>' : '') +
+              '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+  function escapeText(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+
+  function renderRaspadinhaDemo(){
+    // Demo cicla pelos 11 premios reais, cada um aparece por 900ms,
+    // com efeito de "raspa" revelando o premio. Total: ~11s
+    // (alinhado com s.dur=11000 do slide).
+    var demoHtml = '<div class="rasp-demo">' +
+      '<div class="rasp-card">' +
+        '<div class="rasp-card-inner" id="raspCardInner">' +
+          RASP_DEMO_PRIZES.map(function(p, i){
+            return '<div class="rasp-prize" style="animation-delay:'+ (i*0.9) +'s">' +
+                     '<div class="rasp-prize-emoji">'+ p.emoji +'</div>' +
+                     '<div class="rasp-prize-label">'+ p.label +'</div>' +
+                     '<div class="rasp-prize-sub">'+ p.sub +'</div>' +
+                   '</div>';
+          }).join('') +
+        '</div>' +
+        '<div class="rasp-overlay" id="raspOverlay">' +
+          '<div class="rasp-overlay-text">RASPA AQUI 👆</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="rasp-caption">Toda compra acima de R$ 15 ↑</div>' +
+    '</div>';
+    return demoHtml;
+  }
+
+  function renderSlide(s){
+    rotEl.style.background = s.bg;
+    rotEl.style.setProperty('--promo-dur', (s.dur/1000)+'s');
+    var extraClass = '';
+    if (s.raspDemo) extraClass = ' promo-slide-rasp';
+    if (s.hallFamaLive) extraClass = ' promo-slide-hall';
+    // Centro do slide: raspadinha demo / hall fama live / emoji default
+    var middleHtml;
+    if (s.raspDemo) middleHtml = renderRaspadinhaDemo();
+    else if (s.hallFamaLive) middleHtml = renderHallFamaLive(s);
+    else middleHtml = '<div class="promo-emoji">'+ s.emoji +'</div>';
+    // QR no Hall da Fama so aparece se admin manteve showQr ativo
+    var qrHtml = '';
+    if (s.qr) {
+      var showThisQr = s.hallFamaLive ? (hallConfig.showQr !== false) : true;
+      if (showThisQr) qrHtml = '<img class="promo-qr" src="'+ s.qr +'" alt="QR ' + s.id + '" loading="lazy">';
+    }
+    rotEl.innerHTML =
+      '<div class="promo-progress"></div>' +
+      '<div class="promo-slide' + extraClass + '">' +
+        '<div class="promo-eyebrow">'+ s.eyebrow +'</div>' +
+        middleHtml +
+        '<h1 class="promo-headline">'+ s.headline +'</h1>' +
+        '<p class="promo-subtext">'+ s.subtext.replace(/\n/g,'<br>') +'</p>' +
+        '<div class="promo-cta">📱 '+ s.cta +'</div>' +
+        qrHtml +
+        '<div class="promo-tap">👆 Toque pra jogar o Desafio 10s · Aponta a câmera no QR pra promo</div>' +
+      '</div>';
+    trackEvent('view', s.id);
+  }
+
+  function nextPromo(){
+    // Le slides filtrados pelo toggle do admin (painel/tv-desafio-slides.html).
+    // Se TODOS desativados (admin pode ter feito por engano), cai pro array
+    // original como fallback pra TV nao ficar preta.
+    var active = getEnabledSlides();
+    if (!active.length) active = SLIDES;
+    promoIdx = (promoIdx + 1) % active.length;
+    var s = active[promoIdx];
+    renderSlide(s);
+    promoTimer = setTimeout(nextPromo, s.dur);
+  }
+
+  function startPromos(){
+    if (promoActive) return;
+    promoActive = true;
+    rotEl.classList.add('on');
+    nextPromo();
+  }
+  function stopPromos(){
+    promoActive = false;
+    if (promoTimer) { clearTimeout(promoTimer); promoTimer = null; }
+    rotEl.classList.remove('on');
+    rotEl.innerHTML = '';
+  }
+
+  // Expor pra que o JS principal possa chamar
+  window.startPromoRotator = startPromos;
+  window.stopPromoRotator = stopPromos;
+  window.dismissPromoOverlay = function(){
+    // Click no overlay deixa passar pro elemento por baixo (jogo)
+    // Nao pausamos rotator aqui — quem decide pausar e o observer abaixo
+  };
+
+  // ROBUSTO: observa mudancas no DOM em vez de hookar funcoes privadas (IIFE).
+  //
+  // MODO TV (?tv=1):
+  //   Rotator so aparece quando stepAttract ESTA ATIVO.
+  //   Voucher liberado pelo PDV → processVoucherResult muda pra step0/step1/
+  //   stepDiff/step2/step3. Em qualquer um deles = desafio em curso → rotator
+  //   FORA. So volta quando o idleTimer chuta de volta pra stepAttract apos
+  //   o desafio terminar.
+  //
+  // MODO CLIENTE/DESKTOP (sem ?tv=1):
+  //   Rotator nao aparece (isTvMode === false fez early-return no IIFE).
+  //   Sintoma legado mantido: step2 + btn-stop = "running" pro caso de
+  //   alguem acessar /desafio.html em desktop e jogar.
+  function isGameRunning(){
+    if (isTvMode) {
+      var attract = document.getElementById('stepAttract');
+      var attractActive = attract && attract.classList.contains('active');
+      // Em TV, QUALQUER tela diferente de attract = desafio em curso
+      return !attractActive;
+    }
+    var btn = document.getElementById('gameBtn');
+    var s2 = document.getElementById('step2');
+    var step2Active = s2 && s2.classList.contains('active');
+    var btnStop = btn && /btn-stop/.test(btn.className || '');
+    return step2Active && btnStop;
+  }
+
+  function syncRotator(){
+    var running = isGameRunning();
+    if (running) {
+      if (promoActive) stopPromos();
+    } else {
+      if (!promoActive) startPromos();
+    }
+  }
+
+  // Observa mudancas de classe (step.active) e mudancas no botao gameBtn
+  var obs = new MutationObserver(function(){ syncRotator(); });
+  obs.observe(document.body, { attributes:true, subtree:true, attributeFilter:['class'] });
+
+  // Tick redundante a cada 1.5s pra cobrir cenarios que o observer perdeu
+  setInterval(syncRotator, 1500);
+
+  // Primeira ativacao apos load
+  setTimeout(syncRotator, 800);
+
+
+  // ---------- ÁUDIO ÉPICO ----------
+  // Reforça o startTensionSound existente com beats de coração + crescendo.
+  // Roda em paralelo (não substitui — REGRA #0). Audible só durante desafio.
+  var epicCtx = null;
+  var epicNodes = [];
+  function ensureEpic(){
+    try {
+      if (!epicCtx) epicCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (epicCtx.state === 'suspended') epicCtx.resume();
+    } catch(_) {}
+  }
+  function heartbeat(intervalMs, totalSec){
+    if (!epicCtx) return;
+    var t = 0;
+    var iv = setInterval(function(){
+      if (t > totalSec * 1000) { clearInterval(iv); return; }
+      // Batida grave dupla (tum-tum) tipo coração
+      var t0 = epicCtx.currentTime;
+      [60, 80].forEach(function(f, i){
+        var o = epicCtx.createOscillator();
+        var g = epicCtx.createGain();
+        o.frequency.value = f; o.type = 'sine';
+        g.gain.setValueAtTime(0.0001, t0 + i*0.08);
+        g.gain.exponentialRampToValueAtTime(0.18, t0 + i*0.08 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + i*0.08 + 0.12);
+        o.connect(g).connect(epicCtx.destination);
+        o.start(t0 + i*0.08);
+        o.stop(t0 + i*0.08 + 0.15);
+        epicNodes.push(o, g);
+      });
+      t += intervalMs;
+    }, intervalMs);
+    epicNodes.push({ _interval: iv });
+  }
+
+  window.startEpicAudio = function(targetMs){
+    ensureEpic();
+    if (!epicCtx) return;
+    // Coração começa em 800ms (calmo) e acelera ao longo do desafio
+    var dur = (targetMs || 10000) / 1000;
+    heartbeat(800, dur * 0.5);
+    setTimeout(function(){ heartbeat(500, dur * 0.4); }, dur * 500);
+    setTimeout(function(){ heartbeat(280, dur * 0.2); }, dur * 800);
+  };
+  window.stopEpicAudio = function(){
+    epicNodes.forEach(function(n){
+      if (n && n._interval) clearInterval(n._interval);
+      try { if (n.stop) n.stop(0); } catch(_) {}
+      try { if (n.disconnect) n.disconnect(); } catch(_) {}
+    });
+    epicNodes = [];
+    if (epicCtx) {
+      try { epicCtx.close(); } catch(_) {}
+      epicCtx = null;
+    }
+  };
+
+  // ROBUSTO: dispara epic audio via observer do botao em vez de hookar
+  // funcoes privadas (que estao dentro de IIFE inacessivel).
+  // Quando #gameBtn vira btn-stop (jogo iniciado) → starta epic.
+  // Quando volta pra btn-start ou btn-result (jogo parou/terminou) → para.
+  var lastBtnState = '';
+  function syncAudio(){
+    var btn = document.getElementById('gameBtn');
+    if (!btn) { lastBtnState = ''; return; }
+    var cls = btn.className || '';
+    var state = /btn-stop/.test(cls) ? 'running'
+              : /btn-result/.test(cls) ? 'done'
+              : 'idle';
+    if (state === lastBtnState) return;
+    if (state === 'running') {
+      // Detecta target pelo texto do botao "PARAR EM 00:10.000"
+      var targetMs = 10000;
+      var m = (btn.textContent || '').match(/(\d{2}):(\d{2})\.(\d{3})/);
+      if (m) targetMs = (+m[1])*60000 + (+m[2])*1000 + (+m[3]);
+      window.startEpicAudio(targetMs);
+    } else if (state !== 'running' && lastBtnState === 'running') {
+      window.stopEpicAudio();
+    }
+    lastBtnState = state;
+  }
+  var btnObs = new MutationObserver(syncAudio);
+  function attachBtnObserver(){
+    var btn = document.getElementById('gameBtn');
+    if (btn) btnObs.observe(btn, { attributes:true, attributeFilter:['class'] });
+  }
+  attachBtnObserver();
+  setInterval(syncAudio, 800);  // safety net
+
+
+  // ---------- PREPARE-SE OVERLAY (build-up 1.2s antes do timer) ----------
+  // Quando user clica "Iniciar Desafio" (estado IDLE), mostra overlay full-screen
+  // com "PREPARA AÍ" gigante + som crescente. Só depois disso o timer real
+  // dispara — gera tensão dramática e da tempo do cliente focar.
+  //
+  // Audio:
+  //   3 ticks crescentes em frequencia + intensidade
+  //   POP no final (transicao pro tension sound do desafio)
+  //
+  // Visual:
+  //   Overlay roxo->rosa com numero/palavra pulsando
+  //   3-2-1 → GO! sequencial com escala crescente
+  //
+  // ROI: para ao clicar pra parar o cronometro (handler natural ja existente).
+
+  var prepCss = document.createElement('style');
+  prepCss.textContent = ''+
+    '#prepOverlay{position:fixed;inset:0;z-index:90;display:none;'+
+      'align-items:center;justify-content:center;'+
+      'background:radial-gradient(circle at center,#7E57C2 0%,#1A1A2E 100%);'+
+      'animation:prepFlash .25s ease-out both}'+
+    '#prepOverlay.on{display:flex}'+
+    '@keyframes prepFlash{from{opacity:0}to{opacity:1}}'+
+    '.prep-num{font-family:"Orbitron","Baloo 2",sans-serif;'+
+      'font-size:clamp(180px,28vw,420px);font-weight:900;color:#fff;'+
+      'text-shadow:0 0 60px rgba(255,79,138,.8),0 0 120px rgba(126,87,194,.6);'+
+      'animation:prepPop .45s cubic-bezier(.34,1.56,.64,1) both;'+
+      'line-height:1;letter-spacing:-8px}'+
+    '@keyframes prepPop{0%{transform:scale(.2);opacity:0}'+
+      '60%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}'+
+    '.prep-label{position:absolute;top:14vh;left:50%;transform:translateX(-50%);'+
+      'font-family:"Baloo 2",cursive;font-size:clamp(28px,4vw,56px);font-weight:900;'+
+      'color:rgba(255,255,255,.92);letter-spacing:4px;text-transform:uppercase;'+
+      'text-shadow:0 4px 20px rgba(0,0,0,.4)}'+
+    '.prep-sheep{position:absolute;bottom:10vh;left:50%;transform:translateX(-50%);'+
+      'font-size:clamp(80px,12vw,160px);animation:prepBounce .6s ease-in-out infinite}'+
+    '@keyframes prepBounce{0%,100%{transform:translateX(-50%) translateY(0)}'+
+      '50%{transform:translateX(-50%) translateY(-18px)}}'+
+    '.prep-tip{position:absolute;bottom:4vh;left:50%;transform:translateX(-50%);'+
+      'font-size:clamp(14px,1.8vw,20px);color:rgba(255,255,255,.7);'+
+      'font-weight:700;letter-spacing:3px;text-transform:uppercase}';
+  document.head.appendChild(prepCss);
+
+  var prepEl = document.createElement('div');
+  prepEl.id = 'prepOverlay';
+  prepEl.innerHTML = ''+
+    '<div class="prep-label" id="prepLabel">PREPARA AI</div>'+
+    '<div class="prep-num" id="prepNum">3</div>'+
+    '<div class="prep-sheep">🐑</div>'+
+    '<div class="prep-tip">Toque na tela pra PARAR no tempo certo</div>';
+  document.body.appendChild(prepEl);
+
+  function prepTick(){
+    if (!epicCtx) ensureEpic();
+    if (!epicCtx) return;
+    var t0 = epicCtx.currentTime;
+    var o = epicCtx.createOscillator();
+    var g = epicCtx.createGain();
+    o.type = 'square';
+    o.frequency.value = 720;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.16, t0 + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.13);
+    o.connect(g).connect(epicCtx.destination);
+    o.start(t0); o.stop(t0 + 0.15);
+    epicNodes.push(o, g);
+  }
+  function prepGo(){
+    if (!epicCtx) ensureEpic();
+    if (!epicCtx) return;
+    var t0 = epicCtx.currentTime;
+    // POP de partida — sweep grave→agudo + crash agudo
+    var o1 = epicCtx.createOscillator();
+    var g1 = epicCtx.createGain();
+    o1.type = 'sawtooth';
+    o1.frequency.setValueAtTime(80, t0);
+    o1.frequency.exponentialRampToValueAtTime(1200, t0 + 0.18);
+    g1.gain.setValueAtTime(0.22, t0);
+    g1.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+    o1.connect(g1).connect(epicCtx.destination);
+    o1.start(t0); o1.stop(t0 + 0.25);
+    // Crash agudo
+    var o2 = epicCtx.createOscillator();
+    var g2 = epicCtx.createGain();
+    o2.type = 'triangle';
+    o2.frequency.value = 1800;
+    g2.gain.setValueAtTime(0.18, t0 + 0.16);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
+    o2.connect(g2).connect(epicCtx.destination);
+    o2.start(t0 + 0.16); o2.stop(t0 + 0.52);
+    epicNodes.push(o1, g1, o2, g2);
+  }
+
+  function runPrepSequence(callback){
+    ensureEpic();
+    var ov = document.getElementById('prepOverlay');
+    var num = document.getElementById('prepNum');
+    var label = document.getElementById('prepLabel');
+    if (!ov || !num) { callback(); return; }
+    ov.classList.add('on');
+    label.textContent = 'PREPARA AI';
+    var steps = [
+      { txt: '3', dur: 380 },
+      { txt: '2', dur: 380 },
+      { txt: '1', dur: 380 },
+      { txt: 'VAI!', dur: 380, go: true }
+    ];
+    var i = 0;
+    function nextStep(){
+      if (i >= steps.length) {
+        ov.classList.remove('on');
+        callback();
+        return;
+      }
+      var s = steps[i++];
+      num.textContent = s.txt;
+      num.style.animation = 'none';
+      void num.offsetWidth;
+      num.style.animation = 'prepPop .45s cubic-bezier(.34,1.56,.64,1) both';
+      if (s.go) {
+        label.textContent = 'AGORA!';
+        prepGo();
+        if (navigator.vibrate) navigator.vibrate([80, 30, 80]);
+      } else {
+        prepTick();
+        if (navigator.vibrate) navigator.vibrate(20);
+      }
+      setTimeout(nextStep, s.dur);
+    }
+    nextStep();
+  }
+
+  // ROBUSTO: intercepta CLICK no botao Iniciar (capture phase, antes
+  // do handler original). Roda prep, depois replay do click pra deixar
+  // o codigo original cuidar do resto.
+  var prepRunning = false;
+  function btnClickInterceptor(ev){
+    var btn = document.getElementById('gameBtn');
+    if (!btn || ev.target !== btn && !btn.contains(ev.target)) return;
+    if (prepRunning) return;
+    var cls = btn.className || '';
+    var isStart = /btn-start/.test(cls);
+    if (!isStart) return; // PARAR: deixa fluir direto
+
+    // Bloqueia o click original, roda prep, depois dispara click novo
+    ev.preventDefault();
+    ev.stopImmediatePropagation();
+    prepRunning = true;
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    runPrepSequence(function(){
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      prepRunning = false;
+      // Simula click novo — agora sem interceptacao (flag prepRunning impede loop)
+      // mas vamos chamar window.handleGame se existir, mais confiavel
+      if (typeof window.handleGame === 'function') {
+        try { window.handleGame.call(window); } catch (e) { console.warn('handleGame:', e); btn.click(); }
+      } else {
+        // Re-dispara click — flag prepRunning ja resetada, mas o re-entry
+        // sera bloqueado pelo handleGame que vira o state pra running
+        var clone = new MouseEvent('click', { bubbles:true, cancelable:true });
+        // Sinaliza pro nosso proprio interceptor pular esse click
+        clone._mpSkipPrep = true;
+        btn.dispatchEvent(clone);
+      }
+    });
+  }
+  // Capture phase + true → roda ANTES do listener inline onclick="handleGame()"
+  document.addEventListener('click', function(ev){
+    if (ev._mpSkipPrep) return;
+    btnClickInterceptor(ev);
+  }, true);
+})();
+</script>
+</body>
+</html>
