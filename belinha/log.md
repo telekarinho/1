@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #255 — 2026-05-18
+
+**Área:** Conteúdo — Stories comparação implícita Duo vs. "copo compartilhado" (contra-posicionamento JohnnyJoy sem citar concorrente)
+
+**Contexto:** Prescrito no ciclo #254 como próximo passo urgente. Ciclo #252 detectou que JohnnyJoy Catuaí Londrina está vendendo "Dois Amores" (2 sabores num único copo, R$20,90–24,90) durante todo junho, com campanha nacional. A copy prescrita (`competitors/johnnyjoy.md`) precisava virar roteiro operacional pronto para o operador publicar em 10–11/06, antes que o posicionamento JohnnyJoy domine o feed local.
+
+**O que pesquisou/analisou:**
+- Releu `competitors/johnnyjoy.md` seção ciclo #252: sabores Dois Amores confirmados (Brigadeiro Tradicional/Ninho/Pink), copy de campanha *"Jogue cupido com os sabores"*, tabela de contra-posicionamento Duo MilkyPot
+- Releu `content/stories-countdown-namorados-2026.md` (ciclo #221): TP1/TP2/TP3 já cobrem 08–11/06 — slot livre é Qua 10/06 18h (marcado como "1 story teaser extra opcional")
+- Releu `dia-dos-namorados-2026-playbook.md`: confirmou janela Qua 10/06 disponível sem conflito
+- Identificou que a copy *"Tem sobremesa de casal que é um copo pra dois. Potinho é diferente: um feito só pra ela, um feito só pra ele"* é o ângulo exato que diferencia sem atacar
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/stories-comparacao-implicita-duo-10-11jun.md` | Novo arquivo criado: 2 stories prontos com roteiro visual, copy, stickers, 2 variantes de publicação (Qua 10/06 ou Qui 11/06), encadeamento com TP3 e checklist operacional |
+
+**Destaques:**
+1. **Story 1/2 — Gancho (poll):** Pergunta implícita "dividir vs. ter o seu próprio" — gera dado de audiência e planta dúvida sem citar concorrente. Resultado da poll pode ser citado na véspera.
+2. **Story 2/2 — Resposta:** Copy direta *"Tem sobremesa de casal que é um copo pra dois — potinho é diferente"* + visual dos dois potinhos separados + link WA + countdown 12/06 14h.
+3. **Variação B:** Se o operador quiser concentrar na véspera, 5 stories sequenciais de 17h–18h cobrem comparação + urgência num bloco único.
+4. **Regra de ouro mantida:** Zero menção a JohnnyJoy, "Dois Amores", "milkshake" ou qualquer concorrente.
+
+**Commit:** `343d703`
+
+**Próximo passo sugerido:**
+- **Ciclo #256 — Concorrentes:** TheBest Açaí — atualizar ação Piscininha (lança 06/06 antes do Namorados); verificar promoções especiais Namorados e Festa Junina
+- **Ciclo #257 — Conversão:** Mecânica "foto com potinho = reward" (UGC + fidelidade) — prescrita ciclo #226, pendente há 29 ciclos
+- **Ciclo #258 — UX:** Auditar `index.html` — confirmar que os banners de Namorados preview (ciclo #254) + VIP Namorados (03/06) + Junina não sobrepõem em mobile; testar viewport 375px
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️ — teasers de 13/06 dependem disso
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (10/06 18h):** Publicar Stories 1/2 + 2/2 deste arquivo (ou Qui 11/06 17h — Variação B)
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #255 | 2026-05-18_
+
+---
+
+
 ## Ciclo #253 — 2026-05-18
 
 **Área:** Conversão — Kit de Ativação UGC DUO Namorados 12/06 (contra-posicionamento JohnnyJoy "Dois Amores")
