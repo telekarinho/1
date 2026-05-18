@@ -815,7 +815,10 @@
                 html += '<td><span class="pt-tag ' + statusClass + '">' + status + '</span></td>';
                 html += '<td>' + jornCell + '</td>';
                 html += '<td>' + (dia.completo ? dia.horasFormatado : '-') + saldoStr + '</td>';
-                html += '<td><button onclick="ptAjustarJornadaDia(\'' + s.id + '\',\'' + today + '\')" style="background:#EFF6FF;color:#1E40AF;border:1px solid #3B82F6;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer" title="Ajustar jornada deste dia">📅</button></td>';
+                html += '<td style="white-space:nowrap">'
+                    + '<button onclick="ptAjustarJornadaDia(\'' + s.id + '\',\'' + today + '\')" style="background:#EFF6FF;color:#1E40AF;border:1px solid #3B82F6;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer;margin-right:4px" title="Ajuste pontual: só hoje (ex: precisei dela mais cedo)">📅</button>'
+                    + '<button onclick="ptEditarJornadaPadrao(\'' + s.id + '\')" style="background:#F0FDF4;color:#065F46;border:1px solid #16A34A;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer" title="Jornada padrão fixa (vale todo dia + horário diferente em dom/feriado)">📋</button>'
+                    + '</td>';
                 html += '</tr>';
             });
 
@@ -1315,6 +1318,120 @@
             if (!confirm('Remover ajuste? Volta a jornada combinada padrão.')) return;
             TimeClock.removeJornadaOverride(franchiseId, staffId, dateStr);
             document.getElementById('ptJornadaModal').remove();
+            ptLoadHoje();
+            if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
+        };
+
+        // ============================================
+        // 📋 EDITAR JORNADA PADRÃO (fixa, vale todo dia)
+        // ============================================
+        // Diferente do override pontual (📅 só pra UM dia). Edita staff.jornada
+        // que é a regra fixa do contrato: hora entrada/saida, intervalo, folgas,
+        // E o horário ESPECIAL de domingo/feriado (loja fecha mais cedo).
+        // Sistema escolhe automaticamente:
+        //   - Dia normal: hora_saida
+        //   - Dom/feriado: hora_saida_dom_feriado (se preenchido)
+        //   - Override do dia: prevalece sobre tudo
+        window.ptEditarJornadaPadrao = function(staffId) {
+            var staff = (DataStore.getCollection('staff', franchiseId) || []).find(function(s) { return s.id === staffId; });
+            if (!staff) { alert('Funcionário não encontrado'); return; }
+            var j = staff.jornada || {};
+            var folgas = j.folgas || ['domingo'];
+            var modal = document.getElementById('ptJornadaPadModal');
+            if (modal) modal.remove();
+            modal = document.createElement('div');
+            modal.id = 'ptJornadaPadModal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
+            var dias = [
+                { id:'segunda', lbl:'Seg' }, { id:'terca', lbl:'Ter' }, { id:'quarta', lbl:'Qua' },
+                { id:'quinta', lbl:'Qui' }, { id:'sexta', lbl:'Sex' }, { id:'sabado', lbl:'Sáb' },
+                { id:'domingo', lbl:'Dom' }
+            ];
+            var folgasHtml = dias.map(function(d) {
+                var checked = folgas.indexOf(d.id) !== -1 ? 'checked' : '';
+                return '<label style="display:inline-flex;align-items:center;gap:4px;background:#F3F4F6;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:.85rem"><input type="checkbox" id="jpFolga_' + d.id + '" value="' + d.id + '" ' + checked + '>' + d.lbl + '</label>';
+            }).join(' ');
+            modal.innerHTML =
+                '<div style="background:#fff;border-radius:18px;max-width:540px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
+                '<div style="padding:18px 22px;background:linear-gradient(135deg,#16A34A,#065F46);color:#fff">' +
+                '<h3 style="margin:0;font-family:\'Baloo 2\',cursive">📋 Jornada padrão fixa</h3>' +
+                '<small style="opacity:.9">' + escapeHtml(staff.name) + ' — vale todo dia (exceto folga ou ajuste pontual)</small></div>' +
+                '<div style="padding:20px 22px">' +
+
+                '<div style="background:#D1FAE5;border-left:4px solid #16A34A;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.8rem;color:#065F46;line-height:1.5">' +
+                '<b>💡 Como funciona:</b><br>' +
+                '✓ Dias normais (seg-sáb): usa <b>"Hora saída padrão"</b><br>' +
+                '✓ Domingo + feriados: usa <b>"Hora saída em dom/feriado"</b> (loja fecha mais cedo)<br>' +
+                '✓ Ajuste pontual (📅) ainda funciona pra exceção de UM dia' +
+                '</div>' +
+
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">' +
+                '<div><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">⏰ Hora entrada</label>' +
+                '<input type="time" id="jpEntrada" value="' + (j.hora_entrada || '08:00') + '" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit"></div>' +
+                '<div><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">🕘 Hora saída (dias normais)</label>' +
+                '<input type="time" id="jpSaida" value="' + (j.hora_saida || '18:00') + '" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit"></div></div>' +
+
+                '<div style="margin-bottom:10px"><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">🌙 Hora saída em DOM/FERIADO <small style="color:#6B7280;font-weight:500">(loja fecha mais cedo — opcional)</small></label>' +
+                '<input type="time" id="jpSaidaDomFer" value="' + (j.hora_saida_dom_feriado || '') + '" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit"></div>' +
+
+                '<div style="margin-bottom:10px"><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">☕ Intervalo almoço/janta</label>' +
+                '<select id="jpAlmoco" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit">' +
+                '<option value="0">Sem intervalo</option><option value="30">30 min</option><option value="60">1 hora (padrão CLT)</option><option value="90">1h30min</option><option value="120">2 horas</option></select></div>' +
+
+                '<div style="margin-bottom:10px"><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:6px">🛌 Folgas semanais</label>' +
+                '<div style="display:flex;flex-wrap:wrap;gap:6px">' + folgasHtml + '</div></div>' +
+
+                '<div style="background:#FEF3C7;border-radius:8px;padding:8px 12px;font-size:.78rem;color:#92400E">' +
+                '✓ Mudança vale a partir do próximo registro<br>✓ Espelho mensal recalcula banco horas com nova jornada<br>✓ Funcionária vê no app dela' +
+                '</div>' +
+
+                '</div>' +
+                '<div style="padding:14px 22px;border-top:1px solid #E5E7EB;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">' +
+                '<button onclick="document.getElementById(\'ptJornadaPadModal\').remove()" class="btn-outline">Cancelar</button>' +
+                '<button onclick="ptSalvarJornadaPadrao(\'' + staffId + '\')" class="btn-primary">💾 Salvar jornada padrão</button>' +
+                '</div></div>';
+            document.body.appendChild(modal);
+            document.getElementById('jpAlmoco').value = String(j.intervalo_almoco_min != null ? j.intervalo_almoco_min : 60);
+        };
+
+        window.ptSalvarJornadaPadrao = function(staffId) {
+            var hora_entrada = document.getElementById('jpEntrada').value;
+            var hora_saida = document.getElementById('jpSaida').value;
+            var hora_saida_dom_feriado = document.getElementById('jpSaidaDomFer').value || null;
+            var intervalo_almoco_min = parseInt(document.getElementById('jpAlmoco').value, 10);
+            var folgas = [];
+            ['segunda','terca','quarta','quinta','sexta','sabado','domingo'].forEach(function(d) {
+                var el = document.getElementById('jpFolga_' + d);
+                if (el && el.checked) folgas.push(d);
+            });
+
+            var staff = DataStore.getCollection('staff', franchiseId) || [];
+            var idx = staff.findIndex(function(s) { return s.id === staffId; });
+            if (idx === -1) { alert('Funcionário não encontrado'); return; }
+            staff[idx].jornada = Object.assign({}, staff[idx].jornada || {}, {
+                hora_entrada: hora_entrada,
+                hora_saida: hora_saida,
+                hora_saida_dom_feriado: hora_saida_dom_feriado,
+                intervalo_almoco_min: intervalo_almoco_min,
+                folgas: folgas
+            });
+            staff[idx].jornadaUpdatedAt = new Date().toISOString();
+            DataStore.setCollection('staff', franchiseId, staff);
+
+            // Audit
+            try {
+                DataStore.addToCollection('time_clock_audit', franchiseId, {
+                    id: 'audit_' + Date.now(),
+                    action: 'jornada_padrao_changed',
+                    staffId: staffId,
+                    novaJornada: staff[idx].jornada,
+                    changedBy: (Auth.getSession() || {}).email,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (e) {}
+
+            document.getElementById('ptJornadaPadModal').remove();
+            alert('✓ Jornada padrão salva. Sistema usa automaticamente:\n• Dias normais: ' + hora_entrada + ' → ' + hora_saida + '\n• Dom/feriado: ' + (hora_saida_dom_feriado ? hora_entrada + ' → ' + hora_saida_dom_feriado : '(mesmo horário)'));
             ptLoadHoje();
             if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
         };
