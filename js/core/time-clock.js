@@ -650,6 +650,8 @@
         var avisoIntervalo = '';
         if (intervaloSuprimidoMin > 0) {
             avisoIntervalo = 'Intervalo suprimido em ' + intervaloSuprimidoMin + 'min (CLT art. 71 §4º — pagamento +50% obrigatório, ' + intervaloSuprimidoComAdicional + 'min creditados ' + (intervaloSuprimidoTratamento === 'banco_horas' ? 'no banco de horas' : intervaloSuprimidoTratamento === 'hora_extra' ? 'como hora extra' : '— TRATAMENTO DESATIVADO ⚠️') + ')';
+        } else if (minutosTrabalhados > 6 * 60 && minutosAlmoco < 60) {
+            avisoIntervalo = 'Intervalo de almoço menor que 1h (jornada > 6h exige intervalo mínimo de 1h conforme CLT art. 71)';
         }
 
         return {
