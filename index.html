@@ -533,26 +533,27 @@
             var y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate(), h = d.getHours();
             var textEl = document.getElementById('inaugBannerText');
             var ctaEl  = document.getElementById('inaugBannerCta');
+            var narrow = window.innerWidth < 440;
 
             // Após 25/04 23:59 — fases pós-inauguração (Junina 13/06→16/06 teaser · 17/06→29/06 launch · Caramelado 01/07→31/07)
             if(y > 2026 || (y === 2026 && m > 4) || (y === 2026 && m === 4 && day > 25)){
                 // Dia dos Namorados 12/06 — prioridade sobre teaser Junina (11/06 véspera · 12/06 dia H)
                 // Chaves separadas por dia para não suprimir o Dia H se usuário fechou a véspera na mesma sessão
                 if(y === 2026 && m === 6 && day === 12 && !sessionStorage.getItem('namoradosDiahClosed')){
-                    if(textEl) textEl.innerHTML = '💕 <strong>DIA DOS NAMORADOS HOJE!</strong> &nbsp;·&nbsp; Duo MilkyPot: dois potinhos do jeito que vocês amam · Delivery 15–40min 🐑';
+                    if(textEl) textEl.innerHTML = narrow ? '💕 <strong>NAMORADOS HOJE!</strong> &nbsp;·&nbsp; Duo MilkyPot · Delivery 15–40min 🐑' : '💕 <strong>DIA DOS NAMORADOS HOJE!</strong> &nbsp;·&nbsp; Duo MilkyPot: dois potinhos do jeito que vocês amam · Delivery 15–40min 🐑';
                     if(ctaEl){ ctaEl.textContent = 'Pedir Duo →'; ctaEl.href = 'https://wa.me/5543998042424?text=NAMORADOS26'; }
                     if(banner) banner.style.display = 'flex';
                     return;
                 }
                 if(y === 2026 && m === 6 && day === 11 && !sessionStorage.getItem('namoradosVespraClosed')){
-                    if(textEl) textEl.innerHTML = '💕 <strong>AMANHÃ: DIA DOS NAMORADOS</strong> &nbsp;·&nbsp; Duo MilkyPot · Dois potinhos, cada um do jeito que vocês amam · Mande <strong>NAMORADOS26</strong> e entre na lista VIP 🐑';
+                    if(textEl) textEl.innerHTML = narrow ? '💕 <strong>AMANHÃ: NAMORADOS</strong> &nbsp;·&nbsp; Duo MilkyPot · Mande <strong>NAMORADOS26</strong> 🐑' : '💕 <strong>AMANHÃ: DIA DOS NAMORADOS</strong> &nbsp;·&nbsp; Duo MilkyPot · Dois potinhos, cada um do jeito que vocês amam · Mande <strong>NAMORADOS26</strong> e entre na lista VIP 🐑';
                     if(ctaEl){ ctaEl.textContent = 'Lista VIP →'; ctaEl.href = 'https://wa.me/5543998042424?text=NAMORADOS26'; }
                     if(banner) banner.style.display = 'flex';
                     return;
                 }
                 // Namorados VIP teaser 03/06–10/06 — prioridade sobre Junina; keyword NAMORADOS26 ativa a partir de 03/06
                 if(y === 2026 && m === 6 && day >= 3 && day <= 10 && !sessionStorage.getItem('namoradosVipClosed')){
-                    if(textEl) textEl.innerHTML = '💕 <strong>12/06: DUO MILKYPOT</strong> &nbsp;·&nbsp; Dois potinhos, cada um do jeito que vocês amam · Mande <strong>NAMORADOS26</strong> e entre na lista VIP 🐑';
+                    if(textEl) textEl.innerHTML = narrow ? '💕 <strong>12/06: DUO MILKYPOT</strong> &nbsp;·&nbsp; Mande <strong>NAMORADOS26</strong> · Lista VIP 🐑' : '💕 <strong>12/06: DUO MILKYPOT</strong> &nbsp;·&nbsp; Dois potinhos, cada um do jeito que vocês amam · Mande <strong>NAMORADOS26</strong> e entre na lista VIP 🐑';
                     if(ctaEl){ ctaEl.textContent = 'Lista VIP →'; ctaEl.href = 'https://wa.me/5543998042424?text=NAMORADOS26'; }
                     if(banner) banner.style.display = 'flex';
                     return;
@@ -571,7 +572,7 @@
                 }
                 // Pré-Namorados 26/05–02/06 — aquece awareness antes do VIP kick-off 03/06
                 if(y === 2026 && ((m === 5 && day >= 26) || (m === 6 && day <= 2)) && !sessionStorage.getItem('namoradosPreviewClosed')){
-                    if(textEl) textEl.innerHTML = '💕 <strong>12/06: DIA DOS NAMORADOS</strong> &nbsp;·&nbsp; Potinho feito pra dois · Surpreenda com o presente mais gostoso de Londrina 🐑';
+                    if(textEl) textEl.innerHTML = narrow ? '💕 <strong>12/06: NAMORADOS</strong> &nbsp;·&nbsp; Presente mais gostoso de Londrina 🐑' : '💕 <strong>12/06: DIA DOS NAMORADOS</strong> &nbsp;·&nbsp; Potinho feito pra dois · Surpreenda com o presente mais gostoso de Londrina 🐑';
                     if(ctaEl){ ctaEl.textContent = 'Me avisa! →'; ctaEl.href = 'https://wa.me/5543998042424?text=Oi!%20Quero%20saber%20da%20novidade%20do%20Dia%20dos%20Namorados%20na%20MilkyPot%20%F0%9F%90%91'; }
                     if(banner) banner.style.display = 'flex';
                     return;
@@ -661,7 +662,7 @@
 
         configureBanner();
         document.addEventListener('DOMContentLoaded', function(){ configureBanner(); applyBannerOffset(); });
-        window.addEventListener('resize', applyBannerOffset);
+        window.addEventListener('resize', function(){ configureBanner(); applyBannerOffset(); });
         setTimeout(function(){ configureBanner(); applyBannerOffset(); }, 200);
         setInterval(function(){ configureBanner(); applyBannerOffset(); }, 60000);
     })();
