@@ -1524,8 +1524,18 @@ function fnRenderHoje(session, staff) {
             saldoCard.style.display = 'block';
             saldoCard.style.background = dia.saldoDiaMin >= 0 ? '#F0FDF4' : '#FEF2F2';
             saldoCard.style.borderColor = dia.saldoDiaMin >= 0 ? '#16A34A' : '#DC2626';
-            saldoCard.innerHTML = '<div style="font-size:1rem;font-weight:800">' + icon + ' Trabalhado: ' + dia.horasFormatado + ' • Saldo: <b>' + sgn + TimeClock.minutesToTime(Math.abs(dia.saldoDiaMin)) + '</b></div>'
+            var html = '<div style="font-size:1rem;font-weight:800">' + icon + ' Trabalhado: ' + dia.horasFormatado + ' • Saldo: <b>' + sgn + TimeClock.minutesToTime(Math.abs(dia.saldoDiaMin)) + '</b></div>'
                 + '<small style="color:#6B7280">' + lbl + '</small>';
+
+            // ☕ INTERVALO SUPRIMIDO — CLT art. 71 §4º
+            if (dia.intervaloSuprimidoMin && dia.intervaloSuprimidoMin > 0) {
+                var tratLbl = dia.intervaloSuprimidoTratamento === 'banco_horas' ? '🏦 vai pro seu banco de horas' : (dia.intervaloSuprimidoTratamento === 'hora_extra' ? '💰 vai virar hora extra no seu holerite' : '⚠ não está sendo computado — fala com o gerente');
+                html += '<div style="background:#FEF3C7;border-radius:8px;padding:8px 12px;margin-top:8px;font-size:.8rem;color:#92400E;line-height:1.5">'
+                    + '<b>☕ Almoço/janta curto hoje:</b> faltaram ' + TimeClock.minutesToTime(dia.intervaloSuprimidoMin) + ' do intervalo combinado<br>'
+                    + 'Por lei (CLT art. 71 §4º), você recebe <b>' + TimeClock.minutesToTime(dia.intervaloSuprimidoComAdicional) + '</b> (com adicional 50%) — ' + tratLbl
+                    + '</div>';
+            }
+            saldoCard.innerHTML = html;
         } else {
             saldoCard.style.display = 'none';
         }
