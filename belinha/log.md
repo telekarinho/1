@@ -2,6 +2,51 @@
 
 ---
 
+## Ciclo #252 — 2026-05-18
+
+**Área:** Concorrentes — JohnnyJoy "Dois Amores" sabores confirmados + JAH FeliciJAH 2026 + pistache receita própria
+
+**Contexto:** Prescrito pelo ciclo #251. JohnnyJoy em Catuaí Londrina está ativo com campanha nacional "Dois Amores" para todo junho — ciclo #222 havia confirmado o produto mas não os sabores (GKPB retornou 403). Prioridade alta com Namorados em 25 dias.
+
+**O que pesquisou/analisou:**
+- 6 WebSearches: JohnnyJoy Namorados 2026, "Dois Amores" sabores, JohnnyJoy Londrina inauguração, JAH do Açaí Londrina, JAH Jahckeline namorados 2026, JAH "Dia da Felicidade"
+- WebFetch bloqueado (403) em GKPB, jahdoacai.com.br/unidades — uso de snippets indexados
+- Confirmou presença JohnnyJoy Catuaí (catuailondrina.com.br + YouTube shorts inauguração)
+- Confirmou sabores Dois Amores via snippets: brigadeiro tradicional, Ninho, pink
+- Confirmou copy exata: "Jogue cupido com os sabores e faça o seu match perfeito"
+- Confirmou FeliciJAH 2026 (20/03): 360ml por R$16,99, 2ª edição, 293% crescimento em 2025
+- Confirmou pistache JAH: receita própria c/ Francisco Santana (Escola Sorvete), não insumo comprado
+- Confirmou JAH Londrina: NENHUMA unidade detectada
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/johnnyjoy.md` | Seção CICLO #252 adicionada: sabores confirmados (3 brigadeiros), copy exata, Londrina confirmada, contra-posicionamento Duo atualizado, radar de ameaças |
+| `belinha/competitors/jhoy.md` | Seção CICLO #252 adicionada: FeliciJAH 2026 detalhado, pistache receita própria, Londrina status, calendário JAH atualizado |
+
+**Destaques:**
+1. **JohnnyJoy vende "dois amores num copo"** (2 brigadeiros em 1 copo, R$20,90–24,90) enquanto MilkyPot vende "um potinho para cada amor" — narrativa mais íntima, diferencial real. Copy de Stories sugerida pronta no johnnyjoy.md.
+2. **FeliciJAH** confirma padrão JAH de "evento de dia" com preço-âncora que gera filas — MilkyPot pode adaptar para datas futuras (Dia do Sorvete 23/09, etc.)
+3. **Pistache JAH é artesanal** (não comprado) — posiciona JAH como premium técnico. Reforça para MilkyPot: diferenciação deve ser personalização (não pistache), a menos que o operador confirme topping.
+4. **JAH sem unidade em Londrina** — ameaça permanece hipotética; JohnnyJoy Catuaí é o rival real para 12/06.
+
+**Commit:** `85d4820`
+
+**Próximo passo sugerido:**
+- **Ciclo #253 — Conversão:** Mecânica UGC "foto com potinho = reward" — prescrita desde ciclo #226, 26 ciclos pendente; com intel Dois Amores confirmada, o contra-posicionamento UGC é mais urgente
+- **Ciclo #254 — UX:** Auditar `index.html` — verificar coexistência banner Namorados + teaser Junina (sem conflito visual 15/05–11/06)
+- **Ciclo #255 — Conteúdo:** Stories comparação implícita "dois amores num copo vs. potinho feito para você" (sem citar JohnnyJoy) usando copy do johnnyjoy.md ciclo #252
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador:** Confirmar se há topping pistache — define estratégia junho completa
+- **Operador (10/06 18h):** Publicar Reel #4 (`reel-10jun-montagem-ao-vivo-bastidores.md`) — dois potinhos ao vivo bate "Dois Amores" JohnnyJoy na véspera
+- **Operador:** Monitorar @milkymoo_londrina p/ MooBai confirmation (Blocker #ciclo #233)
+
+_Belinha — Ciclo #252 | 2026-05-18_
+
+---
+
 ## Ciclo #251 — 2026-05-17
 
 **Área:** Conteúdo — Script completo Reel #4 "Montagem ao vivo — bastidores" (10/06 · pré-Namorados)
