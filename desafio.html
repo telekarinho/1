@@ -779,7 +779,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="attract-logo">
 <div class="attract-title">Desafio 10 MilkyPot</div>
-<div class="attract-sub">Pare o cronometro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong> e ganhe premio!</div>
+<div class="attract-sub">😳 Pare o cronômetro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong>.<br>🔥 Quem acerta leva prêmio — quase ninguém pega de primeira.</div>
 <!-- Demo counter preview -->
 <div class="counter-box" style="margin:12px 0;padding:clamp(16px,3vw,32px) clamp(24px,5vw,60px)">
 <div class="counter-label">CRONOMETRO</div>
@@ -3256,10 +3256,10 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       cta:'Toca a tela ou escaneia pra jogar do celular',
       qr: qrUrl('/desafio.html', 'desafio10s'),
       bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)', dur:30000 },
-    { id:'acerta300', emoji:'⚖️', eyebrow:'ACERTOU 300g, NÃO PAGA',
-      headline:'Montou 300g no buffet? A casa paga.',
-      subtext:'Você monta seu pote, a gente pesa. Bateu 300g (margem 3g)\né de graça. Errou? Paga normal R$5,99/100g.',
-      cta:'Pega o pote e vai no buffet — desafio é ao vivo',
+    { id:'acerta300', emoji:'⚖️', eyebrow:'⚠️ DESAFIO REAL: 300G EXATOS',
+      headline:'Acertou 300g cravados? A sobremesa sai GRÁTIS.',
+      subtext:'⚖️ Você monta seu potinho e a gente pesa AO VIVO.\n😳 Margem de 3g. Quase ninguém pega de primeira.\n🏆 Quem acerta: NÃO PAGA + vai pro Hall da Fama.',
+      cta:'Vai no buffet e tenta — sem pegadinha',
       // SEM QR: desafio e fisico (cliente monta no buffet da loja).
       qr: null,
       bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:30000 },
@@ -3295,10 +3295,10 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       cta:'Entra no clube e clica em "Adicionar ao Wallet"',
       qr: qrUrl('/clube.html#pass', 'milkypass'),
       bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:30000 },
-    { id:'ganhadores', emoji:'🏆', eyebrow:'HALL DA FAMA',
-      headline:'Vê quem ganhou ontem.',
-      subtext:'Todo cliente que acerta 300g ou ganha o desafio\nvai pro Hall da Fama. Pode ser você amanhã.',
-      cta:'Escaneia e vê os stories + segue a gente',
+    { id:'ganhadores', emoji:'⚖️', eyebrow:'⚖️ DESAFIO 300G EXATOS',
+      headline:'Acertou 300g cravados? Não paga a sobremesa.',
+      subtext:'😳 Parece fácil — quase ninguém acerta de primeira.\n🏆 Quem consegue: leva GRÁTIS + entra pro Hall da Fama.',
+      cta:'👀 Veja quem levou sem pagar',
       qr: qrExternal('https://www.instagram.com/stories/highlights/18075880883645372/', 'ganhadores'),
       bg:'linear-gradient(135deg,#FFD700 0%,#E1306C 50%,#7E57C2 100%)', dur:30000,
       // Live: carrega fotos do Firestore (admin sobe em painel/hall-fama.html)
@@ -3503,22 +3503,35 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   }
 
   function renderHallFamaLive(slide){
-    // Se admin desativou OU nao tem fotos, fallback elegante
+    // Bloco de selos + FOMO — sempre aparece (cria a sensacao "eu tambem
+    // quero tentar" que o user pediu, mesmo sem fotos ainda subidas).
+    var selos = '<div class="mp-hall-selos">' +
+                  '<span class="mp-selo">✅ PRÊMIO REAL</span>' +
+                  '<span class="mp-selo">✅ SEM PEGADINHA</span>' +
+                  '<span class="mp-selo mp-selo-pulse">🍦 QUEM ACERTA NÃO PAGA</span>' +
+                '</div>';
+    var fomo = '<div class="mp-hall-fomo">' +
+                 '⚠️ <b>Quase ninguém acerta de primeira.</b> Hoje pode ser sua vez. 👀' +
+               '</div>';
+    // Se admin desativou OU nao tem fotos, fallback motivacional com FOMO
     if (hallConfig.enabled === false || !hallPhotos.length) {
       return '<div class="promo-emoji">'+ slide.emoji +'</div>' +
-             '<div class="hall-empty-hint">Seja o primeiro a aparecer aqui 🏆</div>';
+             selos +
+             '<div class="hall-empty-hint">😳 Seja o primeiro a entrar pro Hall da Fama hoje 🏆</div>' +
+             fomo;
     }
     // Mini-carousel: max 6 fotos, rotacionam via CSS animation-delay
     var fotos = hallPhotos.slice(0, 6);
     var dur = fotos.length * 2.4; // 2.4s por foto
-    var html = '<div class="hall-fama-carousel" style="--hf-dur:'+ dur +'s">';
+    var html = selos +
+               '<div class="hall-fama-carousel" style="--hf-dur:'+ dur +'s">';
     fotos.forEach(function(p, i){
       html += '<div class="hall-fama-photo" style="animation-delay:'+ (i*2.4) +'s">' +
                 '<img src="'+ p.dataUrl +'" alt="Ganhador">' +
                 (p.legenda ? '<div class="hall-fama-legend">'+ escapeText(p.legenda) +'</div>' : '') +
               '</div>';
     });
-    html += '</div>';
+    html += '</div>' + fomo;
     return html;
   }
   function escapeText(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
