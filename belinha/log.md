@@ -2,6 +2,50 @@
 
 ---
 
+## Ciclo #259 — 2026-05-18
+
+**Área:** UX — Banner Namorados mobile (375px / <440px) + resize texto adaptativo
+
+**Contexto:** Prescrito desde ciclo #254 e reiterado em #256, #257, #258. Os 4 banners de Namorados (preview 26/05, VIP 03–10/06, véspera 11/06, dia-H 12/06) tinham textos de 80–130 chars que em 375px geravam banner de ~80px (3 linhas), empurrando navbar e hero para baixo. Além disso, o listener de resize só chamava `applyBannerOffset` (recalculava altura) mas não `configureBanner` (atualizava o texto) — em rotação portrait→landscape o banner ficava com texto longo mesmo na tela mais larga.
+
+**O que pesquisou/analisou:**
+- Leu `index.html` linhas 514–668 (bloco inteiro do banner)
+- Confirmou: `window.addEventListener('resize', applyBannerOffset)` sem chamar `configureBanner` → texto não adapta em rotação
+- Confirmou: `applyBannerOffset` usa `offsetHeight` corretamente após DOMContentLoaded; setTimeout(200ms) e setInterval(60s) já existem — problema era só no resize e no texto longo
+- Mapeou os 4 textos longos de Namorados como únicos outliers de comprimento (os demais banners — 1 mês, Junina, Caramelado, Pais — já têm <70 chars)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | `var narrow = window.innerWidth < 440` em `configureBanner()` · 4 textos Namorados com versão curta mobile (~50% menores) via ternário · resize listener atualizado para `configureBanner() + applyBannerOffset()` |
+| `sw.js` | Bump mp-v7 → mp-v8 |
+
+**Detalhes das versões curtas:**
+- **Pré-Namorados (26/05–02/06):** `'💕 <strong>12/06: NAMORADOS</strong> &nbsp;·&nbsp; Presente mais gostoso de Londrina 🐑'` (~48 chars)
+- **VIP (03–10/06):** `'💕 <strong>12/06: DUO MILKYPOT</strong> &nbsp;·&nbsp; Mande <strong>NAMORADOS26</strong> · Lista VIP 🐑'` (~52 chars + keyword)
+- **Véspera (11/06):** `'💕 <strong>AMANHÃ: NAMORADOS</strong> &nbsp;·&nbsp; Duo MilkyPot · Mande <strong>NAMORADOS26</strong> 🐑'` (~50 chars + keyword)
+- **Dia-H (12/06):** `'💕 <strong>NAMORADOS HOJE!</strong> &nbsp;·&nbsp; Duo MilkyPot · Delivery 15–40min 🐑'` (~55 chars)
+
+Todos os textos curtos mantêm: emoji sinalização 💕 · produto · CTA/keyword · mascote 🐑. Nenhum perde a keyword NAMORADOS26 onde era relevante.
+
+**Commit:** `b9eba8e`
+
+**Próximo passo sugerido:**
+- **Ciclo #260 — Concorrentes:** MilkyMoo — atualizar com promoções Namorados (last update ciclo #219, há 40 ciclos)
+- **Ciclo #261 — Conteúdo:** Reel "bastidores de montagem" 10/06 (véspera Namorados) — prescrito ciclo #257; verificar se `reel-10jun-montagem-ao-vivo-bastidores.md` existe e completar se necessário
+- **Ciclo #262 — Conversão:** Fluxo WA keyword NAMORADOS26 — criar template de resposta automática para quando operador configurar a keyword no WA Business (script de ativação + mensagem de boas-vindas VIP)
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (imediato):** Imprimir plaquinha balcão UGC (`pdv-ugc-foto-reward-placinha-balcao.md`) ✅
+- **Operador (09/06 18h):** Publicar Story anúncio UGC DUO
+- **Operador (11/06 20h30):** Publicar 2-stories anti-prato-compartilhado
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #259 | 2026-05-18_
+
+---
+
 ## Ciclo #258 — 2026-05-18
 
 **Área:** Conversão — Plaquinha de Balcão · UGC Foto Reward (PDV físico)
