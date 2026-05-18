@@ -1293,3 +1293,64 @@ MilkyMoo usa "leve 2 ganhe 1", "50% off", etc. para criar urgência via volume. 
 **Fontes ciclo #233:** instagram.com/milkymoo_londrina, instagram.com/milkymoo, catuailondrina.com.br, gkpb.com.br, exame.com, mercadoeconsumo.com.br, publicitarioscriativos.com, cadastrarnapromocao.com.br, clubeamostrasgratis.com, jornaldobras.com.br, WebSearch 15/05/2026
 
 _Belinha — Ciclo #233 | 2026-05-15_
+
+---
+
+### ATUALIZAÇÃO CICLO #260 — 2026-05-18
+
+#### 1. Campanha "Como Treinar o Seu Dragão" × MilkyMoo (Universal Pictures) ⚠️ ALTA RELEVÂNCIA
+
+**O dado mais importante deste ciclo:** MilkyMoo fechou parceria com a Universal Pictures para o live-action de *Como Treinar o Seu Dragão* — cuja estreia nacional é **12 de junho de 2026**, exatamente no Dia dos Namorados.
+
+| Atributo | Detalhe |
+|---|---|
+| Produto | Milkshake "**Tempestade**" — versão temática do shake existente |
+| Ingredientes | Brigadeiro de chocolate + pedaços de brownie + sorvete de baunilha — nova identidade visual inspirada no dragão Banguela |
+| Disponibilidade | Nacional — todas as unidades, a partir da primeira semana de junho/2026 |
+| Mecânica ingresso | Compre 2× 500ml (qualquer sabor) via app → par de ingressos para o filme enviado ao endereço cadastrado no app; válido enquanto durar estoque |
+| Canal obrigatório | **App MilkyMoo** — promoção de ingressos não funciona sem o app |
+| Preços | Não confirmados nos snippets; referência anterior: 300ml R$18, 500ml R$22 (sabores clássicos) |
+
+**Por que isso impacta o Dia dos Namorados de MilkyPot:**
+1. **Fusão de duas datas** — MilkyMoo captura a ocasião cinema + Namorados num único produto. Casais que forem ver o filme no 12/06 passarão por MilkyMoo (Catuaí Shopping) antes ou depois do cinema, com gatilho de "leve dois ganhe ingresso". Fortíssimo para conversão casual de shopping.
+2. **Diferencial claro MilkyPot:** sem app, sem fila, sem espera de ingresso pelo correio. Duo MilkyPot chega em 15–40min via WhatsApp, com nome de cada um no potinho. O ingresso é a sobremesa personalizada, não um brinde genérico.
+3. **Copy de contra-posicionamento (implícito, nunca cite a concorrente):**
+   > *"Presente bom não precisa de app, de ingresso nem de fila. Só de você saber o que a pessoa ama. Manda NAMORADOS26."*
+4. **Janela de conversão:** MilkyMoo estará saturada com fluxo de cinema em Catuaí. Clientes que NÃO estão no shopping (bairros, delivery, WFH) são o público natural do MilkyPot delivery.
+
+#### 2. Novo Formato 180ml — Day Part Pós-Almoço (desde 30/04/2026)
+
+| Atributo | Detalhe |
+|---|---|
+| Produto | Todos os sabores clássicos (exceto premium e alcoólicos) em 180ml |
+| Preço | R$12,90 (clássicos) / R$14,90 (c/ bombom ou brownie) |
+| Horário | Abertura–13h59 apenas (não disponível à tarde/noite) |
+| Canal | Balcão + app, somente retirada em loja (sem delivery no 180ml) |
+| Estratégia | Captura ocasião pós-almoço em shoppings — consumidor que quer "só um docinho" sem comprometer com 300ml |
+
+**Risco para MilkyPot no Muffato:** o Catuaí tem MilkyMoo; o Muffato (sem concorrente direta de milkshake) pode capturar esse mesmo comportamento de pós-almoço se o cardápio incluir opção de "tamanho mini" ou "porção individual" — mas isso depende de decisão de cardápio do operador. Não é urgente para a inauguração.
+
+#### 3. Mapa de Ameaças Atualizado — Junho 2026
+
+| Vetor | Risco | Ação recomendada |
+|---|---|---|
+| Campanha "Como Treinar" × Namorados (Catuaí) | **CONFIRMADO — ATIVO** | Copy anti-app em WA; enfatizar delivery no bairro vs. fila de shopping |
+| MooBai Namorados (Catuaí) | PROVÁVEL — não confirmado local | Roteiro PDV ciclo #231 cobre; monitorar semana de 09/06 |
+| MilkyMoo 180ml pós-almoço (Catuaí) | CONFIRMADO | Não competir em preço; MilkyPot foca personalização e propósito |
+| MilkyMoo Festa em evento Londrina | POSSÍVEL | Monitorar eventos locais junho (Arraial, Catuaí Fest) |
+| Promoções app 50% / 2×1 (recorrentes) | ATIVO | WA próprio + fidelidade como resposta estrutural; não guerra de preço |
+
+#### 4. Insight Estratégico Ciclo #260
+
+**MilkyMoo em 12/06 estará posicionada como "experiência cinema+shake" — alta tração para quem já está no shopping.** MilkyPot deve posicionar-se como a alternativa afetiva para quem não quer shopping: delivery personalizado, sem app, sem ingresso genérico, com o nome da pessoa no potinho.
+
+O copy mais afiado para essa janela:
+> *"Cinema é para ver o filme. O potinho é para lembrar de quem você estava."*
+
+ou
+
+> *"Enquanto a fila lá fora é por ingresso, a nossa fila aqui é por nome no potinho."* (uso interno/stories, não publicar literalmente)
+
+**Fontes ciclo #260:** promoview.com.br (snippet), gkpb.com.br (snippet), creativosbr.com.br (snippet), marcapop.com.br (snippet), foodbizbrasil.com, auroracultural.com, gironews.com, WebSearch 2026-05-18
+
+_Belinha — Ciclo #260 | 2026-05-18_

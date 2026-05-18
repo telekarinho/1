@@ -2,6 +2,55 @@
 
 ---
 
+## Ciclo #260 — 2026-05-18
+
+**Área:** Concorrentes — MilkyMoo atualização Namorados + novos produtos (last update ciclo #233)
+
+**Contexto:** Ciclo #259 prescreveu atualização MilkyMoo como prioritária. Último update real era ciclo #233 (3 dias atrás, mas 27 ciclos). Faltam **25 dias** para o Dia dos Namorados (12/06). Urgente: MilkyMoo pode ter campanha ativa que muda o cenário competitivo de Londrina.
+
+**O que pesquisou/analisou:**
+- 4 WebSearches: campanha Namorados 2026 MilkyMoo; MilkyMoo Londrina junho; combo casal milkshake; "Como Treinar o Seu Dragão" campanha MilkyMoo
+- WebFetch em promoview.com.br, gkpb.com.br, creativosbr.com.br, marcapop.com.br → todos 403 Forbidden
+- Extraiu detalhes via snippets de busca de foodbiz, creativosbr, auroracultural, gironews
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | Seção `ATUALIZAÇÃO CICLO #260` (~80 linhas): campanha "Como Treinar o Seu Dragão" × 12/06; 180ml day part; mapa de ameaças atualizado; 2 copies de contra-posicionamento acionáveis |
+
+**Destaques críticos:**
+
+1. **⚠️ ALERTA MÁXIMO — MilkyMoo + Universal Pictures (live-action "Como Treinar o Seu Dragão" estreia em 12/06 = Dia dos Namorados)**
+   - Milkshake temático "Tempestade" (brigadeiro chocolate + brownie + sorvete baunilha) — nova identidade visual
+   - Mecânica: compre 2× 500ml via app → par de ingressos para o filme. Nacional, todas as unidades, 1ª semana de junho
+   - MilkyMoo vai capturar casais no Catuaí Shopping com o gatilho duplo: cinema + sobremesa
+   - **MilkyPot counter:** delivery sem app, sem fila de shopping, com nome no potinho. Copy: *"Cinema é pra ver o filme. O potinho é pra lembrar de quem você estava."*
+
+2. **MilkyMoo 180ml day part** (desde 30/04/2026):
+   - R$12,90–14,90 · somente abertura–13h59 · somente retirada em loja (sem delivery)
+   - Captura pós-almoço em shoppings — MilkyPot Muffato não tem concorrente direta nessa janela (Catuaí tem MilkyMoo, Muffato não)
+
+3. **Mapa de ameaças 12/06 atualizado:** campanha cinema confirmada, MooBai provável, 180ml ativo — MilkyPot responde com delivery + personalização + WA sem app
+
+**Commit:** a registrar
+
+**Próximo passo sugerido:**
+- **Ciclo #261 — Conversão:** Criar template WA de resposta automática para keyword `NAMORADOS26` — o operador ainda não configurou (deadline: 03/06). Um script de ativação + mensagem de boas-vindas VIP reduz fricção e garante que a keyword funcione quando for configurada
+- **Ciclo #262 — Conteúdo:** Adicionar copy de contra-posicionamento "cinema" ao playbook (`dia-dos-namorados-2026-playbook.md`) — inserir como variante de story/caption para 11–12/06 com o insight desta campanha MilkyMoo
+- **Ciclo #263 — Concorrentes:** JohnnyJoy — confirmar se "Dois Amores" ainda está ativo e como está sendo comunicado na semana de 09/06 (last update ciclo #252)
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (imediato):** Imprimir plaquinha balcão UGC (`pdv-ugc-foto-reward-placinha-balcao.md`) ✅
+- **Operador (09/06 18h):** Publicar Story UGC DUO
+- **Operador (10/06 18h):** Publicar Reel bastidores montagem (`reel-10jun-montagem-ao-vivo-bastidores.md`)
+- **Operador (11/06 20h30):** Publicar 2-stories anti-prato-compartilhado
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #260 | 2026-05-18_
+
+---
+
 ## Ciclo #259 — 2026-05-18
 
 **Área:** UX — Banner Namorados mobile (375px / <440px) + resize texto adaptativo
