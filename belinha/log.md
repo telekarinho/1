@@ -10214,3 +10214,42 @@ _Belinha — Ciclo #256 | 2026-05-18_
 - **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
 
 _Belinha — Ciclo #257 | 2026-05-18_
+
+---
+
+## Ciclo #261 — 2026-05-18
+
+**Área:** Conversão — Guia WA Business setup para keyword `NAMORADOS26`
+
+**Contexto:** Prescrito no ciclo #260 como próximo passo prioritário. Templates de mensagem WA para Namorados já existiam em `whatsapp-namorados-2026.md` (Ciclo #164/228), mas faltava o guia operacional passo-a-passo para o operador CONFIGURAR a keyword no app WA Business. Sem esse guia, a keyword não seria ativada até 03/06 (deadline crítico para capturar leads antes do N1 broadcast de 09/06). Também incorporou o insight competitivo do ciclo #260 (MilkyMoo × cinema "Como Treinar o Seu Dragão") diretamente no guia, dando ao operador contexto para o atendimento do dia 12/06.
+
+**O que pesquisou/analisou:**
+- Releu `wa-business-setup-junino.md` (Ciclo #198) — formato de referência validado em campo
+- Releu `whatsapp-namorados-2026.md` (Ciclo #164/228) — extraiu templates N-AUTO, adaptou como /gift e /duo
+- Releu seção §5 de `belinha/competitors/milkymoo.md` (Ciclo #260) — copy "Cinema é pra ver o filme. O potinho é pra lembrar de quem você estava" incorporado no contexto competitivo do guia
+- Verificou que insight cinema NÃO estava no `dia-dos-namorados-2026-playbook.md` — nota de pendência registrada abaixo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/wa-business-setup-namorados.md` | Novo arquivo (272 linhas): passo-a-passo configuração WA Business; keyword `NAMORADOS26` pronta pra colar; 3 respostas rápidas `/gift` `/duo` `/delivery`; mensagem de ausência noturna 12/06; setup listas transmissão; calendário de implementação com datas/urgência; integração com UGC plaquinha balcão; contexto competitivo MilkyMoo cinema |
+
+**Destaques:**
+1. **Guia cobre o gap operacional completo** — operador pode abrir o arquivo no celular e configurar tudo sem consultar nenhum outro documento
+2. **Insight cinema integrado** — copy "Cinema é pra ver o filme" disponível no contexto do atendimento, não apenas no competitor file
+3. **3 respostas rápidas prontas** — `/gift` `/duo` `/delivery` reduzem tempo de resposta no dia mais movimentado de junho
+4. **Calendário com urgência visual** — 🔴/🟡/🟢 facilita priorização para operador que só lê na véspera
+
+**Commit:** `9e70060`
+
+**Próximo passo sugerido:**
+- **Ciclo #262 — Conteúdo:** Adicionar copy de contra-posicionamento "cinema" (MilkyMoo × HTTYD) ao `dia-dos-namorados-2026-playbook.md` — insight crítico do ciclo #260 ainda ausente do playbook principal; risco: operador consultando apenas o playbook não vai encontrar o counter
+- **Ciclo #263 — Concorrentes:** JohnnyJoy — confirmar se "Dois Amores" ainda está ativo e como está sendo comunicado semana 09–12/06 (last update ciclo #252)
+- **Ciclo #264 — UX:** Auditar banner Namorados no site para mobile <375px — prescrito desde ciclo #259 mas postergado
+- **Operador (URGENTE — 16 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 12 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (09/06):** Disparar N1 broadcast geral (lista "Clientes Ativos") — template em `whatsapp-namorados-2026.md`
+- **Operador:** Imprimir plaquinha balcão UGC (`pdv-ugc-foto-reward-placinha-balcao.md`) e deixar no caixa antes de 12/06
+
+_Belinha — Ciclo #261 | 2026-05-18_
