@@ -1,5 +1,5 @@
-const CACHE_VERSION = 'mp-v288';
-const CACHE_NAME = 'milkypot-v288';
+const CACHE_VERSION = 'mp-v289';
+const CACHE_NAME = 'milkypot-v289';
 
 // VAPID public key — Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
 const VAPID_PUBLIC_KEY = 'BAjJDEh3BZsxBDRlLXhLOZomMpCpv-FHsApsPGCvRcj3GjE3kF3Lfok4JgRs8Rdmpx3pq530i5ceVIsnngyyyBE';
@@ -39,6 +39,7 @@ const PRECACHE_URLS = [
     '/painel/belinha-learnings.html',
     '/painel/colaboradores-hub.html',
     '/painel/relatorio-clt.html',
+    '/painel/folha.html',
 
 
     '/painel/finance-os.html',
@@ -88,6 +89,9 @@ const PRECACHE_URLS = [
     '/js/core/legal-terms.js',
     '/js/core/staff-conduct.js',
     '/js/core/overtime-bank.js',
+    '/js/core/clt-compliance.js',
+    '/js/core/payroll-compliance.js',
+    '/js/core/esocial-export.js',
     '/js/core/gamification.js',
     '/js/core/notifications.js',
     // Feature JS

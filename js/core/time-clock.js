@@ -752,6 +752,78 @@
         // Banco de horas: extras - atrasos
         totals.bancoHorasMin = totals.extras - totals.atraso;
 
+        // ============================================
+        // 📅 DSR — Descanso Semanal Remunerado (Lei 605/49)
+        // ============================================
+        // Regra: funcionario que falta SEM JUSTIFICATIVA num dia util da semana
+        // PERDE o direito ao DSR daquela semana (geralmente domingo).
+        // Calculo: pra cada semana com >= 1 falta nao justificada, marca o
+        // proximo domingo como "DSR perdido" (vai pra desconto na folha).
+        //
+        // Tambem marcamos domingos/feriados trabalhados que precisam de
+        // FOLGA COMPENSATORIA em ate 7 dias (CLT 67 + Lei 605/49).
+        var dsrPerdidos = 0;            // dias de DSR perdidos por falta
+        var dsrPerdidosDatas = [];      // lista de datas perdidas (pra UI/relatorio)
+        var domTrabSemFolgaComp = [];   // domingos trabalhados sem folga compensatoria em 7d
+
+        // Agrupa por semana ISO (segunda a domingo)
+        var semanas = {};
+        days.forEach(function (dia) {
+            var dt = new Date(dia.date + 'T12:00:00');
+            // Calcula chave da semana = data da segunda-feira anterior
+            var diaSem = dt.getDay(); // 0=dom .. 6=sab
+            var offsetParaSeg = (diaSem === 0) ? -6 : 1 - diaSem;
+            var seg = new Date(dt);
+            seg.setDate(seg.getDate() + offsetParaSeg);
+            var semKey = seg.toISOString().slice(0, 10);
+            if (!semanas[semKey]) semanas[semKey] = { faltas: 0, domingo: null, domingoTrab: false };
+            if (dia.isFalta && !dia.justificativa) semanas[semKey].faltas++;
+            if (dt.getDay() === 0) {
+                semanas[semKey].domingo = dia;
+                if (dia.completo) semanas[semKey].domingoTrab = true;
+            }
+        });
+
+        Object.keys(semanas).forEach(function (k) {
+            var s = semanas[k];
+            // Se teve falta na semana E o domingo era pra ter DSR → perdeu
+            if (s.faltas > 0 && s.domingo && !s.domingo.completo && !s.domingo.justificativa) {
+                dsrPerdidos++;
+                dsrPerdidosDatas.push(s.domingo.date);
+                s.domingo.dsrPerdido = true;
+                s.domingo.dsrMotivo = s.faltas + ' falta(s) sem justificativa na semana';
+            }
+        });
+
+        // Domingos/feriados trabalhados sem folga compensatoria em 7 dias
+        // (CLT 67 e Lei 605/49 — empregador deve dar folga em outro dia)
+        days.forEach(function (dia, idx) {
+            var dt = new Date(dia.date + 'T12:00:00');
+            var ehDom = dt.getDay() === 0;
+            var ehFer = dia.isHoliday;
+            if ((ehDom || ehFer) && dia.completo) {
+                // Procura folga (dia sem trabalho e sem falta) nos proximos 7 dias
+                var temCompensacao = false;
+                for (var i = 1; i <= 7; i++) {
+                    var prox = days[idx + i];
+                    if (!prox) break;
+                    if (prox.isFolga && prox.records.length === 0) { temCompensacao = true; break; }
+                }
+                if (!temCompensacao) {
+                    domTrabSemFolgaComp.push({
+                        date: dia.date,
+                        tipo: ehFer ? 'feriado' : 'domingo',
+                        alerta: 'Trabalho em ' + (ehFer ? 'feriado' : 'domingo') + ' sem folga compensatoria nos proximos 7 dias (CLT 67)'
+                    });
+                    dia.semFolgaCompensatoria = true;
+                }
+            }
+        });
+
+        totals.dsrPerdidos = dsrPerdidos;
+        totals.dsrPerdidosDatas = dsrPerdidosDatas;
+        totals.domTrabSemFolgaComp = domTrabSemFolgaComp;
+
         return {
             staff: staff,
             year: year,
