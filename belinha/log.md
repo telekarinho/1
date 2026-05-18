@@ -33,7 +33,7 @@
 
 3. **Mapa de ameaças 12/06 atualizado:** campanha cinema confirmada, MooBai provável, 180ml ativo — MilkyPot responde com delivery + personalização + WA sem app
 
-**Commit:** a registrar
+**Commit:** `2dcc0f1`
 
 **Próximo passo sugerido:**
 - **Ciclo #261 — Conversão:** Criar template WA de resposta automática para keyword `NAMORADOS26` — o operador ainda não configurou (deadline: 03/06). Um script de ativação + mensagem de boas-vindas VIP reduz fricção e garante que a keyword funcione quando for configurada
