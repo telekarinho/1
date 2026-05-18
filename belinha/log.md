@@ -10040,3 +10040,45 @@ _Belinha — Ciclo #254 | 2026-05-18_
 - **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
 
 _Belinha — Ciclo #256 | 2026-05-18_
+
+
+---
+
+## Ciclo #257 — 2026-05-18
+
+**Área:** Conteúdo — Story Véspera Namorados 11/06 · Ângulo "Anti-Prato-Compartilhado"
+
+**Contexto:** Prescrito no ciclo #256 como próximo passo prioritário. Intel competitiva do ciclo #256 revelou que todos os 3 concorrentes principais (The Best Piscininha, JAH Polaroid casal, JohnnyJoy Dois Amores) giram em torno de **compartilhar/dividir** um produto — nenhum usa "você fez o potinho perfeito pra pessoa certa". MilkyPot é o único anti-prato-compartilhado. Esta story materializa o insight num roteiro operador-pronto.
+
+**O que pesquisou/analisou:**
+- Releu `belinha/competitors/the-best-acai.md` §5 — copy base do insight (Ciclo #256)
+- Releu `belinha/content/stories-countdown-namorados-2026.md` — mapeou TP3 (18h Qui 11/06) para posicionar a nova peça como segunda onda (20h30), sem conflito
+- Releu `belinha/content/ugc-duo-namorados-ativacao-12jun.md` — confirmou que a mecânica UGC Duo (etiqueta com nome) é reforço visual compatível com esta story
+- Identificou janela noturna 20h–22h como segundo pico de engajamento IG, separada 2h30 do TP3
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/story-11jun-anti-prato-compartilhado.md` | Novo arquivo: roteiro 2-stories para 20h30 Qui 11/06 + versão curta de 1 story + checklist pré-publicação + encaixe na programação do dia |
+
+**Detalhes da implementação:**
+- Story 1/2: gancho implícito ("presente que você tem que dividir na metade ainda é presente?") — fundo lilás/vinho, sem produto, 4s
+- Story 2/2: resposta + produto + CTA — fundo branco, foto flatlay dois potinhos com etiquetas de nomes, link sticker WA, keyword NAMORADOS26
+- Versão curta (1 story) incluída para operador com pouco tempo
+- Posicionamento 100% implícito: sem citar The Best, JAH ou JohnnyJoy por nome
+- Checklist 7 itens + tabela de programação completa do dia 11/06
+
+**Commit:** `3ad9ca5`
+
+**Próximo passo sugerido:**
+- **Ciclo #258 — Conversão:** Mecânica "foto com potinho = reward" (UGC + fidelidade) — prescrita ciclo #226, 32 ciclos pendente — executar agora (arquivo `whatsapp-ugc-foto-reward.md` já existe, criar mechanic no balcão)
+- **Ciclo #259 — UX:** Auditar lógica banner 26/05–12/06 após add ciclo #254 — garantir que preview/VIP/Véspera não colapsam em telas pequenas
+- **Ciclo #260 — Concorrentes:** MilkyMoo — atualizar com promoções Namorados (last update ciclo #219)
+- **Operador (URGENTE — 13 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (URGENTE — 17 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️
+- **Operador (09/06 18h):** Publicar Story anúncio UGC DUO (`ugc-duo-namorados-ativacao-12jun.md`)
+- **Operador (11/06 20h30):** Publicar este roteiro 2-stories anti-prato-compartilhado ← NOVO
+- **Operador:** Confirmar ≥3 reviews Google Maps → descomentar `aggregateRating` (Blocker #7)
+
+_Belinha — Ciclo #257 | 2026-05-18_
