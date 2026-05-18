@@ -3421,6 +3421,74 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   }
   subscribeSlideToggles();
 
+  // ===== CONTADOR AO VIVO (prova social) =====
+  // Conta eventos do dia em tv_promo_events + desafio_results + scratches
+  // pra mostrar em overlay no canto da TV: 'Hoje: 47 rasparam · 3 ganharam
+  // sundae grátis'. Atualiza a cada 90s.
+  var liveStats = { rasparam: 0, ganharam: 0, jogaram: 0 };
+  var liveStatsUnsub = null;
+  function todayKeyTV(){
+    var d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0,10);
+  }
+  async function refreshLiveStats(){
+    if (typeof firebase === 'undefined' || !firebase.firestore) return;
+    try {
+      var db = firebase.firestore();
+      var dayKey = todayKeyTV();
+      // Quantos scans em raspinha hoje?
+      var scratchesSnap = await db.collection('scratches')
+        .where('franchiseId', '==', fidParam)
+        .where('scratchedAt', '>=', dayKey)
+        .limit(500).get().catch(function(){return null});
+      if (scratchesSnap) {
+        liveStats.rasparam = scratchesSnap.size;
+        liveStats.ganharam = scratchesSnap.docs.filter(function(d){
+          var data = d.data() || {};
+          return data.prizeTier && data.prizeTier !== 'none';
+        }).length;
+      }
+      // Quantos jogaram desafio hoje?
+      var desafioSnap = await db.collection('desafio_results')
+        .where('franchiseId', '==', fidParam)
+        .where('date', '==', dayKey)
+        .limit(500).get().catch(function(){return null});
+      if (desafioSnap) liveStats.jogaram = desafioSnap.size;
+      renderLiveStatsOverlay();
+    } catch (e) { console.warn('liveStats:', e); }
+  }
+  function renderLiveStatsOverlay(){
+    if (!isTvMode) return;
+    var existing = document.getElementById('liveStatsOverlay');
+    // Sem dados? esconde
+    if (liveStats.rasparam === 0 && liveStats.jogaram === 0) {
+      if (existing) existing.remove();
+      return;
+    }
+    var html =
+      '<div style="display:flex;gap:14px;align-items:center">' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#fff">'+ liveStats.rasparam +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">rasparam hoje</div></div>' +
+        '<div style="width:1px;height:30px;background:rgba(255,255,255,.2)"></div>' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#FFD700">'+ liveStats.ganharam +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">ganharam</div></div>' +
+        '<div style="width:1px;height:30px;background:rgba(255,255,255,.2)"></div>' +
+        '<div style="text-align:center"><div style="font-family:Baloo 2,cursive;font-weight:900;font-size:22px;color:#FF4F8A">'+ liveStats.jogaram +'</div><div style="font-size:9px;color:rgba(255,255,255,.75);font-weight:700;letter-spacing:1px;text-transform:uppercase">jogaram desafio</div></div>' +
+      '</div>';
+    if (existing) { existing.innerHTML = html; return; }
+    var div = document.createElement('div');
+    div.id = 'liveStatsOverlay';
+    div.style.cssText = 'position:fixed;top:14px;left:14px;z-index:60;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);padding:10px 16px;border-radius:14px;pointer-events:none;animation:lsFadeIn .6s ease-out;font-family:Nunito,sans-serif';
+    div.innerHTML = html;
+    document.body.appendChild(div);
+    var css = document.createElement('style');
+    css.textContent = '@keyframes lsFadeIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}';
+    document.head.appendChild(css);
+  }
+  if (isTvMode) {
+    setTimeout(refreshLiveStats, 4000);
+    setInterval(refreshLiveStats, 90000);
+  }
+
   // Filtra os SLIDES baseado no config admin. Chamado em cada nextPromo
   // pra refletir mudancas ao vivo sem precisar recarregar a TV.
   function getEnabledSlides(){

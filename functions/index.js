@@ -2993,6 +2993,14 @@ exports.generateDesafioUnlockToken = desafioUnlock.generateDesafioUnlockToken;
 exports.generateDesafioUnlockTokenManual = desafioUnlock.generateDesafioUnlockTokenManual;
 
 // ============================================
+// Scratch Reminder Dispatcher (Push D+1, D-1 raspinha vencendo)
+// notifyExpiringScratches (cron 2x/dia) enfileira em pending_notifications,
+// essa CF CONSOME e dispara: push FCM + whatsapp_outbox via Belinha local.
+// ============================================
+const scratchReminders = require("./scratch-reminders");
+exports.dispatchScratchReminder = scratchReminders.dispatchScratchReminder;
+
+// ============================================
 // Time Clock Reminders + Banco de Horas
 // cron a cada 5min envia push pros funcionarios 10min antes da escala
 // + funcoes pra solicitar/aprovar banco de horas via FCM
