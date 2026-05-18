@@ -264,6 +264,119 @@ function fetchStats() {
 MPx.fetchStats = fetchStats;
 
 // ============================================================
+// 4b. ULTIMOS CAMPEOES 300G — lista dinamica pro Hall da Fama
+// ============================================================
+// Tenta varias colecoes em ordem de prioridade. Se nenhuma tiver dado,
+// retorna [] e o caller mostra fallback motivacional.
+var WINNERS_CACHE = { fetchedAt: 0, list: [], placeholder: false };
+var WINNERS_TTL_MS = 120000;
+
+function fetchRecentWinners300g() {
+  return new Promise(function(resolve) {
+    try {
+      if (typeof firebase === 'undefined' || !firebase.firestore) return resolve(WINNERS_CACHE);
+      if (Date.now() - WINNERS_CACHE.fetchedAt < WINNERS_TTL_MS) return resolve(WINNERS_CACHE);
+      var db = firebase.firestore();
+      var fid = getFranchiseId();
+      var sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+
+      // tentativa 1: scratches com prizeCode RSP_BUFFET_* resgatados (proxy do 300g)
+      // tentativa 2: desafio_results filtrando por target=300g se houver
+      // tentativa 3: tv_promo_events com slideId acerta300 (ainda nao registra ganhadores, so views)
+      var attempts = [
+        function() {
+          return db.collection('scratches')
+            .where('status', '==', 'redeemed')
+            .where('redeemedAtFranchise', '==', fid)
+            .orderBy('redeemedAt', 'desc')
+            .limit(20)
+            .get()
+            .then(function(snap) {
+              var list = [];
+              snap.forEach(function(doc) {
+                var d = doc.data();
+                // so pegamos resgates que SOAM como desafio 300g
+                if (!d.prizeCode || !/300|BUFFET/i.test(d.prizeCode)) return;
+                list.push({
+                  name: d.redeemedBy || d.customerName || 'Cliente',
+                  detail: d.prizeName || '300g exatos'
+                });
+              });
+              return list.slice(0, 5);
+            });
+        }
+      ];
+
+      // executa a primeira e ja resolve — se vier vazio, marca placeholder
+      attempts[0]()
+        .then(function(list) {
+          WINNERS_CACHE = {
+            fetchedAt: Date.now(),
+            list: list || [],
+            placeholder: !list || !list.length
+          };
+          resolve(WINNERS_CACHE);
+        })
+        .catch(function(e) {
+          warn(e);
+          WINNERS_CACHE = { fetchedAt: Date.now(), list: [], placeholder: true };
+          resolve(WINNERS_CACHE);
+        });
+    } catch (e) {
+      warn(e);
+      resolve(WINNERS_CACHE);
+    }
+  });
+}
+MPx.fetchRecentWinners300g = fetchRecentWinners300g;
+
+// Injeta a lista no slide hallFamaLive quando ele esta visivel
+function injectRecentWinnersInHall() {
+  try {
+    var hallSlide = document.querySelector('.promo-slide-hall');
+    if (!hallSlide) return;
+    if (hallSlide.querySelector('.mp-hall-recent')) return; // ja injetado
+    fetchRecentWinners300g().then(function(w) {
+      // re-busca caso a chamada demore e o slide tenha mudado
+      var slide = document.querySelector('.promo-slide-hall');
+      if (!slide || slide.querySelector('.mp-hall-recent')) return;
+
+      var html;
+      if (w.list && w.list.length) {
+        html = '<div class="mp-hall-recent"><h4>🏆 Últimos a levarem GRÁTIS hoje</h4><ul>' +
+               w.list.map(function(p) {
+                 return '<li><span>' + escapeHTML(p.name) + '</span><b>' + escapeHTML(p.detail) + '</b></li>';
+               }).join('') +
+               '</ul></div>';
+      } else {
+        // placeholder motivacional — encaixa o "será que hoje é sua vez?"
+        html = '<div class="mp-hall-recent"><h4>🐑 Hoje pode ser sua vez</h4>' +
+               '<ul><li><span>O placar está vazio…</span><b>seja o primeiro</b></li></ul></div>';
+      }
+      var wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      // insere antes do FOMO (.mp-hall-fomo) se existir, senao no fim
+      var fomo = slide.querySelector('.mp-hall-fomo');
+      if (fomo && fomo.parentNode) fomo.parentNode.insertBefore(wrapper.firstChild, fomo);
+      else slide.appendChild(wrapper.firstChild);
+    });
+  } catch (e) { warn(e); }
+}
+MPx.injectRecentWinnersInHall = injectRecentWinnersInHall;
+
+// detecta quando o slide hallFamaLive entra em cena e injeta a lista
+function watchHallSlide() {
+  try {
+    var mo = new MutationObserver(function() {
+      if (document.querySelector('.promo-slide-hall')) injectRecentWinnersInHall();
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    // tenta uma vez ja
+    setTimeout(injectRecentWinnersInHall, 1500);
+  } catch (e) { warn(e); }
+}
+
+// ============================================================
 // 5. HERO HINTS — injeta no stepAttract
 // ============================================================
 function renderHintsStrip(stats) {
@@ -447,6 +560,7 @@ function init() {
     startObserver();
     startCounterWatcher();
     rotateHeroTagline();
+    watchHallSlide();
 
     // hints iniciais (placeholder estatico) + carrega stats reais async
     renderHintsStrip(STATS_CACHE);
