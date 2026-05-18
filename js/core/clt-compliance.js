@@ -154,15 +154,16 @@
             razao = razao || 'Banco de horas habilitado com saldo acumulado (CLT 59 §5 e §6 exige acordo escrito).';
         }
         if (!precisa) {
-            return { compliant: true, required: false, message: 'CCT nao obrigatoria pela configuracao atual.' };
+            return { compliant: true, required: false, severity: 'ok', message: 'CCT nao obrigatoria pela configuracao atual.' };
         }
         var ativo = getActiveCCT(franchiseId);
         if (!ativo) {
             return {
                 compliant: false,
                 required: true,
-                message: '⚠ ' + razao + ' Nenhum documento CCT ou aditivo ativo no sistema.',
-                suggestion: 'Faca upload do PDF da Convencao Coletiva do sindicato OU do aditivo individual assinado em painel/configuracoes-clt.html.'
+                severity: 'warning',  // amarelo, nao bloqueia
+                message: 'Pendência: ' + razao + ' Cadastre um documento quando puder.',
+                suggestion: 'Aditivo individual: peca pra cada funcionário assinar um pequeno acordo (modelo disponível em Equipe → Templates). OU baixe CCT do sindicato em mediador.mte.gov.br.'
             };
         }
         // Vigencia
@@ -171,16 +172,110 @@
             return {
                 compliant: false,
                 required: true,
-                message: '⚠ Documento CCT (' + (ativo.sindicato || ativo.fileName) + ') venceu em ' + ativo.vigenciaFim + '. ' + razao,
-                suggestion: 'Faca upload da CCT renovada.'
+                severity: 'warning',
+                message: 'Aviso: documento CCT (' + (ativo.sindicato || ativo.fileName) + ') venceu em ' + ativo.vigenciaFim + '. ' + razao,
+                suggestion: 'Atualize quando puder; sistema continua funcionando.'
             };
         }
         return {
             compliant: true,
             required: true,
+            severity: 'ok',
             message: '✓ CCT/aditivo ativo: ' + (ativo.sindicato || ativo.fileName) + (ativo.vigenciaFim ? ' (vigencia ate ' + ativo.vigenciaFim + ')' : ' (sem prazo)'),
             doc: ativo
         };
+    }
+
+    // ============================================
+    // 📌 PENDENCIAS DO ADMIN — Agrega TUDO que falta cadastrar
+    // ============================================
+    // Retorna lista priorizada do que admin ainda precisa fazer pra ficar
+    // 100% conforme. Nada disso BLOQUEIA o sistema; tudo é informativo.
+    function getAdminPendencies(franchiseId) {
+        var pend = [];
+        if (typeof DataStore === 'undefined') return pend;
+
+        var franchises = DataStore.getAllFranchises() || [];
+        var f = franchises.find(function (x) { return x.id === franchiseId; }) || {};
+
+        // 1. CNPJ
+        if (!f.cnpj || String(f.cnpj).replace(/\D/g, '').length !== 14) {
+            pend.push({
+                area: 'Empresa',
+                tipo: 'cnpj',
+                severidade: 'high',
+                titulo: 'CNPJ não cadastrado',
+                detalhe: 'Sem CNPJ você não consegue emitir notas, holerites legais nem eSocial. Cadastre em Configurações → Empresa.',
+                acao: 'painel/configuracoes.html'
+            });
+        }
+
+        // 2. Razao social / endereco / responsavel
+        if (!f.razaoSocial && !f.nomeFantasia) {
+            pend.push({ area: 'Empresa', tipo: 'razao', severidade: 'medium', titulo: 'Razão social não cadastrada', detalhe: 'Necessária para holerites e documentos legais.', acao: 'painel/configuracoes.html' });
+        }
+        if (!f.endereco) {
+            pend.push({ area: 'Empresa', tipo: 'endereco', severidade: 'low', titulo: 'Endereço da loja não cadastrado', detalhe: 'Aparece no rodapé do holerite.', acao: 'painel/configuracoes.html' });
+        }
+
+        // 3. Funcionarios sem dados completos
+        var staff = (DataStore.getCollection('staff', franchiseId) || []).filter(function (s) { return s.active; });
+        if (staff.length === 0) {
+            pend.push({ area: 'Equipe', tipo: 'sem_funcionario', severidade: 'low', titulo: 'Nenhum funcionário cadastrado', detalhe: 'Quando contratar, cadastre em Equipe pra ativar holerite, ponto e folha.', acao: 'painel/equipe.html' });
+        }
+        staff.forEach(function (s) {
+            var faltam = [];
+            if (!s.cpf) faltam.push('CPF');
+            if (!s.pis) faltam.push('PIS/PASEP');
+            if (!s.dataAdmissao) faltam.push('data admissão');
+            if (!s.salario_base || parseFloat(s.salario_base) <= 0) faltam.push('salário base');
+            if (!s.cargo) faltam.push('cargo');
+            if (faltam.length > 0) {
+                pend.push({
+                    area: 'Equipe',
+                    tipo: 'staff_incompleto',
+                    severidade: faltam.indexOf('CPF') >= 0 || faltam.indexOf('PIS/PASEP') >= 0 ? 'high' : 'medium',
+                    titulo: s.name + ': faltam ' + faltam.join(', '),
+                    detalhe: 'Sem CPF/PIS, eSocial não envia. Sem salário base, holerite não calcula.',
+                    acao: 'painel/equipe.html'
+                });
+            }
+        });
+
+        // 4. CCT (se usa banco horas)
+        var cfg = (typeof OvertimeBank !== 'undefined') ? OvertimeBank.getConfig(franchiseId) : {};
+        var precisaCCT = cfg.tratamento_intervalo_suprimido === 'banco_horas' || (cfg.bankHoursEnabled && cfg.bankHoursMaxBalance > 0);
+        if (precisaCCT) {
+            var ativoCCT = getActiveCCT(franchiseId);
+            if (!ativoCCT) {
+                pend.push({
+                    area: 'Compliance CLT',
+                    tipo: 'cct',
+                    severidade: 'medium',
+                    titulo: 'CCT ou aditivo individual não cadastrado',
+                    detalhe: 'Você usa banco de horas. Cadastre um aditivo simples assinado pela funcionária (1 página) ou baixe a CCT do sindicato. Sistema funciona sem isso, mas é proteção legal.',
+                    acao: 'painel/ponto.html#config'
+                });
+            }
+        }
+
+        // 5. Foto referencia funcionarios (anti-fraude)
+        var semFoto = staff.filter(function (s) { return !s.fotoRef && !s.referencePhoto; }).length;
+        if (semFoto > 0) {
+            pend.push({
+                area: 'Anti-fraude',
+                tipo: 'foto_ref',
+                severidade: 'low',
+                titulo: semFoto + ' funcionário(s) sem foto-referência',
+                detalhe: 'Sistema bate selfie do ponto contra foto-referência. Cadastre em Equipe → Editar funcionário.',
+                acao: 'painel/equipe.html'
+            });
+        }
+
+        return pend.sort(function (a, b) {
+            var ordem = { critical: 0, high: 1, medium: 2, low: 3 };
+            return (ordem[a.severidade] || 99) - (ordem[b.severidade] || 99);
+        });
     }
 
     // ============================================
@@ -269,6 +364,8 @@
         checkCCTCompliance: checkCCTCompliance,
         // Banco horas vencimento
         getBankExpirationAlerts: getBankExpirationAlerts,
-        getAllBankExpirationAlerts: getAllBankExpirationAlerts
+        getAllBankExpirationAlerts: getAllBankExpirationAlerts,
+        // 📌 Pendencias agregadas do admin (TUDO que falta cadastrar)
+        getAdminPendencies: getAdminPendencies
     };
 })();

@@ -258,6 +258,18 @@
                     </div>
                 </div>
 
+                <!-- 📌 BANNER DE PENDENCIAS — TUDO QUE FALTA CADASTRAR (nao bloqueia, so avisa) -->
+                <div id="ptPendBanner" style="display:none;background:linear-gradient(135deg,#FEF3C7,#FDE68A);border-left:5px solid #F59E0B;border-radius:12px;padding:14px 18px;margin-bottom:14px">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+                        <div style="flex:1">
+                            <h3 style="margin:0 0 6px;color:#92400E;font-family:'Baloo 2',cursive">📌 <span id="ptPendCount">0</span> pendência(s) do admin</h3>
+                            <p style="margin:0;color:#78350F;font-size:.85rem">Sistema funciona normal. Mas pra ficar 100% legal, complete quando puder:</p>
+                        </div>
+                        <button class="btn-secondary" onclick="ptTogglePendDetail()" id="ptPendBtn">Ver detalhes ▼</button>
+                    </div>
+                    <div id="ptPendDetail" style="display:none;margin-top:10px;background:#fff;border-radius:8px;padding:12px;font-size:.85rem"></div>
+                </div>
+
                 <!-- Aviso legal -->
                 <div class="pt-legal">
                     <strong>📋 Lembrete legal:</strong> Toda marcacao e <strong>imutavel</strong>. Ajustes so podem ser feitos via justificativa
@@ -1155,7 +1167,51 @@
             if (e.key === 'Enter') ptPunchByPin();
         });
 
+        // ============================================
+        // 📌 PENDENCIAS DO ADMIN — banner topo (nao bloqueante)
+        // ============================================
+        // Mostra TUDO que falta cadastrar (CNPJ, dados funcionario, CCT, foto-ref,
+        // etc) num banner amarelo no topo. Admin pode ignorar e usar o sistema
+        // normalmente, mas sabe o que falta pra ficar 100% legal.
+        function ptCarregarPendencias() {
+            if (typeof CLTCompliance === 'undefined' || !CLTCompliance.getAdminPendencies) return;
+            var pend = CLTCompliance.getAdminPendencies(franchiseId);
+            var banner = document.getElementById('ptPendBanner');
+            if (!banner) return;
+            if (!pend.length) {
+                banner.style.display = 'none';
+                return;
+            }
+            banner.style.display = 'block';
+            document.getElementById('ptPendCount').textContent = pend.length;
+            var sevColor = { critical: '#7F1D1D', high: '#DC2626', medium: '#D97706', low: '#CA8A04' };
+            var sevIcon = { critical: '🚨', high: '⚠️', medium: '📌', low: '💡' };
+            var detail = pend.map(function(p) {
+                return '<div style="padding:8px 10px;border-left:3px solid ' + (sevColor[p.severidade] || '#9CA3AF') + ';margin-bottom:6px;background:#F9FAFB">' +
+                    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">' +
+                        '<div><b>' + (sevIcon[p.severidade] || '📌') + ' [' + escapeHtml(p.area) + ']</b> ' + escapeHtml(p.titulo) + '</div>' +
+                        (p.acao ? '<a href="' + escapeHtml(p.acao.startsWith('painel/') ? '../' + p.acao : p.acao) + '" class="btn-secondary" style="font-size:.78rem">Resolver</a>' : '') +
+                    '</div>' +
+                    '<div style="color:#6B7280;font-size:.78rem;margin-top:4px">' + escapeHtml(p.detalhe) + '</div>' +
+                '</div>';
+            }).join('');
+            document.getElementById('ptPendDetail').innerHTML = detail;
+        }
+
+        window.ptTogglePendDetail = function() {
+            var det = document.getElementById('ptPendDetail');
+            var btn = document.getElementById('ptPendBtn');
+            if (det.style.display === 'none') {
+                det.style.display = 'block';
+                btn.textContent = 'Esconder ▲';
+            } else {
+                det.style.display = 'none';
+                btn.textContent = 'Ver detalhes ▼';
+            }
+        };
+
         // INIT
+        ptCarregarPendencias();
         ptLoadHoje();
         document.getElementById('ptCurrentNSR').textContent = TimeClock.getCurrentNSR(franchiseId) || '0';
 
@@ -1284,20 +1340,18 @@
                 if (!confirm('⚠⚠ ATENÇÃO LEGAL: você está optando por NÃO computar o intervalo suprimido.\n\nIsso pode gerar AÇÃO TRABALHISTA do funcionário cobrando retroativo + juros + multa.\n\nTem certeza absoluta?')) return;
             }
             if (escolha === 'banco_horas') {
-                // CCT obrigatorio — bloqueia se nao tiver documento valido
+                // Verifica CCT/aditivo APENAS pra registrar pendência (NÃO bloqueia)
+                var avisoCCT = '';
                 if (typeof CLTCompliance !== 'undefined') {
-                    var ativo = CLTCompliance.getActiveCCT(franchiseId);
-                    if (!ativo) {
-                        alert('🚨 BLOQUEADO: para tratar intervalo suprimido como banco de horas você PRECISA ter uma CCT do sindicato OU aditivo individual cadastrado.\n\nVá em "📄 Documentos CCT" abaixo e faça upload do PDF assinado antes de prosseguir.');
-                        return;
-                    }
-                    var hoje = new Date().toISOString().slice(0,10);
-                    if (ativo.vigenciaFim && ativo.vigenciaFim < hoje) {
-                        alert('🚨 BLOQUEADO: o documento CCT cadastrado ("' + (ativo.sindicato || ativo.fileName) + '") venceu em ' + ativo.vigenciaFim + '.\n\nFaça upload da CCT renovada antes de salvar esta configuração.');
-                        return;
+                    var ativoCheck = CLTCompliance.getActiveCCT(franchiseId);
+                    var hojeCheck = new Date().toISOString().slice(0,10);
+                    if (!ativoCheck) {
+                        avisoCCT = '\n\n📌 PENDÊNCIA REGISTRADA: você ainda não cadastrou CCT ou aditivo individual.\nSistema vai operar normalmente, mas LEMBRE de:\n  1. Pedir pra funcionária assinar um aditivo simples (modelo no menu Equipe)\n  2. OU baixar a CCT do sindicato da sua categoria\n  3. Fazer upload em ⚙️ Config CLT → 📄 Documentos CCT\n\nIsso protege você legalmente.';
+                    } else if (ativoCheck.vigenciaFim && ativoCheck.vigenciaFim < hojeCheck) {
+                        avisoCCT = '\n\n📌 ATENÇÃO: seu documento CCT "' + (ativoCheck.sindicato || ativoCheck.fileName) + '" venceu em ' + ativoCheck.vigenciaFim + '.\nRecomendamos atualizar quando puder, mas sistema continua funcionando.';
                     }
                 }
-                if (!confirm('📋 Lembrete legal: tratar intervalo suprimido como banco de horas exige acordo escrito (CCT do sindicato OU aditivo individual assinado).\n\nDocumento ativo encontrado. Confirma a configuração?')) return;
+                if (!confirm('✅ Tratamento como banco de horas habilitado (CLT 59 §5 — acordo individual permite até 6 meses).' + avisoCCT + '\n\nConfirmar?')) return;
             }
             // Salva na config da franquia (OvertimeBank.saveConfig faz merge)
             try {
