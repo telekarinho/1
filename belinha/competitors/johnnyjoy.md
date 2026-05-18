@@ -1,12 +1,78 @@
 # JohnnyJoy — Análise Competitiva
 
-**Última atualização:** 2026-05-14 (Ciclo #222 — Dia dos Namorados 2026 + "Dois Amores" confirmado)
+**Última atualização:** 2026-05-18 (Ciclo #252 — "Dois Amores" sabores confirmados + copy exata + contra-posicionamento Duo atualizado)
+**Fontes ciclo #252:** gkpb.com.br/178878 (snippet), WebSearch 2026, portalg.com.br, catuailondrina.com.br, idealmarketing.com.br
 **Fontes ciclo #222:** gkpb.com.br/178878, WebSearch 2026
 **Fontes ciclo #202:** amostrasgratis.shop, publicitarioscriativos.com, foodbizbrasil.com, gkpb.com.br, WebSearch 2025-2026
 **Fontes ciclo #167:** gkpb.com.br, buscacliente.com.br, foodbizbrasil.com, johnnyjoy.com.br, shoppingjardins.com.br, TikTok @aproveiteacidade
 **Fontes ciclo #160:** gkpb.com.br, ondecomernorio.com, amostrasgratis.shop, Instagram @johnnyjoy.br, riomarfortaleza.com.br, portalg.com.br
 **Fontes ciclo #151:** johnnyjoy.com.br, buscacliente.com.br, gkpb.com.br, amostrasgratis.shop, TikTok @aproveiteacidade, overblur.com, Instagram @johnnyjoy.br
 **Fontes originais:** johnnyjoy.com.br, buscas orgânicas
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #252 — 2026-05-18
+
+### "Dois Amores" — Sabores Confirmados + Copy Exata + Contra-posicionamento Duo
+
+**Fontes:** gkpb.com.br/178878 (snippet indexado), WebSearch 2026, catuailondrina.com.br, idealmarketing.com.br, portalg.com.br
+
+---
+
+#### 1. Sabores "Dois Amores" — CONFIRMADOS (lacuna do ciclo #222 preenchida)
+
+O ciclo #222 havia identificado o produto mas não os sabores (GKPB retornou 403). Neste ciclo, snippets indexados confirmaram:
+
+- **Opção A:** Brigadeiro Tradicional
+- **Opção B:** Brigadeiro Ninho
+- **Opção C:** Brigadeiro Pink
+- **Mecânica:** Cliente escolhe **2 dos 3 brigadeiros** para combinar num único copo
+- **Copy de campanha:** *"Jogue cupido com os sabores e faça o seu match perfeito"*
+- **Posicionamento:** "Celebrar conexões — com alguém especial ou consigo mesmo" (genérico, sem urgência)
+- **Head de marketing:** Eduardo Kodjaoglanian (citado no lançamento)
+
+---
+
+#### 2. Londrina — Status Atualizado
+
+- **JohnnyJoy Catuaí Londrina:** CONFIRMADA em operação (catuailondrina.com.br + YouTube shorts inauguração)
+- **"Dois Amores" em Londrina:** ATIVO — a campanha é nacional para todas as lojas da rede em junho
+- **Conclusão:** JohnnyJoy Catuaí está vendendo "Dois Amores" (R$20,90–24,90) durante TODO junho → **competição direta com Duo MilkyPot no 12/06**
+
+---
+
+#### 3. Contra-posicionamento Atualizado — Duo MilkyPot vs. "Dois Amores"
+
+| Dimensão | JohnnyJoy "Dois Amores" | MilkyPot Duo |
+|---|---|---|
+| **Estrutura** | 2 sabores num único copo | 2 potinhos separados (um para cada) |
+| **Personalização** | Escolhe 2 entre 3 brigadeiros | Toppings 100% livres, infinitas combinações |
+| **Nome no produto** | Nenhum | "Potinho do nome dela + do nome dele" |
+| **Narrativa** | Genérica ("ou consigo mesmo") | Íntima ("feito especialmente para vocês") |
+| **Preço** | R$20,90–R$24,90 por copo | ~R$18–R$22 Duo (dois potinhos) |
+| **Local** | Shopping Catuaí (premium) | Muffato Quintino (popular, praticidade) |
+| **UGC** | Nenhuma mecânica de foto | Foto + story ovelhinha coração |
+| **Fidelidade** | Joybits | Pontos MilkyPot (R$1 = 1pt) |
+
+**Copy recomendada para MilkyPot (atualizada com intel Dois Amores):**
+
+> *"Milkshake tem dois amores num copo. Potinho tem dois potinhos — um feito só para ela 🍓 e um feito só para ele 🍌. É diferente, né? 💕"*
+
+*(pode virar Stories de comparação implícita, sem citar JohnnyJoy — vale como texto DM/story dia 11-12/06)*
+
+---
+
+#### 4. Radar 2026 — Situação Atual
+
+| Ameaça | Nível | Observação |
+|---|---|---|
+| "Dois Amores" em Londrina | 🟡 MÉDIO | Preço alto, shopping ≠ Muffato; perfil de cliente diferente |
+| Copy "Jogue cupido" viraliza | 🟡 MÉDIO | Se UGC explodir em Londrina pré-12/06, cria concorrência de atenção |
+| JohnnyJoy abre unidade Muffato | 🔴 ALTO (hipotético) | Sem indício; mas monitorar |
+
+**Ação recomendada:** Publicar Reel #4 (10/06) com dois potinhos lado a lado antes que "Dois Amores" domine o feed local. O Reel de montagem ao vivo (`reel-10jun-montagem-ao-vivo-bastidores.md`) já está pronto — executar sem alterações.
+
+_Belinha — Ciclo #252 | 2026-05-18_
 
 ---
 

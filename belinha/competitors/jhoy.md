@@ -3,6 +3,8 @@
 > **Status de pesquisa:** FECHADO — ciclos #3 e #28 confirmam que "Jhoy" não é marca identificável no mercado nacional.
 > Hipótese mais provável: confusão de grafia ou nome regional para **JAH do Açaí** (jahdoacai.com.br).
 
+**Última atualização:** 2026-05-18 (Ciclo #252 — FeliciJAH 2026 + pistache receita própria + Londrina não confirmada)
+
 ---
 
 ## JAH do Açaí, Sorvetes e Picolés
@@ -392,3 +394,71 @@ _Belinha — Ciclo #226 | 2026-05-15_
 **Próxima verificação:** Somente se houver indício de entrada do JAH do Açaí em Londrina. Arquivo permanece fechado até então.
 
 _Belinha — Ciclo #160 | 2026-05-08_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #252 — 2026-05-18
+
+### FeliciJAH 2026 Confirmado + Pistache Receita Própria + Londrina Status
+
+**Fontes:** gastronominho.com.br, colanagradebh.com.br, alobrasilia.com.br, diariomsnews.com.br, portalfilipemello.com, gironews.com, gkpb.com.br/166871, WebSearch 2026-05-18
+
+---
+
+#### 1. FeliciJAH 2026 — Promoção Dia da Felicidade (20/03/2026) CONFIRMADA
+
+- **Data:** 20 de março de 2026 (Dia Internacional da Felicidade)
+- **Nome da ação:** FeliciJAH
+- **Produto:** 360ml de açaí, sorvete ou iogurte por **R$16,99** fixo
+- **Abrangência:** Todas as unidades da rede
+- **Histórico:** 2ª edição consecutiva (2025 foi R$14,99, fez fila de km com 50.000+ clientes em 1 dia)
+- **Resultado 2025:** crescimento médio de receita de **293% no dia**
+
+**Implicação MilkyPot:** JAH usa datas do calendário criativo (não apenas Namorados/Natal) para gerar filas com preço-âncora. Padrão ativado 2 anos seguidos — confirma modelo de "evento de dia" como gerador de fluxo. MilkyPot pode replicar logicamente para datas como Dia do Sorvete (23/09), Dia da Felicidade (2027), etc.
+
+---
+
+#### 2. Pistache JAH — Receita Própria (não insumo comprado)
+
+- **Fonte:** portalfilipemello.com, gironews.com — 2026
+- **Diferencial:** JAH criou a pasta de pistache internamente em parceria com Francisco Santana (Escola Sorvete, referência LatAm)
+- **Posicionamento:** "Sem base adquirida, controle total do ingrediente, perfil sensorial e qualidade final"
+- **CEO Rafael Corte:** "Produto original mantendo a essência JAH — natural, acessível, alta qualidade"
+- **Alinhamento com ciclo #226:** Confirma lançamento sorvete pistache para **12/06/2026** (Namorados), mas como inovação estrutural, não apenas campanha sazonal
+- **Efeito:** pistache JAH ficará no cardápio até set/2026 (inverno) — não é produto efêmero
+
+**Implicação MilkyPot:** JAH entra com pistache autêntico (receita própria) vs. The Best Açaí (creme "Piscininha" de mercado). Se operador MilkyPot tiver topping pistache, o diferencial de comunicação pode ser "potinho personalizado com pistache" (você decide a quantidade vs. peso fixo). Se não tiver: manter posicionamento "sabores do Brasil" (paçoca, cocada, brigadeiro).
+
+---
+
+#### 3. Londrina — Status Maio 2026
+
+- **Unidades JAH em Londrina:** NENHUMA CONFIRMADA
+- **Site jahdoacai.com.br/unidades/** retornou 403 — impossível confirmar via WebFetch
+- **WebSearch resultados:** nenhum resultado específico para JAH + Londrina 2026
+- **Conclusão:** JAH ainda não está em Londrina. Risco de entrada permanece baixo no curto prazo (modelo shopping/grande porte).
+
+---
+
+#### 4. Radar Competitivo JAH × MilkyPot — Namorados 12/06/2026
+
+| Ameaça | Nível | Observação |
+|---|---|---|
+| Sorteio Porsche Interlagos (IG) | 🟡 MÉDIO | Viralização nacional possível, mas mecânica é follow+curtir+marcar — não converte em venda direta |
+| Lançamento sorvete pistache 12/06 | 🟡 MÉDIO | Produto novo + data comemorativa = forte UGC nacional; porém JAH não está em Londrina |
+| Jahckeline polaroid casais | 🟢 BAIXO local | Sem loja JAH em Londrina — ação não afeta MilkyPot Muffato diretamente |
+| Entrada JAH em Londrina | 🔴 ALTO (hipotético) | Sem indício; monitorar inaugurações 2026 |
+
+---
+
+#### 5. Calendário JAH 2026 Atualizado
+
+| Data | Ação | Mecânica |
+|---|---|---|
+| 20/03/2026 | FeliciJAH (2ª ed.) | 360ml açaí/sorvete/iogurte por R$16,99 |
+| Até 09/06/2026 | Sorteio Caio Castro | Follow + curtir + marcar + story @caiocastro |
+| 11–12/06/2026 | Passeio Porsche Interlagos | Casal sorteado |
+| 12/06/2026 | Lançamento sorvete Pistache | Receita própria — "ouro verde" |
+| Jun–Set/2026 | Pistache permanente | Cardápio inverno |
+
+_Belinha — Ciclo #252 | 2026-05-18_
