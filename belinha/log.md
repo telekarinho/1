@@ -10253,3 +10253,45 @@ _Belinha — Ciclo #257 | 2026-05-18_
 - **Operador:** Imprimir plaquinha balcão UGC (`pdv-ugc-foto-reward-placinha-balcao.md`) e deixar no caixa antes de 12/06
 
 _Belinha — Ciclo #261 | 2026-05-18_
+
+---
+
+## Ciclo #262 — 2026-05-19
+
+**Área:** Conteúdo — Counter-posicionamento MilkyMoo × cinema no playbook Dia dos Namorados
+
+**Contexto:** Prescrito no ciclo #261 como próximo passo prioritário. O insight competitivo crítico (MilkyMoo + live-action *Como Treinar o Seu Dragão*, produto "Tempestade", estreia ~12/06) havia sido documentado em `belinha/competitors/milkymoo.md` (Ciclo #260) e em `wa-business-setup-namorados.md` (Ciclo #261), mas estava **ausente** do playbook principal `dia-dos-namorados-2026-playbook.md`. Risco real: operador consultando apenas o playbook não encontraria o counter, poderia ser pego de surpresa com clientes mencionando o milkshake do dragão no dia 12/06.
+
+**O que pesquisou/analisou:**
+- Releu `belinha/competitors/milkymoo.md` §4 — seção "Como Treinar o Seu Dragão" (inserida ciclo #260)
+- Releu `belinha/content/wa-business-setup-namorados.md` §"Contexto competitivo" — extraiu copy "Cinema é pra ver o filme. O potinho é pra lembrar de quem você estava." e tabela de vantagens
+- Releu playbook `dia-dos-namorados-2026-playbook.md` inteiro — confirmou ausência de qualquer seção competitiva
+- Verificou que copy de story "anti-prato-compartilhado" do ciclo #257 é complementar (não sobrepõe) à story de counter-cinema
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/dia-dos-namorados-2026-playbook.md` | +44 linhas: nova seção `## INTELIGÊNCIA COMPETITIVA — SEMANA DE 12/06` adicionada antes do footer |
+
+**Detalhes da seção adicionada:**
+- Contexto da ameaça: MilkyMoo + licença Universal Pictures, produto "Tempestade" app-gated
+- Tabela 3×3: O que o casal quer × MilkyMoo Cinema × MilkyPot (delivery, personalização, zero fricção)
+- Copy de atendimento pronta: *"Cinema é pra ver o filme. O potinho é pra lembrar de quem você estava."*
+- Instrução "quando usar": cliente citar cinema/shopping/dragão — reposicionar para personalização
+- Story opcional (1 story, 6s, fundo lilás) com roteiro implícito — sem citar concorrente por nome
+- Flag de condicional: publicar story só se campanha MilkyMoo estiver visível localmente naquela semana; caso contrário usar `story-11jun-anti-prato-compartilhado.md`
+
+**Commit:** `438d8c7`
+
+**Próximo passo sugerido:**
+- **Ciclo #263 — Concorrentes:** JohnnyJoy — confirmar se "Dois Amores" ainda está ativo e como está sendo comunicado semana 09–12/06 (last update ciclo #252, 10 ciclos atrás). Faltam 24 dias para o evento — última janela para intel JohnnyJoy antes do Dia H
+- **Ciclo #264 — UX:** Auditar banner Namorados no site para mobile <375px — prescrito desde ciclo #259, postergado 5 ciclos
+- **Ciclo #265 — Conversão:** Verificar se `dia-dos-namorados-2026-playbook.md` cobre cenário onde as 3 versões A/B/C de mecânica ainda não foram decididas até 07/06 — criar fallback de decisão tardia
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (09/06):** Disparar N1 broadcast geral — template em `whatsapp-namorados-2026.md`
+- **Operador (11/06 20h30):** Publicar story anti-prato-compartilhado — `story-11jun-anti-prato-compartilhado.md`
+- **Operador (11/06, opcional):** Publicar story counter-cinema se campanha MilkyMoo visível localmente
+
+_Belinha — Ciclo #262 | 2026-05-19_
