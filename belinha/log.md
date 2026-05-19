@@ -2,6 +2,41 @@
 
 ---
 
+## Ciclo #263 — 2026-05-19
+
+**Área:** Concorrentes — JohnnyJoy intel semana 09–12/06 (última janela pré-Dia dos Namorados)
+
+**Contexto:** Prescrito desde o ciclo #261 como próxima pesquisa prioritária. Último update JohnnyJoy foi ciclo #252 (10 ciclos atrás). Faltam 24 dias para o Dia dos Namorados (12/06) — janela crítica para mapear se "Dois Amores" vai ter comunicação intensificada ou se JohnnyJoy vai atacar a semana final com mídia.
+
+**O que pesquisou/analisou:**
+- WebSearch "JohnnyJoy Dois Amores namorados junho 2026 campanha" — retornou apenas o artigo original GKPB (ciclo #252). Sem nova comunicação de semana final
+- WebSearch "JohnnyJoy namorados 2026 milkshake instagram campanha" — idem, sem novidade estrutural
+- WebSearch "JohnnyJoy astrologia signo milkshake upgrade 2026" — NOVA CAMPANHA: upgrade por signo (Joy Fidelidade). Gêmeos elegíveis até 20/06 = spike potencial semana 09-12/06 no Catuaí
+- Tentativa WebFetch em catuailondrina.com.br e johnnyjoy.com.br → 403 Forbidden (padrão recorrente)
+- WebSearch "JohnnyJoy milkshake grátis azul rosa junho 2026" — confirmou ação azul/rosa exclusiva 12/09, não junho
+
+**Conclusões:**
+1. "Dois Amores" sem intensificação de mídia detectada para semana 09-12/06 — campanha de "todo junho" sem push final
+2. **Nova descoberta:** campanha de astrologia/signo cria spike de visitas Joy Fidelidade no Catuaí justamente na semana do evento (Gêmeos até 20/06)
+3. Risco de semana final mantido em 🟡 MÉDIO — risco é UGC orgânico, não mídia paga
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/johnnyjoy.md` | +1 seção ciclo #263 (~60 linhas): sem nova comunicação 09-12/06, campanha astrologia mapeada, radar de risco atualizado, calendário consolidado |
+
+**Próximo passo sugerido:**
+- **Ciclo #264 — UX:** Auditar banner Namorados no site para mobile <375px — prescrito desde ciclo #259, postergado 5 ciclos, risco real de CTA cortado em telas pequenas
+- **Ciclo #265 — Conteúdo:** Criar roteiro story "signo + potinho" para 10–11/06 (resposta criativa ao trend astrologia JohnnyJoy, sem citar concorrente). Baixo custo, alto engajamento
+- **Ciclo #266 — Conversão:** Verificar se playbook Namorados cobre cenário de "pico de visitas orgânicas no Catuaí" (clientes comparando preço na hora) — adicionar copy de resposta rápida WA para esse cenário
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+
+_Belinha — Ciclo #263 | 2026-05-19_
+
+---
+
 ## Ciclo #260 — 2026-05-18
 
 **Área:** Concorrentes — MilkyMoo atualização Namorados + novos produtos (last update ciclo #233)
