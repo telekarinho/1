@@ -10419,3 +10419,56 @@ _Belinha — Ciclo #261 | 2026-05-18_
 - **Operador (11/06, opcional):** Publicar story counter-cinema se campanha MilkyMoo visível localmente
 
 _Belinha — Ciclo #262 | 2026-05-19_
+
+---
+
+## Ciclo #266 — 2026-05-19
+
+**Área:** Conversão — Copies WA para comparador ao vivo (pico Catuaí 10–12/06)
+
+**Contexto:** Prescrito no ciclo #265 (e reforçado no #263). A campanha Joy Fidelidade do JohnnyJoy para o signo Gêmeos (válida até 20/06) cria um spike de tráfego no Catuaí Shopping justamente na semana 10–12/06 — janela crítica do Dia dos Namorados. Clientes que estão fisicamente no Catuaí (ou viram UGC de astrologia no Instagram) podem abrir o WA do MilkyPot em tempo real, comparando preço/produto antes de decidir. A janela de decisão é < 3 minutos: sem resposta rápida e clara, o pedido vai para o quiosque. O `dia-dos-namorados-2026-playbook.md` não cobria esse cenário — cobertura anterior focada apenas em broadcasts e automação de keyword.
+
+**O que pesquisou/analisou:**
+- Releu `belinha/competitors/johnnyjoy.md` §ciclo #263 — campanha Joy Fidelidade Gêmeos, spike confirmado semana 09–12/06
+- Releu seção "AUTOMAÇÃO WA: KEYWORD NAMORADOS26" do playbook — verificou que cobertura era apenas de broadcasts e fluxo de keyword automático; sem copy para atendimento reativo 1:1
+- Releu `belinha/content/wa-business-setup-namorados.md` §"Respostas Rápidas" — confirmou que /duo, /gift, /delivery existem mas são CTA de fechamento, não abertura de conversa para comparador frio
+- Identificou 4 gatilhos distintos de abertura de conversa: "quanto custa?", "vocês entregam?", "veio pelo story", "têm promoção?" — cada um exige ângulo diferente de entrada
+- Verificou regra de resposta < 2 min como critério de vitória no cenário de comparação ao vivo
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/dia-dos-namorados-2026-playbook.md` | +73 linhas: nova seção `### Cenário: "Pico de visitas Catuaí"` na Inteligência Competitiva; 4 copies de resposta rápida WA por gatilho; tabela de vantagens do delivery vs quiosque; copy de fechamento rápido; contexto do cenário; regra de ouro de tempo de resposta |
+
+**Detalhes da seção adicionada:**
+1. **Contexto do cenário** — vinculado explicitamente à campanha Joy Fidelidade Gêmeos (ciclo #263), janela de decisão < 3 min
+2. **4 respostas rápidas por gatilho:**
+   - "quanto custa? / o que tem?" → anchor R$19,90 + delivery CTA
+   - "vocês entregam? / fica onde?" → endereço + delivery 15-40min + CTA
+   - Veio via story signo/astrologia → personalização para dois + horário limite
+   - "têm promoção pra namorados?" → valor sem desconto (potinho com nome) + CTA
+3. **Regra de ouro:** resposta em < 2 min — sem isso, cliente já pediu no quiosque
+4. **Tabela de vitória** JohnnyJoy × quiosque × MilkyPot — 4 critérios
+5. **Copy de fechamento rápido:** "Não precisa sair do sofá. Você escolhe agora, a gente entrega."
+
+**Por que esta seção gera valor concreto:**
+- O spike JohnnyJoy no Catuaí é previsto e real (ciclo #263 confirmou campanha Gêmeos até 20/06)
+- Sem copy pronto, o operador no dia 12/06 improvisa → perde a venda
+- As 4 respostas cobrem os 4 gatilhos mais prováveis, reduzindo decisão do operador para "qual gatilho = qual colar"
+- Copy de fechamento é anti-desconto (padrão Constituição) — agrega valor sem queimar margem
+
+**Commit:** `e0e2423`
+
+**Próximo passo sugerido:**
+- **Ciclo #267 — Concorrentes:** TheBest Açaí — não pesquisado há mais de 15 ciclos; atualizar intel pré-Namorados (piscininha "afeto" ainda ativa? nova promoção para 12/06? ação de delivery ou só loja?)
+- **Ciclo #268 — UX:** Verificar se o counter-posicionamento cinema (ciclo #262) e o cenário Catuaí (ciclo #266) têm versão no banner mobile (veryNarrow <375px) ou se o banner ainda usa copy genérico para a semana 10-12/06
+- **Ciclo #269 — Conteúdo:** Criar caption + hashtags para Reel de abertura do Dia dos Namorados (ao vivo 14h Sex 12/06) — roteiro já existe no playbook mas caption de legenda ainda não foi redigida
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador:** Salvar as 4 respostas rápidas no WA Business como "Respostas Rápidas" adicionais (além de /duo /gift /delivery) — copiar de `dia-dos-namorados-2026-playbook.md` seção "Pico Catuaí"
+- **Operador (Seg 10/06 · 18h):** Publicar sequência 3 stories "signo + potinho" — `story-signo-potinho-10jun.md`
+- **Operador (Ter 11/06 · 20h30):** Publicar stories anti-prato-compartilhado — `story-11jun-anti-prato-compartilhado.md`
+- **Operador (09/06):** Disparar N1 broadcast geral — template em `whatsapp-namorados-2026.md`
+
+_Belinha — Ciclo #266 | 2026-05-19_
