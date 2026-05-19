@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>MilkyPot — Roleta da Sorte (Configuração)</title>
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<style>
+body{font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#FAF9FC 0%,#F3EEFC 100%);margin:0;min-height:100vh}
+.page{padding:24px 28px;max-width:1100px;margin:0 auto}
+.btn-back{display:inline-flex;align-items:center;gap:8px;color:#7E57C2;font-weight:700;text-decoration:none;font-size:14px;margin-bottom:16px}
+.btn-back:hover{text-decoration:underline}
+h1{font-family:'Baloo 2',cursive;color:#2D1747;font-size:28px;margin:0 0 4px;display:flex;align-items:center;gap:10px;font-weight:900}
+.sub{color:#6B7280;font-size:14px;margin:0 0 22px;line-height:1.5}
+.sub code{background:#F3F4F6;padding:2px 6px;border-radius:6px;font-size:12px}
+
+/* Master card */
+.master-card{
+  background:linear-gradient(135deg,#FF9800 0%,#F97316 100%);
+  color:#fff;border-radius:18px;padding:20px 22px;margin-bottom:24px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+  box-shadow:0 10px 28px rgba(249,115,22,.28);
+}
+.master-card h2{font-family:'Baloo 2',cursive;font-size:20px;margin:0;font-weight:800}
+.master-card p{margin:4px 0 0;font-size:13px;opacity:.92}
+
+/* Toggle */
+.tog{position:relative;display:inline-block;width:64px;height:34px;flex-shrink:0;cursor:pointer}
+.tog input{opacity:0;width:0;height:0}
+.tog-slider{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,.32);border-radius:34px;transition:.3s}
+.tog-slider::before{position:absolute;content:'';height:26px;width:26px;left:4px;top:4px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.tog input:checked + .tog-slider{background:rgba(255,255,255,.5)}
+.tog input:checked + .tog-slider::before{transform:translateX(30px)}
+
+/* KPIs */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:14px}
+.kpi-label{font-size:11px;color:#6B7280;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.kpi-value{font-family:'Orbitron',monospace;font-size:24px;font-weight:900;color:#2D1747;margin-top:4px}
+.kpi-value.green{color:#16A34A}
+.kpi-value.orange{color:#F97316}
+
+/* Section */
+.section{background:#fff;border:1.5px solid #E5E7EB;border-radius:18px;padding:20px;margin-bottom:20px}
+.section h2{font-family:'Baloo 2',cursive;font-size:18px;color:#2D1747;margin:0 0 12px;font-weight:800;display:flex;align-items:center;gap:8px}
+.section p.section-desc{color:#6B7280;font-size:13px;margin:0 0 16px;line-height:1.5}
+
+/* Recompra config */
+.config-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #F3F4F6;flex-wrap:wrap;gap:12px}
+.config-row:last-child{border-bottom:0}
+.config-label{flex:1;min-width:200px}
+.config-label strong{display:block;color:#2D1747;font-size:14px}
+.config-label small{display:block;color:#6B7280;font-size:12px;margin-top:2px}
+.toggle-small{position:relative;display:inline-block;width:48px;height:26px;flex-shrink:0;cursor:pointer}
+.toggle-small input{opacity:0;width:0;height:0}
+.toggle-small-slider{position:absolute;cursor:pointer;inset:0;background:#E5E7EB;border-radius:26px;transition:.3s}
+.toggle-small-slider::before{position:absolute;content:'';height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.toggle-small input:checked + .toggle-small-slider{background:#16A34A}
+.toggle-small input:checked + .toggle-small-slider::before{transform:translateX(22px)}
+
+.input-num{padding:8px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;width:100px;text-align:right}
+.input-num:focus{outline:none;border-color:#7E57C2}
+
+/* Prêmios */
+.prize-row{display:flex;align-items:center;gap:12px;padding:14px;background:#FAFAFA;border:1px solid #E5E7EB;border-radius:12px;margin-bottom:8px;flex-wrap:wrap}
+.prize-row:hover{border-color:#7E57C2}
+.prize-emoji{font-size:30px;width:42px;text-align:center;flex-shrink:0}
+.prize-info{flex:1;min-width:160px}
+.prize-info strong{color:#2D1747;font-size:14px;display:block}
+.prize-info small{color:#6B7280;font-size:12px;display:block;margin-top:2px}
+.prize-weight-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:#6B7280}
+.prize-weight-wrap b{font-family:'Orbitron',monospace;color:#F97316;font-size:14px}
+
+.bar{background:#F3F4F6;height:8px;border-radius:4px;overflow:hidden;width:90px}
+.bar-fill{height:100%;background:linear-gradient(90deg,#F97316,#FBBF24);transition:width .3s}
+
+.legend{margin:14px 0;padding:14px 18px;border-radius:12px;font-size:13px;line-height:1.5}
+.legend.info{background:rgba(126,87,194,.06);border:1px dashed rgba(126,87,194,.3);color:#5A4570}
+.legend.warn{background:rgba(249,115,22,.08);border:1px dashed rgba(249,115,22,.4);color:#9A3412}
+.legend strong{font-weight:800}
+
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.btn{padding:10px 18px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,#7E57C2,#FF4F8A);color:#fff;border:0}
+.btn.primary:hover{box-shadow:0 10px 24px rgba(126,87,194,.35)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16A34A;color:#fff;padding:12px 22px;border-radius:100px;font-weight:700;box-shadow:0 8px 22px rgba(22,163,74,.32);z-index:1000;display:none}
+.toast.show{display:block;animation:tIn .35s ease-out}
+@keyframes tIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="promocoes-hub.html" class="btn-back">← Voltar pro Hub de Promoções</a>
+
+  <h1>🎰 Roleta da Sorte</h1>
+  <p class="sub">
+    Modal animada que aparece <strong>automaticamente no celular do cliente</strong> após ele fechar pedido no
+    <code>milkypot.com/cardapio.html</code>. Sorteia 1 dos prêmios habilitados (com pesos relativos).
+    Cupom único é salvo no Firestore e validado pelo atendente no PDV. Validade padrão: <strong>7 dias</strong>.
+  </p>
+
+  <!-- Master toggle -->
+  <div class="master-card">
+    <div>
+      <h2>🎰 Sistema da Roleta</h2>
+      <p>Ligado, a roleta gira pra todo cliente que fechar pedido online.</p>
+    </div>
+    <label class="tog">
+      <input type="checkbox" id="rolETAEnabled" checked>
+      <span class="tog-slider"></span>
+    </label>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Spins (30d)</div>
+      <div class="kpi-value" id="kpiSpins">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Resgatados (30d)</div>
+      <div class="kpi-value" id="kpiResg">—</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Custo total (30d)</div>
+      <div class="kpi-value orange" id="kpiCusto">R$ —</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">ROI estimado</div>
+      <div class="kpi-value green" id="kpiROI">🚧</div>
+    </div>
+  </div>
+
+  <!-- Regras de recompra -->
+  <div class="section">
+    <h2>🔒 Regras anti-prejuízo (recompra obrigatória)</h2>
+    <p class="section-desc">
+      Pra evitar que a promoção vire custo puro, configure que o cupom <strong>só pode ser resgatado em um pedido NOVO</strong>.
+      Sem isso, o cliente pode juntar vários cupons sem voltar.
+    </p>
+
+    <div class="config-row">
+      <div class="config-label">
+        <strong>⚖️ Exigir recompra pra resgatar cupom</strong>
+        <small>Cliente precisa fazer pedido NOVO no PDV pra usar o cupom da roleta.</small>
+      </div>
+      <label class="toggle-small">
+        <input type="checkbox" id="cfgRequireRebuy" checked>
+        <span class="toggle-small-slider"></span>
+      </label>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">
+        <strong>💰 Valor mínimo do pedido de resgate</strong>
+        <small>Atendente só libera o prêmio se o pedido novo for ≥ esse valor.</small>
+      </div>
+      <div>
+        R$ <input type="number" id="cfgMinOrder" value="15" min="0" step="1" class="input-num">
+      </div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-label">
+        <strong>⏱️ Validade do cupom (dias)</strong>
+        <small>Cupom expira sozinho. Recomenda-se 7 dias pra criar urgência.</small>
+      </div>
+      <div>
+        <input type="number" id="cfgValidityDays" value="7" min="1" max="30" step="1" class="input-num">
+      </div>
+    </div>
+  </div>
+
+  <!-- Prêmios -->
+  <div class="section">
+    <h2>🎁 Prêmios disponíveis</h2>
+    <p class="section-desc">
+      Cada prêmio tem um <strong>peso de sorteio</strong> (quanto maior, mais sai). Os pesos são normalizados
+      automaticamente — soma 100% entre os ativos.
+    </p>
+
+    <div class="legend info">
+      💡 <strong>Estratégia recomendada:</strong> prêmios <strong>baratos</strong> (topping, stickers, 5% off) com peso alto.
+      Prêmios <strong>caros</strong> (sundae grátis, frete) com peso baixo (raros). Isso mantém o ROI saudável.
+    </div>
+
+    <div id="prizeList"></div>
+
+    <div class="legend warn" id="prizeWarn" style="display:none">
+      ⚠️ <strong>Atenção:</strong> nenhum prêmio ativo. A roleta não vai funcionar.
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" onclick="window.location.href='promocoes-hub.html'">Cancelar</button>
+    <button class="btn primary" onclick="saveAll()">💾 Salvar configurações</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ Salvo!</div>
+
+<script>
+(function(){
+  'use strict';
+  if (typeof Auth!=='undefined' && !Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  var session = Auth.getSession();
+  var fid = session.franchiseId;
+
+  // ============================================================
+  // PRÊMIOS PADRÃO (espelho de js/core/roleta-milkycoins.js)
+  // ============================================================
+  var DEFAULT_PRIZES = [
+    { id:'desconto_20',    label:'20% OFF',     sub:'No próximo pedido',          emoji:'💸', weight:30, value:20, cost:6 },
+    { id:'milky_coins_50', label:'+50',         sub:'MilkyCoins',                 emoji:'🪙', weight:20, value:50, cost:2 },
+    { id:'topping_gratis', label:'Topping',     sub:'Grátis no próximo',          emoji:'🍓', weight:15, value:1,  cost:3 },
+    { id:'sticker_digital',label:'Sticker',     sub:'Exclusivo Belinha',          emoji:'🎨', weight:15, value:1,  cost:0 },
+    { id:'frete_gratis',   label:'Frete',       sub:'Grátis na próxima',          emoji:'🛵', weight:10, value:1,  cost:8 },
+    { id:'sundae_gratis',  label:'Sundae',      sub:'Grátis em pedido R$30+',     emoji:'🍨', weight:5,  value:1,  cost:9 },
+    { id:'desconto_5',     label:'5% OFF',      sub:'Próximo pedido',             emoji:'💵', weight:4,  value:5,  cost:2 },
+    { id:'milky_coins_jackpot', label:'+500',   sub:'MilkyCoins JACKPOT',         emoji:'🎰', weight:1,  value:500,cost:15 }
+  ];
+
+  // ============================================================
+  // LOAD / SAVE
+  // ============================================================
+  function loadConfig() {
+    var saved = DataStore.get('roleta_config_'+fid) || {};
+    var prizesSaved = DataStore.get('roleta_prizes_'+fid);
+
+    document.getElementById('rolETAEnabled').checked = saved.enabled !== false;
+
+    // promocoes_config consolidada
+    var promosCfg = DataStore.get('promocoes_config_'+fid) || {};
+    var rolETACfg = promosCfg.roleta || {};
+    document.getElementById('cfgRequireRebuy').checked = rolETACfg.requireRebuy !== false;
+    document.getElementById('cfgMinOrder').value = rolETACfg.minOrderValue || 15;
+    document.getElementById('cfgValidityDays').value = rolETACfg.validityDays || 7;
+
+    // Prêmios — merge defaults com salvo (preserva edits)
+    var merged = DEFAULT_PRIZES.map(function(def){
+      var found = (prizesSaved||[]).find(function(p){return p.id===def.id});
+      return Object.assign({}, def, found||{});
+    });
+    renderPrizes(merged);
+  }
+
+  function renderPrizes(prizes) {
+    var totalActiveWeight = prizes.filter(function(p){return !p.disabled}).reduce(function(s,p){return s+p.weight},0);
+    var list = document.getElementById('prizeList');
+    list.innerHTML = '';
+    prizes.forEach(function(p, i){
+      var pct = totalActiveWeight > 0 && !p.disabled ? (p.weight / totalActiveWeight * 100).toFixed(1) : '0';
+      var barWidth = totalActiveWeight > 0 && !p.disabled ? (p.weight / Math.max.apply(null, prizes.map(function(x){return x.weight})) * 90) : 0;
+      var row = document.createElement('div');
+      row.className = 'prize-row';
+      row.dataset.prizeId = p.id;
+      row.innerHTML =
+        '<div class="prize-emoji">'+p.emoji+'</div>' +
+        '<div class="prize-info">' +
+          '<strong>'+p.label+' · '+p.sub+'</strong>' +
+          '<small>Custo: <b>R$ '+p.cost.toFixed(2).replace('.', ',')+'</b> · Peso bruto: '+p.weight+'</small>' +
+        '</div>' +
+        '<div class="prize-weight-wrap">' +
+          '<b>'+pct+'%</b>' +
+          '<div class="bar"><div class="bar-fill" style="width:'+barWidth+'px"></div></div>' +
+        '</div>' +
+        '<input type="number" class="input-num prize-weight-input" value="'+p.weight+'" min="0" max="100" data-prize-id="'+p.id+'" style="width:70px">' +
+        '<label class="toggle-small">' +
+          '<input type="checkbox" class="prize-active" data-prize-id="'+p.id+'" '+(!p.disabled?'checked':'')+'>' +
+          '<span class="toggle-small-slider"></span>' +
+        '</label>';
+      list.appendChild(row);
+    });
+
+    // re-render percentages ao mudar peso
+    list.addEventListener('input', function(){
+      var prizes = readPrizesFromUI();
+      var act = prizes.filter(function(p){return !p.disabled});
+      var total = act.reduce(function(s,p){return s+p.weight},0);
+      Array.from(list.querySelectorAll('.prize-row')).forEach(function(row){
+        var id = row.dataset.prizeId;
+        var p = prizes.find(function(x){return x.id===id});
+        var pct = total > 0 && !p.disabled ? (p.weight/total*100).toFixed(1) : '0';
+        var w = row.querySelector('.prize-weight-wrap b');
+        if (w) w.textContent = pct + '%';
+      });
+      var anyActive = prizes.some(function(p){return !p.disabled});
+      document.getElementById('prizeWarn').style.display = anyActive ? 'none' : 'block';
+    });
+  }
+
+  function readPrizesFromUI() {
+    return DEFAULT_PRIZES.map(function(def){
+      var row = document.querySelector('.prize-row[data-prize-id="'+def.id+'"]');
+      if (!row) return Object.assign({}, def);
+      var weightInput = row.querySelector('.prize-weight-input');
+      var activeInput = row.querySelector('.prize-active');
+      return Object.assign({}, def, {
+        weight: parseInt(weightInput.value, 10) || 0,
+        disabled: !activeInput.checked
+      });
+    });
+  }
+
+  window.saveAll = function() {
+    var enabled = document.getElementById('rolETAEnabled').checked;
+    var requireRebuy = document.getElementById('cfgRequireRebuy').checked;
+    var minOrder = parseFloat(document.getElementById('cfgMinOrder').value) || 0;
+    var validity = parseInt(document.getElementById('cfgValidityDays').value, 10) || 7;
+
+    DataStore.set('roleta_config_'+fid, {
+      enabled: enabled,
+      updatedAt: new Date().toISOString()
+    });
+
+    var promosCfg = DataStore.get('promocoes_config_'+fid) || {};
+    promosCfg.roleta = {
+      requireRebuy: requireRebuy,
+      minOrderValue: minOrder,
+      validityDays: validity,
+      updatedAt: new Date().toISOString()
+    };
+    DataStore.set('promocoes_config_'+fid, promosCfg);
+
+    var prizes = readPrizesFromUI();
+    DataStore.set('roleta_prizes_'+fid, prizes);
+
+    var t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2400);
+  };
+
+  // ============================================================
+  // KPIs — count via DataStore (roleta_spins_<fid> futuramente)
+  // ============================================================
+  function loadKpis() {
+    var spins = DataStore.get('roleta_spins_'+fid) || [];
+    var thirtyAgo = new Date(); thirtyAgo.setDate(thirtyAgo.getDate()-30);
+    var recent = spins.filter(function(s){ return new Date(s.createdAt||0) >= thirtyAgo; });
+    var redeemed = recent.filter(function(s){ return s.status === 'redeemed'; });
+
+    document.getElementById('kpiSpins').textContent = recent.length || '—';
+    document.getElementById('kpiResg').textContent = redeemed.length || '—';
+
+    var prizes = DataStore.get('roleta_prizes_'+fid) || DEFAULT_PRIZES;
+    var custo = 0;
+    redeemed.forEach(function(r){
+      var p = prizes.find(function(x){return x.id===r.prizeId});
+      if (p) custo += (p.cost||0);
+    });
+    document.getElementById('kpiCusto').textContent = 'R$ ' + custo.toFixed(2).replace('.', ',');
+  }
+
+  loadConfig();
+  loadKpis();
+})();
+</script>
+</body>
+</html>
