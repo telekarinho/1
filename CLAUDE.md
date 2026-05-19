@@ -4,6 +4,24 @@
 
 ---
 
+## 👑 LEI MAIOR: Constituição do MilkyClube
+
+**ANTES** de tocar em qualquer copy / visual / tela customer-facing, leia **obrigatoriamente** [`docs/MILKYCLUBE-CONSTITUICAO.md`](docs/MILKYCLUBE-CONSTITUICAO.md).
+
+A Constituição define:
+- 🧭 **Regra mãe:** cliente nunca vê sistema — vê progresso.
+- 🚫 Termos **proibidos** na interface do cliente (cashback, ROI, cupom, chance rara, loot, drop, R$).
+- ✅ Termos **permitidos** (moedas, nível, conquista, benefício VIP, desbloquear, progresso).
+- 📐 Regra de tela: 1 título + 1 frase + 1 CTA + 1 visual.
+- 📺 Regra de TV: 3 segundos a 3 metros.
+- 👤 Regra de cliente: ele só precisa entender 3 coisas (nível, evolução, Milkypass).
+- 💰 Regra financeira: benefício deve incentivar retorno/ticket — nunca parecer desconto.
+- 🍦 Regra de marca: Milkypot **não dá desconto**. Milkypot **desbloqueia conquistas**.
+
+Se a copy/PR violar a Constituição, ele **não sobe**. Sem exceção.
+
+---
+
 ## 🍦 O QUE É O MILKYPOT
 
 Sistema SaaS multi-tenant pra rede de franquias de sorvete/açaí (MilkyPot). Inclui:
