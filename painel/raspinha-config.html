@@ -4,392 +4,443 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>MilkyPot — Configurar Prêmios da Raspinha</title>
+<title>MilkyPot — Raspadinha da Sorte (Configuração v2)</title>
 <link rel="stylesheet" href="../css/shared-panel.css">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="../js/core/firebase-config.js"></script>
 <script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
 <script src="../js/core/utils.js"></script>
 <script src="../js/core/auth.js"></script>
 <style>
-body{font-family:'Nunito',sans-serif;background:#FAF9FC;margin:0}
-.page{padding:20px 24px;max-width:1400px;margin:0 auto}
-h1{font-family:'Baloo 2',cursive;color:#2D1747;font-size:26px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
-.sub{color:#6B7280;font-size:14px;margin:0 0 22px;line-height:1.5}
-.sub code{background:#F3F4F6;padding:2px 6px;border-radius:6px;font-size:12px}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#FAF9FC 0%,#F3EEFC 100%);margin:0;min-height:100vh}
+.page{padding:24px 28px;max-width:1300px;margin:0 auto}
+.btn-back{display:inline-flex;align-items:center;gap:8px;color:#7E57C2;font-weight:700;text-decoration:none;font-size:14px;margin-bottom:16px}
+.btn-back:hover{text-decoration:underline}
+h1{font-family:'Baloo 2',cursive;color:#2D1747;font-size:28px;margin:0 0 4px;display:flex;align-items:center;gap:10px;font-weight:900}
+.sub{color:#6B7280;font-size:14px;margin:0 0 24px;line-height:1.55;max-width:880px}
+.sub b{color:#2D1747}
 
-.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
-.btn{padding:9px 16px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
-.btn.primary{background:#7E57C2;color:#fff;border-color:#7E57C2}
-.btn.success{background:#16A34A;color:#fff;border-color:#16A34A}
-.btn.danger{background:#fff;color:#DC2626;border-color:#FCA5A5}
+.master{background:linear-gradient(135deg,#FF9800,#F97316);color:#fff;border-radius:18px;padding:18px 22px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;box-shadow:0 10px 28px rgba(249,115,22,.28)}
+.master h2{font-family:'Baloo 2',cursive;font-size:20px;margin:0;font-weight:800}
+.master p{margin:4px 0 0;font-size:13px;opacity:.92}
+.tog{position:relative;display:inline-block;width:64px;height:34px;cursor:pointer}
+.tog input{opacity:0;width:0;height:0}
+.tog-s{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,.32);border-radius:34px;transition:.3s}
+.tog-s::before{position:absolute;content:'';height:26px;width:26px;left:4px;top:4px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.tog input:checked + .tog-s{background:rgba(255,255,255,.55)}
+.tog input:checked + .tog-s::before{transform:translateX(30px)}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:14px}
+.kpi-lbl{font-size:11px;color:#6B7280;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.kpi-v{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:#2D1747;margin-top:4px}
+.kpi-v.green{color:#16A34A}
+.kpi-v.orange{color:#F97316}
+.kpi-v.red{color:#DC2626}
+
+.section{background:#fff;border:1.5px solid #E5E7EB;border-radius:18px;padding:22px;margin-bottom:20px}
+.section h2{font-family:'Baloo 2',cursive;font-size:18px;color:#2D1747;margin:0 0 6px;font-weight:800;display:flex;align-items:center;gap:8px}
+.section-desc{color:#6B7280;font-size:13px;margin:0 0 16px;line-height:1.55}
+
+.config-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #F3F4F6;flex-wrap:wrap;gap:12px}
+.config-row:last-child{border-bottom:0}
+.config-lbl{flex:1;min-width:220px}
+.config-lbl strong{display:block;color:#2D1747;font-size:14px}
+.config-lbl small{display:block;color:#6B7280;font-size:12px;margin-top:2px}
+.tog-sm{position:relative;display:inline-block;width:46px;height:24px;cursor:pointer}
+.tog-sm input{opacity:0;width:0;height:0}
+.tog-sm-s{position:absolute;cursor:pointer;inset:0;background:#E5E7EB;border-radius:24px;transition:.3s}
+.tog-sm-s::before{position:absolute;content:'';height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.tog-sm input:checked + .tog-sm-s{background:#16A34A}
+.tog-sm input:checked + .tog-sm-s::before{transform:translateX(22px)}
+.inp{padding:8px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;width:100px;text-align:right}
+.inp:focus{outline:none;border-color:#7E57C2}
+
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cat-tab{padding:8px 14px;border:1.5px solid #E5E7EB;border-radius:100px;background:#fff;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;color:#6B7280}
+.cat-tab.active{background:#2D1747;color:#fff;border-color:#2D1747}
+.cat-tab .badge{background:rgba(255,255,255,.15);padding:1px 8px;border-radius:100px;margin-left:6px;font-size:11px}
+.cat-tab:not(.active) .badge{background:#F3F4F6;color:#2D1747}
+
+.prize-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px}
+.prize-card{background:#FAFAFA;border:1.5px solid #E5E7EB;border-radius:14px;padding:14px;transition:border-color .2s,box-shadow .2s;position:relative}
+.prize-card:hover{border-color:#7E57C2;box-shadow:0 6px 20px rgba(126,87,194,.08)}
+.prize-card.legendary{background:linear-gradient(135deg,rgba(255,231,0,.08),rgba(255,179,0,.08));border-color:rgba(255,179,0,.5)}
+.prize-card.legendary::before{content:'👑 LENDÁRIO';position:absolute;top:-9px;right:14px;background:linear-gradient(135deg,#FFD700,#FF9800);color:#fff;font-size:10px;font-weight:900;letter-spacing:1px;padding:3px 10px;border-radius:100px;box-shadow:0 4px 12px rgba(255,179,0,.35)}
+.prize-card.epic{background:linear-gradient(135deg,rgba(139,92,246,.06),rgba(168,85,247,.06));border-color:rgba(139,92,246,.45)}
+.prize-card.rare{background:linear-gradient(135deg,rgba(33,150,243,.05),rgba(66,165,245,.05));border-color:rgba(66,165,245,.4)}
+.prize-card.common{background:#fff;border-color:#E5E7EB}
+.prize-card.disabled{opacity:.5}
+
+.prize-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.prize-emoji-wrap{width:54px;height:54px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+.prize-info{flex:1;min-width:0}
+.prize-name{font-family:'Baloo 2',cursive;font-weight:800;font-size:15px;color:#2D1747;margin:0;line-height:1.2;outline:none}
+.prize-name:focus{background:#FFF7ED;border-radius:6px;padding:2px 4px}
+.prize-desc{font-size:12px;color:#6B7280;margin:3px 0 0;line-height:1.4;outline:none}
+.prize-desc:focus{background:#FFF7ED;border-radius:6px;padding:2px 4px}
+.prize-toggle{flex-shrink:0;align-self:flex-start;margin-top:6px}
+
+.prize-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.meta-cell{font-size:11px;color:#6B7280;display:flex;flex-direction:column}
+.meta-cell label{font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#9CA3AF;font-size:10px;margin-bottom:2px}
+.meta-cell input{font-family:inherit;font-size:12px;padding:5px 8px;border:1px solid #E5E7EB;border-radius:6px;width:100%;box-sizing:border-box;font-weight:700;color:#2D1747}
+.meta-cell input:focus{outline:none;border-color:#7E57C2}
+
+.bar-prob{background:#F3F4F6;height:6px;border-radius:3px;overflow:hidden;margin-top:4px}
+.bar-prob-fill{height:100%;background:linear-gradient(90deg,#F97316,#FBBF24);transition:width .3s}
+
+.legend{margin:10px 0 18px;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.5}
+.legend.info{background:rgba(126,87,194,.06);border:1px dashed rgba(126,87,194,.32);color:#5A4570}
+.legend.warn{background:rgba(249,115,22,.08);border:1px dashed rgba(249,115,22,.4);color:#9A3412}
+.legend b{font-weight:800}
+
+.prob-summary{padding:14px 16px;background:#FFFBE6;border:1.5px solid rgba(255,215,0,.6);border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px;font-size:13px;color:#7A5500}
+.prob-summary b{font-family:'Orbitron',monospace;font-weight:800}
+
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;flex-wrap:wrap;position:sticky;bottom:14px;background:rgba(250,249,252,.94);padding:14px;border-radius:14px;backdrop-filter:blur(8px);box-shadow:0 -4px 12px rgba(0,0,0,.04)}
+.btn{padding:10px 18px;border:1.5px solid #E5E7EB;border-radius:10px;background:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s}
 .btn:hover:not(:disabled){transform:translateY(-1px)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{background:linear-gradient(135deg,#7E57C2,#FF4F8A);color:#fff;border:0}
+.btn.primary:hover{box-shadow:0 10px 24px rgba(126,87,194,.35)}
+.btn.outline{background:#fff;color:#7E57C2;border-color:#7E57C2}
 
-.sum-banner{padding:14px 18px;border-radius:14px;font-weight:800;display:flex;align-items:center;gap:10px;margin-bottom:16px;font-size:15px}
-.sum-banner.ok{background:#DCFCE7;color:#166534;border:1.5px solid #BBF7D0}
-.sum-banner.err{background:#FEE2E2;color:#991B1B;border:1.5px solid #FCA5A5}
-.sum-banner .num{font-family:'Baloo 2',cursive;font-size:24px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16A34A;color:#fff;padding:12px 22px;border-radius:100px;font-weight:700;box-shadow:0 8px 22px rgba(22,163,74,.32);z-index:1000;display:none}
+.toast.show{display:block;animation:tIn .35s ease-out}
+@keyframes tIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 
-table{width:100%;background:#fff;border:1px solid #E5E7EB;border-radius:14px;border-collapse:separate;border-spacing:0;overflow:hidden}
-th,td{padding:10px 12px;text-align:left;font-size:13px;border-bottom:1px solid #F3F4F6;vertical-align:middle}
-th{background:#FAF9FC;font-weight:800;color:#374151;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
-tr:last-child td{border-bottom:0}
-tr.disabled-row td{opacity:.55}
-input,select,textarea{font-family:inherit;border:1.5px solid #E5E7EB;border-radius:8px;padding:6px 9px;font-size:13px;width:100%;box-sizing:border-box}
-input:focus,select:focus,textarea:focus{outline:none;border-color:#7E57C2}
-.input-pct{width:60px;text-align:right}
-.input-cost{width:78px;text-align:right}
-.input-val{width:54px;text-align:right}
-.input-emoji{width:56px;text-align:center;font-size:18px}
-
-.toggle{position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block}
-.toggle input{opacity:0;width:0;height:0}
-.toggle .slider{position:absolute;inset:0;background:#D1D5DB;border-radius:22px;cursor:pointer;transition:.2s}
-.toggle .slider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 2px 4px rgba(0,0,0,.15)}
-.toggle input:checked + .slider{background:#7E57C2}
-.toggle input:checked + .slider::before{transform:translateX(16px)}
-
-.add-form{background:#FFF9F5;border:2px dashed #FCA5A5;border-radius:14px;padding:18px;margin-bottom:18px;display:none}
-.add-form.open{display:block}
-.add-form h3{font-family:'Baloo 2',cursive;color:#7E57C2;margin:0 0 12px;font-size:18px}
-.add-form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
-.add-form-grid label{font-size:11px;color:#6B7280;font-weight:800;display:block;margin-bottom:4px;letter-spacing:.5px;text-transform:uppercase}
-.add-form-grid textarea{resize:vertical;min-height:60px}
-
-.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
-.kpi{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:12px 14px}
-.kpi .num{font-family:'Baloo 2',cursive;font-size:24px;font-weight:900;color:#2D1747}
-.kpi .lbl{font-size:10px;color:#6B7280;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
-
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1F2937;color:#fff;padding:12px 22px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 14px 40px rgba(0,0,0,.3);z-index:9999;display:none}
-.toast.show{display:block;animation:toastIn .3s ease-out}
-.toast.error{background:#DC2626}
-.toast.success{background:#16A34A}
-@keyframes toastIn{from{opacity:0;transform:translate(-50%,20px)}to{opacity:1;transform:translateX(-50%)}}
-
-.backup-list{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:12px;margin-top:14px;font-size:12px;color:#6B7280}
-.backup-list strong{color:#374151}
+@media(max-width:600px){h1{font-size:24px}.prize-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="page">
-  <h1>🎫 Prêmios da Raspinha</h1>
+  <a href="promocoes-hub.html" class="btn-back">← Voltar pro Hub de Promoções</a>
+
+  <h1>🎫 Raspadinha da Sorte</h1>
   <p class="sub">
-    Adicione, remova ou edite prêmios. Soma das probabilidades **deve ser 100%**.
-    Backup é salvo automático em <code>backups/</code> antes de cada gravação.
-    A TV do desafio mostra os prêmios na demo visual em tempo real.
+    Toda compra acima do <b>valor mínimo</b> gera uma raspadinha com prêmio aleatório baseado nos <b>pesos</b>.
+    Cada prêmio exige <b>recompra</b> (volta ao caixa) — assim a promoção paga o próprio custo. Validade curta cria <b>urgência</b>.
   </p>
 
-  <div class="bar">
-    <select id="franchiseSelect" class="btn" style="min-width:220px">
-      <option value="muffato-quintino">Muffato Quintino (padrão)</option>
-    </select>
-    <button class="btn primary" onclick="toggleAdd()">➕ Adicionar prêmio</button>
-    <button class="btn" onclick="autoBalance()">⚖️ Auto-balancear 100%</button>
-    <button class="btn success" onclick="save()">💾 Salvar tudo</button>
-    <button class="btn" onclick="reload()">🔄 Recarregar</button>
-    <button class="btn" onclick="window.location.href='configuracoes.html'">⚙️ Voltar</button>
-  </div>
-
-  <div id="sumBanner" class="sum-banner ok">
-    <span>Soma das probabilidades:</span>
-    <span class="num" id="sumNum">0%</span>
-    <span id="sumHint">— precisa ser 100%</span>
+  <div class="master">
+    <div>
+      <h2>🎫 Sistema da Raspadinha</h2>
+      <p>Quando ligado, toda venda acima do valor mínimo emite uma raspadinha automaticamente.</p>
+    </div>
+    <label class="tog">
+      <input type="checkbox" id="masterEnabled" checked>
+      <span class="tog-s"></span>
+    </label>
   </div>
 
   <div class="kpi-row">
-    <div class="kpi"><div class="num" id="kpiCount">0</div><div class="lbl">Prêmios ativos</div></div>
-    <div class="kpi"><div class="num" id="kpiCost">R$ 0</div><div class="lbl">Custo médio esperado</div></div>
-    <div class="kpi"><div class="num" id="kpiMax">R$ 0</div><div class="lbl">Maior custo unitário</div></div>
-    <div class="kpi"><div class="num" id="kpiDisabled">0</div><div class="lbl">Desativados</div></div>
+    <div class="kpi"><div class="kpi-lbl">Emitidas (30d)</div><div class="kpi-v" id="kpiEmit">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">Raspadas</div><div class="kpi-v" id="kpiScratch">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">Resgatadas</div><div class="kpi-v green" id="kpiRedeem">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">Custo total</div><div class="kpi-v orange" id="kpiCost">R$ —</div></div>
+    <div class="kpi"><div class="kpi-lbl">Recompras geradas</div><div class="kpi-v green" id="kpiRebuy">—</div></div>
   </div>
 
-  <div class="add-form" id="addForm">
-    <h3>➕ Novo prêmio</h3>
-    <div class="add-form-grid">
-      <div><label>Emoji</label><input type="text" id="newEmoji" value="🎁" maxlength="4"></div>
-      <div><label>Código (snake_case)</label><input type="text" id="newCode" placeholder="RSP_NOVO_PREMIO"></div>
-      <div><label>Nome curto</label><input type="text" id="newName" placeholder="Topping Grátis"></div>
-      <div><label>Categoria interna</label>
-        <select id="newCat">
-          <option value="brinde">Brinde</option>
-          <option value="produto">Produto grátis</option>
-          <option value="buffet">Buffet bonus</option>
-          <option value="combo">Combo</option>
-          <option value="especial">Especial</option>
-        </select>
+  <div class="section">
+    <h2>⚙️ Regras globais (anti-prejuízo)</h2>
+    <p class="section-desc">Valem pra TODAS as raspadinhas. Cada prêmio pode ter regra mais específica (valor mínimo individual, validade própria).</p>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>💰 Valor mínimo da compra pra GERAR raspadinha</strong>
+        <small>Ex.: R$ 15 — só compras acima desse valor emitem raspadinha.</small>
       </div>
-      <div><label>Probabilidade %</label><input type="number" id="newProb" min="0" max="100" step="0.5" value="5"></div>
-      <div><label>Custo estimado (R$)</label><input type="number" id="newCost" min="0" step="0.5" value="3"></div>
-      <div><label>Validade (dias)</label><input type="number" id="newVal" min="1" max="60" value="7"></div>
-      <div><label>Min. pedido (R$)</label><input type="number" id="newMin" min="0" step="5" value="15"></div>
+      <div>R$ <input type="number" id="cfgMinPurchase" value="15" min="0" step="1" class="inp"></div>
     </div>
-    <div class="add-form-grid" style="grid-template-columns:1fr">
-      <div><label>Descrição (texto que aparece pro cliente quando ganha)</label>
-        <textarea id="newDesc" placeholder="Ex: Próximo Milk Shake M+ vem com 1 casquinha de leite ninho de brinde."></textarea>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>⏱️ Validade padrão do prêmio (dias)</strong>
+        <small>Cada prêmio pode sobrescrever (comum 3-5d, raro 7d, épico 7d, lendário 14d).</small>
       </div>
+      <div><input type="number" id="cfgDefaultValidity" value="7" min="1" max="30" step="1" class="inp"></div>
     </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn primary" onclick="addPrize()">Adicionar à lista</button>
-      <button class="btn" onclick="toggleAdd()">Cancelar</button>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>🛒 Exigir recompra pra resgatar</strong>
+        <small>Cliente só pode usar o prêmio fazendo NOVA compra. PADRÃO LIGADO.</small>
+      </div>
+      <label class="tog-sm"><input type="checkbox" id="cfgRequireRebuy" checked><span class="tog-sm-s"></span></label>
+    </div>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>🎯 Limite de raspadinhas por cliente / dia</strong>
+        <small>Anti-fraude. Mesma pessoa não emite mais que X raspadinhas no mesmo dia.</small>
+      </div>
+      <div><input type="number" id="cfgPerCustomerPerDay" value="3" min="1" max="20" step="1" class="inp"></div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>🧠 Sistema inteligente (boost pra cliente sumido)</strong>
+        <small>Cliente sem voltar há 14+ dias ganha chance MAIOR de prêmio raro/épico. PADRÃO LIGADO.</small>
+      </div>
+      <label class="tog-sm"><input type="checkbox" id="cfgSmartBoost" checked><span class="tog-sm-s"></span></label>
     </div>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th style="width:42px"></th>
-        <th style="width:60px">Emoji</th>
-        <th>Nome / Descrição</th>
-        <th style="width:90px">Categoria</th>
-        <th style="width:90px">Prob %</th>
-        <th style="width:90px">Custo R$</th>
-        <th style="width:70px">Validade</th>
-        <th style="width:80px">Min R$</th>
-        <th style="width:80px">Ações</th>
-      </tr>
-    </thead>
-    <tbody id="rowsBody"><tr><td colspan="9" style="text-align:center;padding:40px;color:#9CA3AF">Carregando…</td></tr></tbody>
-  </table>
+  <div class="section">
+    <h2>🎁 Catálogo de prêmios</h2>
+    <p class="section-desc">
+      Edita nome, descrição, peso (probabilidade), validade individual, valor mínimo do pedido de resgate, custo estimado e limites.
+      Probabilidades são redistribuídas automaticamente entre os prêmios <b>ativos</b>. Cliques no nome/descrição = edição inline.
+    </p>
 
-  <div class="backup-list" id="backupHint">
-    💾 <strong>Backups recentes:</strong> Após cada save, um JSON é salvo em <code>backups/scratch-prizes-&lt;fid&gt;-&lt;timestamp&gt;.json</code> no repo. Pra restaurar, cole o conteúdo do backup direto no Firestore via console admin.
+    <div class="cat-tabs" id="catTabs"></div>
+
+    <div class="prob-summary">
+      ⚖️ <b>Probabilidades:</b> <span id="probSummaryText">calculando…</span>
+    </div>
+
+    <div class="legend info">
+      💡 <b>Como pensar nos pesos:</b> a soma TOTAL define a chance. Recomendado: prêmios <b>baratos</b> (casquinha, topping) com peso alto.
+      <b>Lendários</b> com peso 1-3 (raríssimos). Mantém o ROI saudável.
+    </div>
+
+    <div id="prizeContainer"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn outline" onclick="window.location.href='promocoes-hub.html'">Cancelar</button>
+    <button class="btn outline" onclick="resetDefaults()" style="color:#DC2626;border-color:#DC2626">↺ Restaurar padrão</button>
+    <button class="btn primary" onclick="saveAll()">💾 Salvar tudo</button>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast">✅ Salvo!</div>
 
 <script>
 (function(){
   'use strict';
-  if (typeof Auth !== 'undefined' && !Auth.requireAuth('franchisee')) return;
+  if (typeof Auth!=='undefined' && !Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  var session = Auth.getSession();
+  var fid = session.franchiseId;
 
-  var fid = 'muffato-quintino';
-  var prizes = [];
+  // ============================================================
+  // CATÁLOGO PADRÃO v2 — nomes claros + recompra obrigatória
+  // ============================================================
+  var DEFAULT_PRIZES = [
+    // COMUM (alta chance, baixo custo)
+    { id:'RSP_TOPPING_15',     cat:'common',    emoji:'🍫', name:'Topping Premium Grátis',     desc:'Ganhe Nutella, Oreo ou Ovomaltine grátis na próxima compra acima de R$15.', weight:25, cost:3,  validity:5,  minOrder:15, dailyLimit:0, perCustomer:1 },
+    { id:'RSP_CASQUINHA',      cat:'common',    emoji:'🍦', name:'Casquinha de Brinde',        desc:'1 casquinha grátis na próxima compra acima de R$10.',                       weight:20, cost:2,  validity:5,  minOrder:10, dailyLimit:0, perCustomer:1 },
+    { id:'RSP_50G_BUFFET',     cat:'common',    emoji:'⚖️', name:'+50g de Buffet',              desc:'Ganhe 50g a mais no próximo buffet acima de R$15.',                          weight:15, cost:3,  validity:5,  minOrder:15, dailyLimit:0, perCustomer:1 },
+    { id:'RSP_COINS_50',       cat:'common',    emoji:'🪙', name:'+50 MilkyCoins',              desc:'Recebe 50 moedas no MilkyClube (vale ~R$ 2,50).',                            weight:12, cost:2,  validity:7,  minOrder:0,  dailyLimit:0, perCustomer:2 },
 
-  function toast(msg, type){
-    var el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = 'toast show ' + (type || '');
-    setTimeout(function(){ el.classList.remove('show'); }, 2800);
+    // RARO (média chance)
+    { id:'RSP_UPGRADE_SHAKE',  cat:'rare',      emoji:'⬆️', name:'Upgrade de Milk Shake',       desc:'Próximo Milk Shake: P vira M, ou M vira G GRÁTIS. Acima de R$18.',           weight:8,  cost:5,  validity:7,  minOrder:18, dailyLimit:0, perCustomer:1 },
+    { id:'RSP_DOSE_DUPLA',     cat:'rare',      emoji:'🥤', name:'Dose Dupla',                  desc:'Comprou Milk Shake G ou Monster? Ganha 1 P grátis pra dividir.',             weight:6,  cost:7,  validity:7,  minOrder:25, dailyLimit:0, perCustomer:1 },
+    { id:'RSP_SUNDAE_UP',      cat:'rare',      emoji:'🍨', name:'Sundae Evoluído',             desc:'Compre Sundae P e leve M grátis no próximo pedido (R$18+).',                 weight:5,  cost:6,  validity:7,  minOrder:18, dailyLimit:0, perCustomer:1 },
+    { id:'RSP_COPINHO_20',     cat:'rare',      emoji:'🍧', name:'Copinho de Sorvete',          desc:'1 copinho grátis em compra acima de R$20.',                                  weight:5,  cost:5,  validity:7,  minOrder:20, dailyLimit:0, perCustomer:1 },
+
+    // ÉPICO (chance baixa, valor percebido alto)
+    { id:'RSP_COMBO_SURPRESA', cat:'epic',      emoji:'🎁', name:'Combo Surpresa',              desc:'Na próxima compra acima de R$25 ganhe: 1 casquinha + 1 picolé GRÁTIS.',      weight:3,  cost:9,  validity:7,  minOrder:25, dailyLimit:0, perCustomer:1 },
+    { id:'RSP_300G_VIP',       cat:'epic',      emoji:'⚖️', name:'Desafio 300g VIP',           desc:'Tentativa extra do desafio 300g — sem valor mínimo na próxima visita.',      weight:2,  cost:8,  validity:7,  minOrder:0,  dailyLimit:0, perCustomer:1 },
+    { id:'RSP_FESTIVAL_TOPPING', cat:'epic',    emoji:'🍫', name:'Festival de Toppings',        desc:'3 toppings premium grátis no próximo Milk Shake ou Sundae acima de R$20.',   weight:2,  cost:9,  validity:7,  minOrder:20, dailyLimit:0, perCustomer:1 },
+
+    // LENDÁRIO (chance ínfima, máxima recompra)
+    { id:'RSP_SEMANA_CASQUINHA', cat:'legendary', emoji:'👑', name:'1 Semana de Casquinha',    desc:'1 casquinha grátis POR DIA durante 7 dias. Cada uma exige compra acima de R$15.', weight:1, cost:14, validity:14, minOrder:15, dailyLimit:1, perCustomer:1 },
+    { id:'RSP_SHAKE_GRATIS',     cat:'legendary', emoji:'👑', name:'Milk Shake Grátis',        desc:'1 Milk Shake P grátis na próxima compra acima de R$25.',                       weight:1, cost:12, validity:14, minOrder:25, dailyLimit:0, perCustomer:1 },
+    { id:'RSP_SUPER_UPGRADE',    cat:'legendary', emoji:'👑', name:'Super Upgrade do Dia',     desc:'Todos os tamanhos M viram G GRÁTIS por 1 dia. Validade: 14 dias pra escolher.', weight:1, cost:18, validity:14, minOrder:25, dailyLimit:1, perCustomer:1 }
+  ];
+
+  var CATEGORIES = [
+    { id:'common',   label:'COMUM',    emoji:'⚪' },
+    { id:'rare',     label:'RARO',     emoji:'🔵' },
+    { id:'epic',     label:'ÉPICO',    emoji:'🟣' },
+    { id:'legendary',label:'LENDÁRIO', emoji:'👑' }
+  ];
+
+  var activeCategory = 'common';
+  var workingPrizes = [];
+
+  function loadConfig() {
+    var saved = DataStore.get('scratch_config_'+fid) || {};
+    var cfg = DataStore.get('promocoes_config_'+fid) || {};
+    var rasp = cfg.raspinha || {};
+
+    document.getElementById('masterEnabled').checked = saved.enabled !== false;
+    document.getElementById('cfgMinPurchase').value = rasp.minPurchase || 15;
+    document.getElementById('cfgDefaultValidity').value = rasp.defaultValidity || 7;
+    document.getElementById('cfgRequireRebuy').checked = rasp.requireRebuy !== false;
+    document.getElementById('cfgPerCustomerPerDay').value = rasp.perCustomerPerDay || 3;
+    document.getElementById('cfgSmartBoost').checked = rasp.smartBoost !== false;
+
+    var savedPrizes = DataStore.get('scratch_prizes_'+fid) || [];
+    workingPrizes = DEFAULT_PRIZES.map(function(def){
+      var found = savedPrizes.find(function(p){ return p.code === def.id || p.id === def.id; });
+      return Object.assign({}, def, found || {}, { id: def.id });
+    });
   }
 
-  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
+  function renderCatTabs() {
+    var tabs = document.getElementById('catTabs');
+    tabs.innerHTML = '';
+    CATEGORIES.forEach(function(c){
+      var count = workingPrizes.filter(function(p){ return p.cat === c.id; }).length;
+      var b = document.createElement('button');
+      b.className = 'cat-tab' + (c.id === activeCategory ? ' active' : '');
+      b.innerHTML = c.emoji + ' ' + c.label + '<span class="badge">' + count + '</span>';
+      b.onclick = function(){ activeCategory = c.id; renderCatTabs(); renderPrizes(); };
+      tabs.appendChild(b);
+    });
+  }
 
-  function loadFranchises(){
-    if (!firebase || !firebase.firestore) return;
-    firebase.firestore().collection('datastore').doc('franchises').get().then(function(snap){
-      if (!snap.exists) return;
-      var raw = snap.data().value || '[]';
-      var list = JSON.parse(raw);
-      if (!Array.isArray(list)) list = list.franchises || [];
-      var sel = document.getElementById('franchiseSelect');
-      sel.innerHTML = '';
-      list.forEach(function(f){
-        var opt = document.createElement('option');
-        opt.value = f.id;
-        opt.textContent = f.name || f.id;
-        if (f.id === fid) opt.selected = true;
-        sel.appendChild(opt);
+  function renderPrizes() {
+    var container = document.getElementById('prizeContainer');
+    var inCat = workingPrizes.filter(function(p){ return p.cat === activeCategory; });
+    var totalActiveWeight = workingPrizes.filter(function(p){ return !p.disabled; }).reduce(function(s,p){ return s+p.weight; }, 0);
+
+    container.innerHTML = '<div class="prize-grid">' + inCat.map(function(p){
+      var pct = totalActiveWeight > 0 && !p.disabled ? (p.weight / totalActiveWeight * 100).toFixed(2) : '0';
+      return '<div class="prize-card ' + p.cat + (p.disabled?' disabled':'') + '" data-id="' + p.id + '">' +
+        '<div class="prize-head">' +
+          '<div class="prize-emoji-wrap">' + p.emoji + '</div>' +
+          '<div class="prize-info">' +
+            '<h3 class="prize-name" contenteditable="true" data-field="name">' + escapeHtml(p.name) + '</h3>' +
+            '<p class="prize-desc" contenteditable="true" data-field="desc">' + escapeHtml(p.desc) + '</p>' +
+          '</div>' +
+          '<label class="tog-sm prize-toggle">' +
+            '<input type="checkbox" data-field="active" ' + (!p.disabled?'checked':'') + '>' +
+            '<span class="tog-sm-s"></span>' +
+          '</label>' +
+        '</div>' +
+        '<div class="prize-meta">' +
+          '<div class="meta-cell"><label>Peso de sorteio</label>' +
+            '<input type="number" data-field="weight" value="' + p.weight + '" min="0" max="100" step="1">' +
+            '<div class="bar-prob"><div class="bar-prob-fill" style="width:' + (p.weight*2) + '%;max-width:100%"></div></div>' +
+            '<span style="font-size:10px;color:#9CA3AF;margin-top:2px">Chance atual: <b style="color:#F97316">' + pct + '%</b></span>' +
+          '</div>' +
+          '<div class="meta-cell"><label>Custo estimado (R$)</label>' +
+            '<input type="number" data-field="cost" value="' + p.cost + '" min="0" step="0.5">' +
+          '</div>' +
+          '<div class="meta-cell"><label>Validade (dias)</label>' +
+            '<input type="number" data-field="validity" value="' + p.validity + '" min="1" max="30" step="1">' +
+          '</div>' +
+          '<div class="meta-cell"><label>Compra mínima do resgate</label>' +
+            '<input type="number" data-field="minOrder" value="' + p.minOrder + '" min="0" step="1">' +
+          '</div>' +
+          '<div class="meta-cell"><label>Limite por cliente (lifetime)</label>' +
+            '<input type="number" data-field="perCustomer" value="' + (p.perCustomer||0) + '" min="0" max="99" step="1">' +
+          '</div>' +
+          '<div class="meta-cell"><label>Limite global por dia</label>' +
+            '<input type="number" data-field="dailyLimit" value="' + (p.dailyLimit||0) + '" min="0" max="999" step="1">' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('') + '</div>';
+
+    container.querySelectorAll('[data-field]').forEach(function(el){
+      var prizeId = el.closest('.prize-card').dataset.id;
+      var field = el.dataset.field;
+      var evt = (el.tagName === 'INPUT' && el.type === 'checkbox') ? 'change' : 'input';
+      el.addEventListener(evt, function(){
+        var p = workingPrizes.find(function(x){ return x.id === prizeId; });
+        if (!p) return;
+        if (field === 'active') {
+          p.disabled = !el.checked;
+          el.closest('.prize-card').classList.toggle('disabled', !!p.disabled);
+        } else if (field === 'name' || field === 'desc') {
+          p[field] = el.textContent.trim();
+        } else {
+          p[field] = parseFloat(el.value) || 0;
+        }
+        updateProbSummary();
       });
-      sel.onchange = function(){ fid = sel.value; reload(); };
-    }).catch(function(){});
+    });
+
+    updateProbSummary();
   }
 
-  async function reload(){
-    if (!firebase || !firebase.firestore) return;
-    try {
-      var snap = await firebase.firestore().collection('datastore').doc('scratch_prizes_' + fid).get();
-      var raw = snap.exists ? snap.data().value : '[]';
-      var parsed = typeof raw === 'string' ? JSON.parse(raw || '[]') : raw;
-      prizes = Array.isArray(parsed) ? parsed : [];
-      // Adiciona id local p/ trackear na UI sem mexer no Firestore
-      prizes.forEach(function(p, i){ if (!p._localId) p._localId = 'p' + i + '_' + Math.random().toString(36).slice(2,6); });
-      render();
-    } catch (e) {
-      console.error(e);
-      toast('Erro ao carregar: ' + e.message, 'error');
-    }
-  }
-  window.reload = reload;
-
-  function render(){
-    var tbody = document.getElementById('rowsBody');
-    if (!prizes.length) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:40px;color:#9CA3AF">Nenhum prêmio. Clique em <strong>Adicionar prêmio</strong> pra começar.</td></tr>';
-    } else {
-      tbody.innerHTML = prizes.map(function(p){
-        var disabled = p.disabled === true;
-        return '<tr class="' + (disabled ? 'disabled-row' : '') + '" data-id="'+ p._localId +'">'
-          + '<td><label class="toggle"><input type="checkbox" '+ (disabled?'':'checked') +' onchange="toggleEnabled(\''+ p._localId +'\', this.checked)"><span class="slider"></span></label></td>'
-          + '<td><input class="input-emoji" value="'+ escapeHtml(p.emoji||'🎁') +'" onchange="upd(\''+ p._localId +'\', \'emoji\', this.value)"></td>'
-          + '<td>'
-            + '<input value="'+ escapeHtml(p.name||'') +'" placeholder="Nome" onchange="upd(\''+ p._localId +'\', \'name\', this.value)" style="margin-bottom:4px;font-weight:700">'
-            + '<textarea rows="2" placeholder="Descrição que o cliente vê" onchange="upd(\''+ p._localId +'\', \'desc\', this.value)">'+ escapeHtml(p.desc||'') +'</textarea>'
-          + '</td>'
-          + '<td>'
-            + '<select onchange="upd(\''+ p._localId +'\', \'categoria_label\', this.value)">'
-              + ['brinde','produto','buffet','combo','especial'].map(function(c){
-                return '<option value="'+c+'"' + ((p.categoria_label||'brinde')===c?' selected':'') + '>'+c+'</option>';
-              }).join('')
-            + '</select>'
-          + '</td>'
-          + '<td><input type="number" class="input-pct" min="0" max="100" step="0.5" value="'+ (p.prob||0) +'" onchange="upd(\''+ p._localId +'\', \'prob\', parseFloat(this.value)||0)"></td>'
-          + '<td><input type="number" class="input-cost" min="0" step="0.1" value="'+ (p.cost||0) +'" onchange="upd(\''+ p._localId +'\', \'cost\', parseFloat(this.value)||0)"></td>'
-          + '<td><input type="number" class="input-val" min="1" max="60" value="'+ (p.validity||7) +'" onchange="upd(\''+ p._localId +'\', \'validity\', parseInt(this.value)||7)"></td>'
-          + '<td><input type="number" class="input-val" min="0" step="5" value="'+ (p.minOrder||0) +'" onchange="upd(\''+ p._localId +'\', \'minOrder\', parseFloat(this.value)||0)"></td>'
-          + '<td><button class="btn danger" onclick="removePrize(\''+ p._localId +'\')">🗑️</button></td>'
-        + '</tr>';
-      }).join('');
-    }
-    updateSumBanner();
-    updateKpis();
+  function sumPct(arr, cat, total) {
+    if (total === 0) return 0;
+    return arr.filter(function(p){return p.cat===cat;}).reduce(function(s,p){ return s+p.weight; }, 0) / total * 100;
   }
 
-  function updateSumBanner(){
-    var active = prizes.filter(function(p){ return !p.disabled; });
-    var sum = active.reduce(function(s,p){ return s + (Number(p.prob)||0); }, 0);
-    var banner = document.getElementById('sumBanner');
-    var numEl = document.getElementById('sumNum');
-    var hint = document.getElementById('sumHint');
-    numEl.textContent = sum.toFixed(1) + '%';
-    var diff = Math.abs(sum - 100);
-    if (diff < 0.05) {
-      banner.className = 'sum-banner ok';
-      hint.textContent = '✓ pode salvar';
-    } else {
-      banner.className = 'sum-banner err';
-      hint.textContent = '— bloqueia salvar (faltam ' + (100-sum).toFixed(1) + '%). Clica em Auto-balancear pra ajustar.';
-    }
+  function updateProbSummary() {
+    var active = workingPrizes.filter(function(p){ return !p.disabled; });
+    var total = active.reduce(function(s,p){ return s+p.weight; }, 0);
+    document.getElementById('probSummaryText').innerHTML =
+      '<b>' + active.length + '</b> ativos · soma peso <b>' + total + '</b> · ' +
+      'COMUM <b>' + sumPct(active,'common',total).toFixed(0) + '%</b> · ' +
+      'RARO <b>' + sumPct(active,'rare',total).toFixed(0) + '%</b> · ' +
+      'ÉPICO <b>' + sumPct(active,'epic',total).toFixed(0) + '%</b> · ' +
+      'LENDÁRIO <b>' + sumPct(active,'legendary',total).toFixed(2) + '%</b>';
   }
 
-  function updateKpis(){
-    var active = prizes.filter(function(p){ return !p.disabled; });
-    var disabled = prizes.filter(function(p){ return p.disabled; });
-    document.getElementById('kpiCount').textContent = active.length;
-    var costSum = active.reduce(function(s,p){ return s + (Number(p.cost)||0) * (Number(p.prob)||0) / 100; }, 0);
-    document.getElementById('kpiCost').textContent = 'R$ ' + costSum.toFixed(2);
-    var maxCost = active.reduce(function(m,p){ return Math.max(m, Number(p.cost)||0); }, 0);
-    document.getElementById('kpiMax').textContent = 'R$ ' + maxCost.toFixed(2);
-    document.getElementById('kpiDisabled').textContent = disabled.length;
+  function loadKpis() {
+    var arr = DataStore.get('scratches_'+fid) || [];
+    var thirtyAgo = new Date(); thirtyAgo.setDate(thirtyAgo.getDate() - 30);
+    var recent = arr.filter(function(s){ return new Date(s.createdAt||0) >= thirtyAgo; });
+    var scratched = recent.filter(function(s){ return s.status==='scratched' || s.status==='redeemed'; });
+    var redeemed = recent.filter(function(s){ return s.status==='redeemed'; });
+
+    document.getElementById('kpiEmit').textContent = recent.length;
+    document.getElementById('kpiScratch').textContent = scratched.length;
+    document.getElementById('kpiRedeem').textContent = redeemed.length;
+
+    var cost = 0;
+    redeemed.forEach(function(r){
+      var p = workingPrizes.find(function(x){ return x.id===r.prizeCode || x.code===r.prizeCode; });
+      if (p) cost += (p.cost||0);
+    });
+    document.getElementById('kpiCost').textContent = 'R$ ' + cost.toFixed(2).replace('.', ',');
+    document.getElementById('kpiRebuy').textContent = redeemed.length || '—';
   }
 
-  window.toggleEnabled = function(id, on){
-    var p = prizes.find(function(x){ return x._localId === id; });
-    if (!p) return;
-    p.disabled = !on;
-    render();
-  };
-  window.upd = function(id, field, value){
-    var p = prizes.find(function(x){ return x._localId === id; });
-    if (!p) return;
-    p[field] = value;
-    updateSumBanner();
-    updateKpis();
-  };
-  window.removePrize = function(id){
-    var p = prizes.find(function(x){ return x._localId === id; });
-    if (!confirm('Remover "'+ (p && p.name) +'"?')) return;
-    prizes = prizes.filter(function(x){ return x._localId !== id; });
-    render();
-  };
-  window.toggleAdd = function(){
-    document.getElementById('addForm').classList.toggle('open');
-  };
-  window.addPrize = function(){
-    var code = (document.getElementById('newCode').value||'').trim().toUpperCase().replace(/[^A-Z0-9_]/g,'_');
-    if (!code) { toast('Código obrigatório', 'error'); return; }
-    var newPrize = {
-      _localId: 'p_new_' + Date.now(),
-      code: code,
-      name: document.getElementById('newName').value.trim(),
-      desc: document.getElementById('newDesc').value.trim(),
-      emoji: document.getElementById('newEmoji').value || '🎁',
-      categoria_label: document.getElementById('newCat').value,
-      prob: parseFloat(document.getElementById('newProb').value)||0,
-      cost: parseFloat(document.getElementById('newCost').value)||0,
-      validity: parseInt(document.getElementById('newVal').value)||7,
-      minOrder: parseFloat(document.getElementById('newMin').value)||0,
-      scope: 'same',
-      tier: 'medium',
-      disabled: false
+  window.saveAll = function() {
+    DataStore.set('scratch_config_'+fid, {
+      enabled: document.getElementById('masterEnabled').checked,
+      updatedAt: new Date().toISOString()
+    });
+    var cfg = DataStore.get('promocoes_config_'+fid) || {};
+    cfg.raspinha = {
+      minPurchase: parseFloat(document.getElementById('cfgMinPurchase').value) || 0,
+      defaultValidity: parseInt(document.getElementById('cfgDefaultValidity').value, 10) || 7,
+      requireRebuy: document.getElementById('cfgRequireRebuy').checked,
+      perCustomerPerDay: parseInt(document.getElementById('cfgPerCustomerPerDay').value, 10) || 3,
+      smartBoost: document.getElementById('cfgSmartBoost').checked,
+      updatedAt: new Date().toISOString()
     };
-    prizes.push(newPrize);
-    // Limpa form
-    ['newCode','newName','newDesc'].forEach(function(id){ document.getElementById(id).value=''; });
-    toggleAdd();
-    render();
-    toast('Prêmio adicionado — ajuste %, depois salva', 'success');
+    DataStore.set('promocoes_config_'+fid, cfg);
+
+    // Salva com 'code' duplicado pro PDV (back-compat)
+    DataStore.set('scratch_prizes_'+fid, workingPrizes.map(function(p){
+      return Object.assign({}, p, { code: p.id });
+    }));
+
+    var t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2400);
+    loadKpis();
   };
 
-  window.autoBalance = function(){
-    var active = prizes.filter(function(p){ return !p.disabled; });
-    if (!active.length) { toast('Sem prêmios ativos', 'error'); return; }
-    var sum = active.reduce(function(s,p){ return s + (Number(p.prob)||0); }, 0);
-    if (sum === 0) {
-      // Distribui igual
-      var each = (100 / active.length).toFixed(2);
-      active.forEach(function(p){ p.prob = parseFloat(each); });
-    } else {
-      // Escala proporcional
-      var factor = 100 / sum;
-      active.forEach(function(p){ p.prob = Math.round((Number(p.prob)||0) * factor * 10) / 10; });
-      // Ajusta o último pra fechar exato 100
-      var newSum = active.reduce(function(s,p){ return s + p.prob; }, 0);
-      active[active.length-1].prob += Math.round((100 - newSum) * 10) / 10;
-    }
-    render();
-    toast('Probabilidades reescaladas pra somar 100%', 'success');
+  window.resetDefaults = function() {
+    if (!confirm('Restaurar TODOS os prêmios pra configuração padrão? Suas customizações serão perdidas.')) return;
+    workingPrizes = DEFAULT_PRIZES.map(function(p){ return Object.assign({}, p); });
+    renderCatTabs();
+    renderPrizes();
   };
 
-  window.save = async function(){
-    var active = prizes.filter(function(p){ return !p.disabled; });
-    var sum = active.reduce(function(s,p){ return s + (Number(p.prob)||0); }, 0);
-    if (Math.abs(sum - 100) > 0.05) {
-      toast('Soma das probabilidades ATIVAS deve ser 100% — clique em Auto-balancear', 'error');
-      return;
-    }
-    if (!confirm('Salvar ' + prizes.length + ' prêmios no Firestore?\n\nUm backup automático será criado.')) return;
+  function escapeHtml(s) {
+    return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});
+  }
 
-    try {
-      // 1. BACKUP no Firestore mesmo (doc separado timestamp)
-      var ts = new Date().toISOString().replace(/[:.]/g, '-');
-      var beforeSnap = await firebase.firestore().collection('datastore').doc('scratch_prizes_' + fid).get();
-      if (beforeSnap.exists) {
-        await firebase.firestore().collection('scratch_prizes_backups').doc('scratch_prizes_' + fid + '_' + ts).set({
-          franchiseId: fid,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          before: beforeSnap.data().value,
-          editedBy: 'painel/raspinha-config.html'
-        });
-      }
-
-      // 2. Limpa _localId antes de salvar
-      var clean = prizes.map(function(p){
-        var c = Object.assign({}, p);
-        delete c._localId;
-        return c;
-      });
-
-      // 3. GRAVA
-      await firebase.firestore().collection('datastore').doc('scratch_prizes_' + fid).set({
-        value: JSON.stringify(clean),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        _updatedBy: 'painel/raspinha-config.html'
-      });
-      toast('✅ Salvo! Backup em scratch_prizes_backups/' + ts.slice(0,19), 'success');
-    } catch (e) {
-      console.error(e);
-      toast('Erro ao salvar: ' + e.message, 'error');
-    }
-  };
-
-  loadFranchises();
-  reload();
+  loadConfig();
+  renderCatTabs();
+  renderPrizes();
+  loadKpis();
 })();
 </script>
 </body>

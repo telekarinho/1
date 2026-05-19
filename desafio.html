@@ -3405,36 +3405,58 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     } catch(_) {}
   }
 
-  // Premios REAIS da raspinha — todos no formato "comprou X, leva Y junto"
-  // pra MAXIMIZAR upsell e MINIMIZAR prejuizo (Y sempre tem custo bem
-  // menor que X). Sem mostrar probabilidades — cliente so precisa saber
-  // QUE ganha.
-  // Ideia: cada premio condiciona a recompra a uma categoria especifica,
-  // virando motor de cross-sell.
-  var RASP_DEMO_PRIZES = [
-    { emoji:'🥛➕🍦', label:'COMPROU MILK SHAKE? LEVA CASQUINHA',
-      sub:'Casquinha de leite ninho de brinde no próximo' },
-    { emoji:'🍨➕🍧', label:'COMPROU SUNDAE? LEVA COPINHO',
-      sub:'Copinho de sorvete grátis no próximo sundae' },
-    { emoji:'🍦➕🍦', label:'CASCÃO? LEVA CASQUINHA',
-      sub:'Casquinha de brinde no próximo cascão' },
-    { emoji:'⚖️➕🍡', label:'BUFFET 250g+? LEVA PICOLÉ',
-      sub:'1 picolé de graça acima de 250g' },
-    { emoji:'⬆️',    label:'UPGRADE MILK SHAKE',
-      sub:'P vira M ou M vira G de graça' },
-    { emoji:'⬆️',    label:'UPGRADE SUNDAE',
-      sub:'P vira M ou M vira G de graça' },
-    { emoji:'➕⚖️',  label:'+50g BUFFET',
-      sub:'no próximo buffet acima de R$ 15' },
-    { emoji:'🍫',    label:'TOPPING PREMIUM GRÁTIS',
-      sub:'Nutella, Ovomaltine ou Oreo no próximo' },
-    { emoji:'👯',    label:'VOLTE COM UM AMIGO',
-      sub:'os dois ganham 1 casquinha' },
-    { emoji:'🥤',    label:'DOSE DUPLA MILK SHAKE',
-      sub:'comprou G ou Monster? leva 1 P pra dividir' },
-    { emoji:'🎁',    label:'COMBO SURPRESA',
-      sub:'casquinha + picolé no próximo Milk Shake M+' }
+  // Premios da raspinha exibidos no carousel demo do slide.
+  // CARREGA do DataStore (scratch_prizes_<fid>) se admin configurou —
+  // assim a TV reflete EXATAMENTE o que o painel/raspinha-config.html mostra.
+  // Fallback: catalogo padrao v2 (nomes claros, com recompra).
+  var RASP_DEMO_PRIZES_FALLBACK = [
+    { emoji:'🍫', label:'TOPPING PREMIUM GRÁTIS',
+      sub:'Nutella, Oreo ou Ovomaltine no próximo pedido (R$15+)' },
+    { emoji:'🍦', label:'CASQUINHA DE BRINDE',
+      sub:'1 casquinha grátis na próxima compra (R$10+)' },
+    { emoji:'⚖️', label:'+50g DE BUFFET',
+      sub:'50g a mais no próximo buffet acima de R$15' },
+    { emoji:'🪙', label:'+50 MILKYCOINS',
+      sub:'50 moedas extras no MilkyClube' },
+    { emoji:'⬆️', label:'UPGRADE DE MILK SHAKE',
+      sub:'P vira M ou M vira G de graça (R$18+)' },
+    { emoji:'🥤', label:'DOSE DUPLA',
+      sub:'Comprou Milk Shake G/Monster? 1 P grátis (R$25+)' },
+    { emoji:'🍨', label:'SUNDAE EVOLUÍDO',
+      sub:'Compre Sundae P, leve M grátis (R$18+)' },
+    { emoji:'🎁', label:'COMBO SURPRESA',
+      sub:'Casquinha + picolé na próxima compra R$25+' },
+    { emoji:'⚖️', label:'DESAFIO 300G VIP',
+      sub:'Tentativa extra do desafio dos 300g' },
+    { emoji:'🍫', label:'FESTIVAL DE TOPPINGS',
+      sub:'3 toppings premium grátis no próximo M-shake' },
+    { emoji:'👑', label:'1 SEMANA DE CASQUINHA',
+      sub:'1 casquinha grátis por dia durante 7 dias' }
   ];
+  function getRaspDemoPrizes() {
+    // Tenta carregar do DataStore (admin pode ter customizado em raspinha-config)
+    try {
+      if (typeof DataStore === 'undefined') return RASP_DEMO_PRIZES_FALLBACK;
+      var saved = DataStore.get('scratch_prizes_' + fidParam);
+      if (Array.isArray(saved) && saved.length) {
+        var active = saved.filter(function(p){ return !p.disabled; });
+        if (!active.length) return RASP_DEMO_PRIZES_FALLBACK;
+        // Ordena por categoria (lendario primeiro pra puxar atencao) + weight
+        var catOrder = { legendary: 0, epic: 1, rare: 2, common: 3 };
+        active.sort(function(a, b){
+          var ca = catOrder[a.cat] !== undefined ? catOrder[a.cat] : 4;
+          var cb = catOrder[b.cat] !== undefined ? catOrder[b.cat] : 4;
+          if (ca !== cb) return ca - cb;
+          return (b.weight || 0) - (a.weight || 0);
+        });
+        return active.slice(0, 12).map(function(p){
+          return { emoji: p.emoji || '🎁', label: (p.name || 'Prêmio').toUpperCase(), sub: p.desc || '' };
+        });
+      }
+    } catch(e) {}
+    return RASP_DEMO_PRIZES_FALLBACK;
+  }
+  var RASP_DEMO_PRIZES = getRaspDemoPrizes();
 
   // Hall da Fama: fotos LIVE do Firestore. Admin sobe em painel/hall-fama.html,
   // a TV escuta via onSnapshot e renderiza mini-carousel rotando 1 por 2.4s.
