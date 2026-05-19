@@ -3318,7 +3318,7 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     { id:'acerta300', emoji:'⚖️', eyebrow:'⚖️ ACERTOU 300G? NÃO PAGA.',
       headline:'',  // gerenciado por renderAcerta300Live (rotativo)
       subtext:'',  // idem
-      cta:'⚖️ Pega o pote e vai no buffet — desafio é AO VIVO',
+      cta:'🔥 Quero tentar os 300g — pega o pote agora',
       // SEM QR: desafio e fisico (cliente monta no buffet da loja).
       qr: null,
       bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:30000,
@@ -3633,17 +3633,21 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
    * Animacao do peso: 287g -> 293g -> 299g -> 301g -> 300g 🎉 (looping).
    * Copys giram a cada 4s mantendo o slide vivo.
    */
+  // 12 copys rotativas — mix de hook viral + humor BR + emocional + escassez.
+  // Cada uma dura 4s. Rotacao infinita enquanto o slide esta visivel.
   var ACERTA300_COPIES = [
-    { hl: '⚖️ Acertou 300g? 🍦 Não paga.',           sb: '😳 Parece fácil… até a balança aparecer.' },
-    { hl: '🔥 O DESAFIO MAIS VICIANTE DA MILKYPOT',  sb: '⚖️ Acerte 300g EXATOS. 🍦 E o buffet sai GRÁTIS.' },
-    { hl: '😳 Quase ninguém acerta 300g.',           sb: '👀 Será que você consegue?' },
-    { hl: '⚠️ 299g NÃO ganha. 301g também NÃO.',    sb: '🍦 Só 300g CRAVADOS.' },
-    { hl: '🏆 Eles acertaram 300g…',                 sb: 'E saíram sem pagar nada.' },
-    { hl: '🔥 Tem cliente pegando MAIS sorvete',     sb: 'só pra tentar acertar os 300g 👀' },
-    { hl: '⚖️ A balança decide tudo.',               sb: 'Sem pegadinha. Sem sorteio. Sem cupom.' },
-    { hl: '😳 Parece fácil…',                        sb: 'até chegar na balança.' },
-    { hl: '⚡ Você tem UMA chance.',                  sb: 'Acertar 300g exatos. Sem margem.' },
-    { hl: '👑 Cliente lendário paga R$ 0.',          sb: '⚖️ Monta o pote. Bate na balança. 300g CRAVADOS = leva GRÁTIS.' }
+    { hl: '⚖️ Acertou 300g? 🍦 Não paga.',                sb: '😳 Parece fácil… até a balança aparecer.' },
+    { hl: '😳 Por apenas 1g',                              sb: 'muita gente perde o buffet grátis. 👀' },
+    { hl: '🐑 A balança não perdoa.',                      sb: 'Ela é cruel. Ela é justa. Ela manda em tudo.' },
+    { hl: '⚠️ 299g perdeu. 301g também.',                  sb: '🍦 Só 300g exatos ganha.' },
+    { hl: '🔥 O desafio mais difícil da Milkypot.',        sb: '⚖️ E o único que sai GRÁTIS quando você acerta.' },
+    { hl: '😳 Tem gente pegando MENOS granulado',          sb: 'só pra tentar acertar os 300g. 👀' },
+    { hl: '👀 O ovomaltine já fez muita gente perder',     sb: 'por 1g só. 😩' },
+    { hl: '🏆 Eles acertaram 300g cravados…',              sb: 'e saíram sem pagar nada. Vai ser você?' },
+    { hl: '⚖️ O buffet pode sair GRÁTIS.',                 sb: 'Mas só se der 300g cravados na balança.' },
+    { hl: '⚡ Você tem UMA chance.',                       sb: 'A balança decide tudo. Sem revanche.' },
+    { hl: '👑 Cliente lendário paga R$ 0.',                sb: '⚖️ Monta o pote. Bate na balança. 300g cravados = leva GRÁTIS.' },
+    { hl: '🔥 Quanto mais granulado, mais tenso.',         sb: '🍫 Um errinho de 1g e R$ 5,99/100g entra na conta.' }
   ];
   var acerta300CopyIdx = 0;
   var acerta300CopyTimer = null;
@@ -3667,16 +3671,20 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
                 '</div>';
 
     var fomo = '<div class="mp-hall-fomo">' +
-                 '⚠️ <b>299g e 301g NÃO ganham.</b> Só <b>300g exatos</b>. 👀' +
+                 '⚠️ <b>299g perdeu.</b> <b>301g também.</b> Só <b>300g exatos</b> ganha. 👀' +
                '</div>';
+
+    // Prova social ao vivo — placeholder que MPxDesafio.injectAcerta300LiveSocial
+    // popula com dados reais (tentativas hoje, campeoes). Sem dado: fica oculto.
+    var liveSocial = '<div class="mp-300g-live" data-mpx-300g-live="1"></div>';
 
     // Placeholders pros textos rotativos
     var initialCopy = ACERTA300_COPIES[acerta300CopyIdx];
     var rotativeHtml = '<h2 class="mp-300g-headline" data-mpx-300g-hl>' + initialCopy.hl + '</h2>' +
                        '<p class="mp-300g-sub" data-mpx-300g-sb>' + initialCopy.sb + '</p>';
 
-    // Container do peso
-    var weightDisplay = '<div class="mp-300g-scale">⚖️</div>' +
+    // Container do peso — balanca SAGRADA + numeros pulsando
+    var weightDisplay = '<div class="mp-300g-scale-wrap"><div class="mp-300g-scale-aura"></div><div class="mp-300g-scale">⚖️</div></div>' +
                         '<div class="mp-300g-weight">' + weightSpans + '</div>';
 
     // Inicia rotacao das copys (4s cada). MutationObserver vai limpar quando o
@@ -3699,7 +3707,7 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       }, 4000);
     }, 200);
 
-    return weightDisplay + selos + rotativeHtml + fomo;
+    return weightDisplay + selos + rotativeHtml + liveSocial + fomo;
   }
 
   function renderRaspadinhaDemo(){
