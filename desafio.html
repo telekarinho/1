@@ -3115,90 +3115,246 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
 }
 @keyframes promoTick{from{width:0}to{width:100%}}
 
-/* RASPADINHA DEMO — simula a raspadinha real do app raspando sozinha
-   em loop, mostrando os 11 premios possiveis. Pra cliente entender
-   visualmente o fluxo: "toda compra ganha algo". */
-.rasp-demo{
+/* RASPADINHA v3 — experiencia viva com 3 fases por premio:
+     FASE 1 (0-28% do ciclo de 7s): SUSPENSE — card prata pulsando com shine
+     FASE 2 (28-42%): RASPANDO — particulas voando + scan metalico
+     FASE 3 (42-100%): REVELACAO — premio gigante com glow */
+.rasp-stage{
   display:flex; flex-direction:column; align-items:center;
-  gap:clamp(8px, 1.5vh, 18px);
-}
-.rasp-card{
+  gap:clamp(8px, 1.5vh, 16px);
   position:relative;
-  width:clamp(240px, 36vmin, 360px);
-  aspect-ratio: 16 / 10;
-  background:linear-gradient(135deg,#FFF 0%,#FFE4F0 100%);
-  border-radius:18px;
-  box-shadow:0 18px 50px rgba(0,0,0,.35), 0 0 0 4px rgba(255,255,255,.4);
+  width:100%;
+}
+/* Particulas de fundo flutuando atras do card */
+.rasp-particles{
+  position:absolute; inset:-40px;
+  pointer-events:none; z-index:0;
   overflow:hidden;
 }
-.rasp-card-inner{
-  position:absolute; inset:0;
-  display:flex; align-items:center; justify-content:center;
-}
-.rasp-prize{
-  position:absolute; inset:0;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:6px; padding:14px;
+.rasp-particle{
+  position:absolute;
+  width:6px; height:6px;
+  background:radial-gradient(circle,#FFE700,rgba(255,231,0,0));
+  border-radius:50%;
+  animation:raspParticleFloat 7s ease-in-out infinite;
   opacity:0;
-  animation:raspPrizeIn 11s linear infinite;
 }
-.rasp-prize-emoji{
-  font-size:clamp(38px, 6.5vmin, 70px); line-height:1;
+@keyframes raspParticleFloat{
+  0%,100%{ opacity:0; transform:translateY(20px) scale(0.5) }
+  10%    { opacity:.8; transform:translateY(-10px) scale(1) }
+  50%    { opacity:1; transform:translateY(-40px) scale(1.2) }
+  90%    { opacity:.4; transform:translateY(-80px) scale(0.8) }
 }
-.rasp-prize-label{
-  font-family:'Baloo 2',cursive; font-weight:900;
-  font-size:clamp(13px, 2.2vmin, 22px);
-  color:#1A1A2E; letter-spacing:.5px; text-align:center;
+/* BIGCARD: 50% maior, glow ouro pulsante, sombra forte */
+.rasp-bigcard{
+  position:relative; z-index:1;
+  width:clamp(280px, 50vmin, 520px);
+  aspect-ratio: 16 / 10;
+  background:transparent;
+  border-radius:24px;
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.45),
+    0 0 0 5px rgba(255,255,255,.15),
+    0 0 80px rgba(255,231,0,.25);
+  overflow:hidden;
+  animation:raspBigCardPulse 2.4s ease-in-out infinite;
 }
-.rasp-prize-sub{
-  font-size:clamp(10px, 1.4vmin, 14px); color:#6B7280;
-  font-weight:600; text-align:center;
+@keyframes raspBigCardPulse{
+  0%,100% { box-shadow:0 24px 60px rgba(0,0,0,.45), 0 0 0 5px rgba(255,255,255,.15), 0 0 80px rgba(255,231,0,.25); transform:scale(1) }
+  50%     { box-shadow:0 30px 80px rgba(0,0,0,.55), 0 0 0 5px rgba(255,255,255,.25), 0 0 120px rgba(255,231,0,.55); transform:scale(1.015) }
 }
-/* Cada premio fica visivel ~1s do ciclo de 11s (delay = i*1s da JS).
-   Janela: 0%-1% aparece, 1%-8% visivel, 8%-9% desaparece. */
-@keyframes raspPrizeIn{
-  0%       { opacity:0; transform:scale(.7); }
-  1%       { opacity:1; transform:scale(1); }
-  8%       { opacity:1; transform:scale(1.04); }
-  9%, 100% { opacity:0; transform:scale(1.1); }
-}
-.rasp-overlay{
+/* Slot = um premio com 3 fases. Cada slot dura 7s, slots se sucedem
+   via animation-delay. Total: N premios * 7s = ciclo completo. */
+/* Slot = um premio. JS adiciona .active no slot atual a cada 7s.
+   Quando NAO active, slot fica invisivel. Quando active, dispara
+   as 3 fases internas (suspense -> raspando -> reveal). */
+.rasp-slot{
   position:absolute; inset:0;
-  background:linear-gradient(135deg,#C0C0C0 0%,#9E9E9E 50%,#C0C0C0 100%);
-  display:flex; align-items:center; justify-content:center;
-  animation:raspOverlay 1s ease-in-out infinite;
+  opacity:0;
   pointer-events:none;
 }
-.rasp-overlay-text{
+.rasp-slot.active{
+  opacity:1;
+}
+/* As 3 fases internas — animacao reinicia quando .active e adicionado
+   (pelo restart do keyframes via :not(.active) -> .active transition).
+   Cada slot.active roda as 3 fases em sequencia dentro de 7s. */
+.rasp-phase{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:8px; padding:20px;
+  opacity:0;
+}
+.rasp-slot.active .rasp-phase-suspense{
+  animation:raspPhaseSuspense 7s ease-in-out 1 forwards;
+}
+.rasp-slot.active .rasp-phase-scratching{
+  animation:raspPhaseScratching 7s ease-in-out 1 forwards;
+}
+.rasp-slot.active .rasp-phase-reveal{
+  animation:raspPhaseReveal 7s ease-in-out 1 forwards;
+}
+
+/* SUSPENSE: 0-28% (≈2s do ciclo de 7s) */
+@keyframes raspPhaseSuspense{
+  0%, 28%       { opacity:1 }
+  29%, 100%     { opacity:0 }
+}
+/* SCRATCHING: 28-42% (≈1s) */
+@keyframes raspPhaseScratching{
+  0%, 27%       { opacity:0 }
+  28%, 42%      { opacity:1 }
+  43%, 100%     { opacity:0 }
+}
+/* REVEAL: 42-100% (≈4s) */
+@keyframes raspPhaseReveal{
+  0%, 41%       { opacity:0 }
+  42%           { opacity:0; transform:scale(.6) }
+  46%           { opacity:1; transform:scale(1.1) }
+  50%, 95%      { opacity:1; transform:scale(1) }
+  100%          { opacity:0; transform:scale(1.04) }
+}
+
+/* SUSPENSE — card prata */
+.rasp-silver{
+  position:absolute; inset:0;
+  background:linear-gradient(135deg,#D7D7D7 0%,#9E9E9E 50%,#D7D7D7 100%);
+  border-radius:20px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px;
+  overflow:hidden;
+}
+.rasp-silver-shine{
+  position:absolute; inset:0;
+  background:linear-gradient(110deg, transparent 0%, rgba(255,255,255,.55) 45%, rgba(255,255,255,.85) 50%, rgba(255,255,255,.55) 55%, transparent 100%);
+  background-size:200% 100%;
+  animation:raspShineMove 2.4s linear infinite;
+  pointer-events:none;
+}
+@keyframes raspShineMove{ 0%{background-position:200% 0} 100%{background-position:-100% 0} }
+.rasp-silver-text{
   font-family:'Baloo 2',cursive; font-weight:900;
-  font-size:clamp(16px, 2.6vmin, 26px);
-  color:#fff; letter-spacing:2px;
-  text-shadow:0 2px 6px rgba(0,0,0,.4);
-  animation:raspOverlayShake 1.2s ease-in-out infinite;
+  font-size:clamp(20px, 4vmin, 38px);
+  color:#fff; letter-spacing:3px;
+  text-shadow:0 3px 10px rgba(0,0,0,.5), 0 0 24px rgba(255,255,255,.4);
+  z-index:1;
+  animation:raspTextPulse 1.2s ease-in-out infinite;
 }
-@keyframes raspOverlay{
-  /* Loop 1s: cobre (0%) → raspa rapido (5%-15%) → revelado (15%-85%)
-     → volta cobrir (95%-100%) sincronizado com keyframe do premio. */
-  0%   { clip-path:inset(0 0 0 0); }
-  10%  { clip-path:inset(0 50% 0 0); }
-  15%  { clip-path:inset(0 100% 0 0); }
-  85%  { clip-path:inset(0 100% 0 0); }
-  95%  { clip-path:inset(0 50% 0 0); }
-  100% { clip-path:inset(0 0 0 0); }
+.rasp-silver-hint{
+  font-family:'Nunito',sans-serif; font-weight:800;
+  font-size:clamp(13px, 2vmin, 18px);
+  color:rgba(255,255,255,.92);
+  letter-spacing:2px; z-index:1;
 }
-@keyframes raspOverlayShake{
-  0%,100%{ transform:translate(0,0) }
-  25%   { transform:translate(-2px,1px) }
-  50%   { transform:translate(2px,-1px) }
-  75%   { transform:translate(-1px,2px) }
+@keyframes raspTextPulse{
+  0%,100%{ transform:scale(1) }
+  50%    { transform:scale(1.08) }
 }
-.rasp-caption{
-  font-size:clamp(11px, 1.6vmin, 16px); font-weight:800;
-  color:rgba(255,255,255,.85); letter-spacing:2px;
+
+/* SCRATCHING — fundo prata com partículas voando */
+.rasp-scratching-bg{
+  position:absolute; inset:0;
+  background:linear-gradient(135deg,rgba(215,215,215,.85) 0%,rgba(158,158,158,.3) 50%,rgba(215,215,215,.85) 100%);
+  border-radius:20px;
+  animation:raspScratchOut 1s linear forwards;
+}
+@keyframes raspScratchOut{
+  0%  { clip-path:inset(0 0 0 0); opacity:1 }
+  100%{ clip-path:inset(0 100% 0 0); opacity:.3 }
+}
+.rasp-spark{
+  position:absolute; left:50%; top:50%;
+  width:12px; height:4px;
+  background:linear-gradient(90deg,#FFE700,#FF9800);
+  border-radius:4px;
+  transform-origin:center;
+  animation:raspSparkFly 1s ease-out infinite;
+}
+@keyframes raspSparkFly{
+  0%  { opacity:1; transform:translate(-50%,-50%) rotate(var(--ang)) translateX(0) scale(.5) }
+  60% { opacity:1; transform:translate(-50%,-50%) rotate(var(--ang)) translateX(140px) scale(1) }
+  100%{ opacity:0; transform:translate(-50%,-50%) rotate(var(--ang)) translateX(220px) scale(.3) }
+}
+.rasp-scratching-text{
+  font-family:'Baloo 2',cursive; font-weight:900;
+  font-size:clamp(16px, 3vmin, 30px);
+  color:#FFE700;
+  text-shadow:0 0 18px rgba(255,231,0,.85), 0 3px 8px rgba(0,0,0,.5);
+  z-index:2;
+  letter-spacing:2px;
+}
+
+/* REVELACAO — premio GIGANTE com glow */
+.rasp-reveal-glow{
+  position:absolute; inset:-40px;
+  background:radial-gradient(circle, rgba(255,231,0,.45), rgba(255,107,53,.25) 35%, transparent 70%);
+  filter:blur(28px);
+  animation:raspRevealGlow 2s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes raspRevealGlow{
+  0%,100%{ opacity:.6; transform:scale(1) }
+  50%    { opacity:1; transform:scale(1.15) }
+}
+.rasp-reveal-emoji{
+  font-size:clamp(60px, 12vmin, 130px);
+  line-height:1;
+  filter:drop-shadow(0 12px 24px rgba(0,0,0,.4)) drop-shadow(0 0 18px rgba(255,231,0,.7));
+  z-index:1;
+  animation:raspRevealBounce .8s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes raspRevealBounce{
+  0%   { transform:scale(.5) rotate(-12deg); opacity:0 }
+  60%  { transform:scale(1.18) rotate(5deg); opacity:1 }
+  100% { transform:scale(1) rotate(0); opacity:1 }
+}
+.rasp-reveal-label{
+  font-family:'Baloo 2',cursive; font-weight:900;
+  font-size:clamp(16px, 3.4vmin, 32px);
+  color:#fff; text-align:center; line-height:1.1;
+  text-shadow:0 4px 14px rgba(0,0,0,.55), 0 0 18px rgba(255,231,0,.5);
+  z-index:1;
+  padding:0 20px;
+}
+.rasp-reveal-sub{
+  font-family:'Nunito',sans-serif; font-weight:700;
+  font-size:clamp(11px, 1.7vmin, 16px);
+  color:rgba(255,255,255,.95);
+  text-align:center; line-height:1.3;
+  z-index:1; padding:0 20px;
+  max-width:90%;
+}
+
+/* Notas discretas embaixo do card */
+.rasp-wallet-note{
+  font-family:'Nunito',sans-serif; font-weight:700;
+  font-size:clamp(11px, 1.6vmin, 14px);
+  color:rgba(255,255,255,.92);
+  text-shadow:0 2px 6px rgba(0,0,0,.3);
+  padding:6px 14px;
+  background:rgba(255,255,255,.12);
+  border-radius:100px;
+  backdrop-filter:blur(6px);
+}
+.rasp-wallet-note b{ color:#FFE700 }
+.rasp-min-rule{
+  font-family:'Nunito',sans-serif; font-weight:700;
+  font-size:clamp(10px, 1.3vmin, 12px);
+  color:rgba(255,255,255,.7);
+  letter-spacing:1px;
   text-transform:uppercase;
 }
+.rasp-min-rule b{ color:#FFE700; font-family:'Orbitron',monospace; font-weight:800 }
+
 /* No slide da raspadinha, escondemos o emoji default pra dar lugar ao card */
 .promo-slide-rasp .promo-emoji{ display:none; }
+/* Tambem escondemos headline/subtext vazios e damos espaco pro card */
+.promo-slide-rasp .promo-headline,
+.promo-slide-rasp .promo-subtext{ display:none }
+.promo-slide-rasp{
+  display:flex; flex-direction:column;
+  justify-content:center; gap:16px;
+}
 
 /* ===== HALL DA FAMA LIVE ===== */
 .promo-slide-hall .promo-emoji{ display:none; }
@@ -3285,10 +3441,10 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   // 1 segundo e entende DE PRIMEIRA. Cada slide diz: o que é, qual
   // a regra, o que faz. Sem firula.
   var SLIDES = [
-    { id:'raspadinha', emoji:'🎫', eyebrow:'🎫 RASPADINHA DA SORTE',
-      headline:'Toda compra acima de R$ 15 SAI com prêmio raspável.',
-      subtext:'😳 Não tem sorteio. Não tem cupom. É na hora.\n🎫 Sundae, casquinha, brinde, moeda… ou o lendário 50% off.\n🏆 Quem rasparia recebe o prêmio em 7 dias.',
-      cta:'🎫 Pega teu QR no caixa AGORA',
+    { id:'raspadinha', emoji:'🎁', eyebrow:'🎁 SUA RASPADINHA ESTÁ PRONTA',
+      headline:'',  // gerenciado pelo card gigante no centro
+      subtext:'',
+      cta:'🎁 Pega teu QR no caixa e raspa AGORA',
       // SEM QR no slide: o QR é UNICO e impresso na nota da compra.
       // Cada cliente recebe o SEU codigo individual ao pagar.
       qr: null,
@@ -3732,28 +3888,64 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     return weightDisplay + selos + rotativeHtml + liveSocial + fomo;
   }
 
+  // Estado do ciclo da raspadinha — JS rotaciona o slot ativo a cada 7s
+  var _raspSlotIdx = 0;
+  var _raspSlotTimer = null;
   function renderRaspadinhaDemo(){
-    // Demo cicla pelos 11 premios reais, cada um aparece por 900ms,
-    // com efeito de "raspa" revelando o premio. Total: ~11s
-    // (alinhado com s.dur=11000 do slide).
-    var demoHtml = '<div class="rasp-demo">' +
-      '<div class="rasp-card">' +
-        '<div class="rasp-card-inner" id="raspCardInner">' +
-          RASP_DEMO_PRIZES.map(function(p, i){
-            return '<div class="rasp-prize" style="animation-delay:'+ (i*0.9) +'s">' +
-                     '<div class="rasp-prize-emoji">'+ p.emoji +'</div>' +
-                     '<div class="rasp-prize-label">'+ p.label +'</div>' +
-                     '<div class="rasp-prize-sub">'+ p.sub +'</div>' +
-                   '</div>';
-          }).join('') +
-        '</div>' +
-        '<div class="rasp-overlay" id="raspOverlay">' +
-          '<div class="rasp-overlay-text">RASPA AQUI 👆</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="rasp-caption">Toda compra acima de R$ 15 ↑</div>' +
-    '</div>';
-    return demoHtml;
+    // Raspadinha GIGANTE com 3 fases por premio (JS controla ciclo):
+    //   FASE 1 (2s) "SUSPENSE"   — card prata pulsando "RASPA AQUI"
+    //   FASE 2 (1s) "RASPANDO"   — particulas voando + scan metalico
+    //   FASE 3 (4s) "REVELACAO"  — premio GIGANTE com nome + descricao
+    // JS troca slot ativo a cada 7s. Slide dura 30s ≈ 4 premios por exibicao.
+    if (_raspSlotTimer) { clearInterval(_raspSlotTimer); _raspSlotTimer = null; }
+    _raspSlotIdx = 0;
+
+    var slotsHtml = RASP_DEMO_PRIZES.map(function(p, i){
+      return '<div class="rasp-slot' + (i === 0 ? ' active' : '') + '" data-rasp-idx="' + i + '">' +
+               '<div class="rasp-phase rasp-phase-suspense">' +
+                 '<div class="rasp-silver">' +
+                   '<div class="rasp-silver-shine"></div>' +
+                   '<div class="rasp-silver-text">🎁 RASPA AQUI</div>' +
+                   '<div class="rasp-silver-hint">👆 o que será que veio?</div>' +
+                 '</div>' +
+               '</div>' +
+               '<div class="rasp-phase rasp-phase-scratching">' +
+                 '<div class="rasp-scratching-bg"></div>' +
+                 Array.from({length:10}).map(function(_,j){
+                   return '<span class="rasp-spark" style="--ang:'+(j*36)+'deg;animation-delay:'+(j*0.04)+'s"></span>';
+                 }).join('') +
+                 '<div class="rasp-scratching-text">✨ revelando…</div>' +
+               '</div>' +
+               '<div class="rasp-phase rasp-phase-reveal">' +
+                 '<div class="rasp-reveal-glow"></div>' +
+                 '<div class="rasp-reveal-emoji">'+ p.emoji +'</div>' +
+                 '<div class="rasp-reveal-label">'+ p.label +'</div>' +
+                 '<div class="rasp-reveal-sub">'+ p.sub +'</div>' +
+               '</div>' +
+             '</div>';
+    }).join('');
+
+    // Inicia rotacao depois do paint
+    setTimeout(function(){
+      _raspSlotTimer = setInterval(function(){
+        var slots = document.querySelectorAll('.promo-slide-rasp .rasp-slot');
+        if (!slots.length) { clearInterval(_raspSlotTimer); _raspSlotTimer = null; return; }
+        slots.forEach(function(s){ s.classList.remove('active'); });
+        _raspSlotIdx = (_raspSlotIdx + 1) % slots.length;
+        slots[_raspSlotIdx].classList.add('active');
+      }, 7000);
+    }, 100);
+
+    return '<div class="rasp-stage">' +
+             '<div class="rasp-particles" aria-hidden="true">' +
+               Array.from({length:18}).map(function(_,i){
+                 return '<span class="rasp-particle" style="animation-delay:'+(i*0.4)+'s;left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%"></span>';
+               }).join('') +
+             '</div>' +
+             '<div class="rasp-bigcard">' + slotsHtml + '</div>' +
+             '<div class="rasp-wallet-note">📲 Salvo no <b>MilkyClube</b> · usa na próxima compra · 7 dias</div>' +
+             '<div class="rasp-min-rule">Toda compra acima de <b>R$ 15</b> sai com 1 raspadinha</div>' +
+           '</div>';
   }
 
   function renderSlide(s){
