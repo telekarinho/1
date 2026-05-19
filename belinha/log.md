@@ -2,6 +2,48 @@
 
 ---
 
+## Ciclo #267 — 2026-05-19
+
+**Área:** Concorrentes — The Best Açaí: refresh pré-Namorados + flagship Gleba Palhano descoberta
+
+**Contexto:** TheBest mapeada em apenas 3 unidades em Londrina desde o ciclo #256. Busca atualizada revelou que o mapa estava incompleto: existe uma **flagship de 310m²** (maior da rede nacional) em Gleba Palhano que nunca havia sido documentada, além de 5 unidades adicionais no iFood Londrina. Total revisado: 8 unidades. Dia dos Namorados em 24 dias — momento crítico para intel completa.
+
+**O que pesquisou/analisou:**
+- WebSearch "The Best Açaí namorados junho 2026" → Piscininha confirmada como único veículo (sem campanha 12/06 separada)
+- WebSearch iFood Londrina TheBest → 5 listagens novas (Av. JK, Higienópolis, Arthur Thomas/Rodo, Aeroporto, Zona Norte 2)
+- WebSearch "maior loja Gleba Palhano Londrina 2026" → Rua Caracas 159, 310m², inaugurada set/2024, confirmada por TikTok @marceladegusta + Gazeta do Povo + ABC Comunicação
+- WebSearch JAH Açaí Londrina → sem unidade confirmada na cidade; concorrente apenas de mindshare nacional
+- WebSearch JAH Caio Castro namorados → ação Porsche/Interlagos confirmada (nacional, não local)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/the-best-acai.md` | Header atualizado + nova seção ciclo #267: 5 seções (~90 linhas): flagship Gleba Palhano, mapa 8 unidades Londrina, confirmação Piscininha único produto Namorados, update JAH/Caio Castro, síntese estratégica com tabela comparativa |
+
+**Principais achados:**
+1. **Flagship Gleba Palhano (310m², maior da rede)** — fora do radar desde o início. Inaugurada set/2024, zona premium, 100+ lugares. Compete por memória de marca no público A/B mas não por localização (distante do Muffato)
+2. **8 unidades iFood Londrina** (era 3): cobertura de delivery em toda a cidade. MilkyPot não pode competir em capilaridade — deve competir em personalização + canal próprio
+3. **Piscininha = único veículo Namorados da TheBest** — sem SKU de casal, sem campanha 12/06, "afeto no inverno" absorve a data. Janela aberta para MilkyPot ser o único com nome no produto para o casal
+4. **JAH Açaí sem unidade em Londrina** — concorrência apenas por desejo nas redes, não por pedido local
+5. **Copy-ouro identificada:** *"Você escreve o nome dela. A gente faz o potinho com esse nome."* — impossível de copiar em 24 dias por qualquer concorrente com self-service ou iFood
+
+**Commit:** (ver abaixo)
+
+**Próximo passo sugerido:**
+- **Ciclo #268 — UX:** Verificar se banner Namorados no site mobile <375px (corrigido no ciclo #264) ainda mostra copy genérica ou se absorveu algum dos insights de posicionamento "anti-self-service" / "você escreve o nome" — se genérica, atualizar com copy nova
+- **Ciclo #269 — Conteúdo:** Criar caption + hashtags para Reel de abertura do Dia dos Namorados (ao vivo 14h Sex 12/06) — roteiro no playbook, caption de legenda ainda não redigida
+- **Ciclo #270 — Conversão:** Com 8 unidades TheBest + iFood dominando delivery Londrina, criar argumento de "por que WA não iFood" para usar no atendimento (cliente que perguntar "mas tem no iFood?" ter uma resposta pronta que agrega valor, não apenas nega)
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador:** Salvar as 4 respostas rápidas do cenário Catuaí no WA Business (ciclo #266) — copiar de `dia-dos-namorados-2026-playbook.md` seção "Pico Catuaí"
+- **Operador (09/06):** Disparar N1 broadcast geral — template em `whatsapp-namorados-2026.md`
+- **Operador (10/06 18h):** Publicar sequência 3 stories "signo + potinho" — `story-signo-potinho-10jun.md`
+
+_Belinha — Ciclo #267 | 2026-05-19_
+
+---
+
 ## Ciclo #265 — 2026-05-19
 
 **Área:** Conteúdo — Story "signo + potinho" para 10–11/06 (trend astrologia sem citar JohnnyJoy)
