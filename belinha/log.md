@@ -2,6 +2,52 @@
 
 ---
 
+## Ciclo #272 — 2026-05-19
+
+**Área:** Conteúdo — Post feed IG interativo "qual a sua combinação?" (UGC seed Namorados)
+
+**Contexto:** O prescrito no ciclo #271 era criar o post feed IG de interação pré-Namorados para semear comentários/UGC que viram prova social no 12/06. Auditando o calendário editorial 14/05-02/06, identificou-se que 21/05 (Qui) é o único dia da janela 20-22/05 sem post de feed (só stories). O feed 20/05 já tem o Reel de educação de produto; o feed 22/05 já tem a linha Zero/Fit. O slot 21/05 às 18h30 é o ponto de entrada ideal: complementa os stories "Topping da semana" das 18h com fluxo stories→feed.
+
+**O que pesquisou/analisou:**
+- `calendario-editorial-14mai-02jun-2026.md` — confirmou gap de feed em 21/05 (só stories)
+- `dia-dos-namorados-2026-playbook.md` — cronograma de ativação; 04/06 é o primeiro dia com menção pública a Namorados
+- `ugc-duo-namorados-ativacao-12jun.md` — mecânica de recompensa já existente; precisava do post "semente" que justifica "banco de UGC recebidos antes"
+- `copy-final-namorados-2026.md` + `feed-05jun-resultado-enquete-countdown.md` — mapeamento de slots já ocupados (05/06 = Junina, 11/06 = véspera Namorados, 12/06 = Dia H)
+- Concluiu: post neutro (sem mencionar Namorados nem datas) para 21/05 planta semente 22 dias antes, alimenta banco de UGC e aquece algoritmo antes do Reel de 1 mês (25/05)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/feed-21mai-qual-combinacao-duo.md` | Criado (153 linhas). Post feed IG completo para 21/05 18h30: 2 opções de formato (imagem única ou carrossel), caption longa + variante curta, sinergia com stories 21/05, tabela de coleta de UGC pré-Namorados, checklist operacional, métricas esperadas, fluxo de integração 21/05 → 09/06 → 12/06 |
+
+**Detalhes do post:**
+1. **Gancho:** 3 nomes fictícios com combinações reais (cria identificação e demonstra variedade do cardápio)
+2. **Pergunta em 3 partes** (base → topping → calda): baixo esforço cognitivo = mais comentários
+3. **Incentivo sem desconto:** "os mais criativos aparecem nos stories" — conforme Constituição
+4. **Sinergia stories→feed:** sequência 18h stories "Topping da semana" → 18h30 feed "qual a sua combinação?" aumenta tráfego do post
+5. **Comentário-seed próprio:** "Eu começo: Ninho + morango + granola + Nutella 🐑" no próprio post para quebrar o gelo e acionar o algoritmo
+6. **Pipeline fechado:** comentários 21/05 → banco de UGC → D+30 addon Namorados (25/05) → seeds stories 09/06 → galeria UGC 12/06 21h
+
+**Por que gera valor concreto:**
+- 12/06 sem UGC real = posts frios. Com comentários reais de 3 semanas antes, o operador tem conteúdo para stories de encerramento
+- Comentários que mencionam "pra minha namorada/namorado/presentear" = leads Duo identificados antes do broadcast D+30 (25/05)
+- Post interativo 4 dias antes do Reel de 1 mês (25/05) aquece o algoritmo → maior alcance orgânico do Reel
+
+**Commit:** (ver abaixo)
+
+**Próximo passo sugerido:**
+- **Ciclo #273 — Concorrentes:** MilkyMoo — última análise foi ciclo #263 (8 ciclos atrás); verificar se collab "Como Treinar Dragão" / "Tempestade" ainda está ativa localmente em Londrina + campanha Namorados se existir (intel para posicionamento semana 10-12/06)
+- **Ciclo #274 — SEO:** Schema.org `aggregateRating` — verificar reviews Google Maps da unidade Muffato; se ≥3 reviews já existem, adicionar `aggregateRating` ao JSON-LD do `index.html` para desbloquear star rating nas SERPs
+- **Ciclo #275 — UX:** Verificar mobile do banner Namorados (veryNarrow <375px) — ciclo #268 resolveu cinema/Catuaí; verificar se a copy Duo MilkyPot também ficou adequada em telas pequenas
+- **Operador (CRÍTICO — D-6):** D+30 broadcast inicia **25/05 (seg)**. Usar `reativacao-d30-onda1-maio26.md` + `reativacao-d30-addon-namorados.md`. Marcar 💕 comentadores do post 21/05 que mencionaram presentear alguém → etiqueta `#aquecido-namorados` no WA Business ⚠️🔴
+- **Operador (URGENTE — D-15):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️🔴
+- **Operador (URGENTE — D-11):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+
+_Belinha — Ciclo #272 | 2026-05-19_
+
+---
+
 ## Ciclo #271 — 2026-05-19
 
 **Área:** Conversão — D+30 add-on Variante Namorados (dois-em-um)
