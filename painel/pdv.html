@@ -1748,6 +1748,13 @@
                 </label>
             </div>
 
+            <!-- v308: Banner pra impressao automatica -->
+            <div style="margin-top:20px;background:linear-gradient(135deg,#FFF8E1,#FFE082);border-radius:14px;padding:14px 16px;border:2px dashed #FFB300">
+                <div style="font-weight:800;color:#E65100;font-size:14px;margin-bottom:6px">⚡ Quer imprimir SEM clicar?</div>
+                <div style="font-size:12px;color:#5D4037;line-height:1.4;margin-bottom:10px">Configure o Chrome com a flag <code style="background:#fff;padding:2px 6px;border-radius:4px">--kiosk-printing</code> e o recibo sai direto na impressora ao fechar o pedido. Sem janela de impressão!</div>
+                <a href="/painel/configurar-impressao-automatica.html" target="_blank" style="display:inline-block;background:#FF6F00;color:#fff;padding:8px 16px;border-radius:30px;text-decoration:none;font-weight:800;font-size:12px">🚀 Ver tutorial passo a passo</a>
+            </div>
+
             <div style="margin-top:24px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                 <button class="buffet-btn" onclick="testPrinter()">📑 Imprimir Teste</button>
                 <button class="buffet-btn primary" onclick="closePrinterSettings()">Salvar e Fechar</button>
@@ -6660,18 +6667,34 @@
             t += '--------------------------------\n';
         }
 
-        // Bloco compacto Raspinha (código + QR + URL)
+        // Bloco compacto Raspinha (código GIGANTE + QR + URL curta + instruções)
+        // FIX (v308): URL curta milkypot.com/r?CODE — fácil de digitar manualmente.
+        // Antes a única opção era escanear QR ou digitar URL longa. Agora o user
+        // pode: 1) escanear QR (caso 99%), 2) digitar URL curta milkypot.com/r,
+        // 3) ir em milkypot.com/raspinha e colar o código.
         if(scratch && scratch.code){
             var displayCode = scratch.shortCode || scratch.code;
             t += '\n';
-            t += '🎰 RASPINHA DA SORTE\n';
-            t += 'Codigo: ' + displayCode + '\n';
+            t += '================================\n';
+            t += centerPad('🎰 RASPINHA DA SORTE', 32) + '\n';
+            t += '================================\n';
+            t += centerPad('SEU CODIGO:', 32) + '\n';
+            // Código GIGANTE — espaço entre cada caractere pra ficar bem grande
+            var bigCode = String(displayCode).split('').join(' ');
+            t += centerPad(bigCode, 32) + '\n';
+            t += '\n';
             t += '[QR_CODE_PLACEHOLDER]\n';
-            t += 'Raspe: milkypot.com/raspinha\n';
+            t += '\n';
+            t += centerPad('Aponte a camera no QR', 32) + '\n';
+            t += centerPad('Nao conseguiu escanear?', 32) + '\n';
+            t += centerPad('Digite na barra do navegador:', 32) + '\n';
+            t += centerPad('milkypot.com/r', 32) + '\n';
+            t += centerPad('e informe o codigo acima', 32) + '\n';
             if(scratch.expiresAt) {
-                t += 'Valido ate ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR') + '\n';
+                t += '\n';
+                t += centerPad('Validade: ' + new Date(scratch.expiresAt).toLocaleDateString('pt-BR'), 32) + '\n';
             }
-            t += '--------------------------------\n';
+            t += '================================\n';
         }
 
         // BLOCO PRODUCAO — nome cliente + receita por milkshake/sundae/açaí (cozinha conferir)
@@ -6840,22 +6863,27 @@
                 encodedInline = btoa(unescape(encodeURIComponent(JSON.stringify(inline))))
                     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
             } catch (e) { console.warn('[Raspinha] inline encode falhou:', e); }
-            var raspUrl = location.origin + '/raspinha.html?c=' + encodeURIComponent(scratchData.shortCode)
+            // QR URL ENXUTA: aponta pra /r?c=CODE — payload inline vai no fragment (#)
+            // que NAO entra na URL escaneada se o user digitar manualmente milkypot.com/r.
+            // O QR contem URL completa + inline data, mas a impressao mostra so
+            // milkypot.com/r + o codigo grande, super facil de digitar.
+            var qrPayloadUrl = location.origin + '/r.html?c=' + encodeURIComponent(scratchData.shortCode)
                 + (encodedInline ? '&d=' + encodedInline : '');
-            // Tamanho do QR adaptativo ao papel termico
-            var qrSizeMm = (cfg.width === '58mm') ? 50 : 56;
-            var qrApiSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=800x800&ecc=H&margin=4&data=' +
-                encodeURIComponent(raspUrl);
-            var raspUrlHtmlSafe = String(raspUrl)
+            // FALLBACK SHORT URL: se o user nao escanear, ele digita
+            // milkypot.com/r + codigo (pra digitar bem rapido). O r.html
+            // aceita ?CODE direto ou redirecionamento manual.
+            // Tamanho do QR adaptativo ao papel termico — agora MAIOR
+            // pra facilitar leitura: 60mm em 58mm paper, 70mm em 80mm
+            var qrSizeMm = (cfg.width === '58mm') ? 60 : 70;
+            var qrApiSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&ecc=H&margin=4&data=' +
+                encodeURIComponent(qrPayloadUrl);
+            var qrUrlHtmlSafe = String(qrPayloadUrl)
                 .replace(/&/g,'&amp;').replace(/"/g,'&quot;')
                 .replace(/</g,'&lt;').replace(/>/g,'&gt;');
             qrHtml = '<div style="text-align:center;margin:4mm 0">' +
-                '<img class="rcp-qr" data-url="' + raspUrlHtmlSafe + '" src="' + qrApiSrc + '" ' +
+                '<img class="rcp-qr" data-url="' + qrUrlHtmlSafe + '" src="' + qrApiSrc + '" ' +
                 'alt="QR Raspinha" style="width:' + qrSizeMm + 'mm;height:' + qrSizeMm + 'mm;' +
-                'background:#fff;padding:2mm;display:block;margin:0 auto">' +
-                '<div style="font-family:monospace;font-size:9px;text-align:center;margin-top:1mm">' +
-                  scratchData.shortCode +
-                '</div>' +
+                'background:#fff;padding:3mm;display:block;margin:0 auto;border:1px solid #000">' +
                 '</div>';
         }
 
@@ -6901,7 +6929,30 @@
             '</head><body>' +
             '<pre>' + parts[0].replace(/</g,'&lt;') + '</pre>' +
             (parts.length > 1 ? qrHtml + '<pre>' + parts.slice(1).join('').replace(/</g,'&lt;') + '</pre>' : '') +
-            '<' + 'script>window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},800)},700)}<\/script>' +
+            // IMPRESSAO AUTOMATICA SEM DIALOGO:
+            // - Espera as IMAGENS (QR) terminarem de carregar antes de chamar print()
+            //   (antes o setTimeout de 700ms as vezes disparava com QR ainda vazio)
+            // - Reduz delay total pra ~150ms apos load completo
+            // - Se Chrome estiver com flag --kiosk-printing, imprime SEM dialogo
+            //   (ver painel/configurar-impressao-automatica.html pra setup)
+            // - Sem flag: dialogo abre + ja com impressora selecionada (lembrada da ultima)
+            '<' + 'script>(function(){' +
+              'function doPrint(){setTimeout(function(){window.print();setTimeout(function(){window.close()},600)},150)}' +
+              'function waitImages(){' +
+                'var imgs=document.images;' +
+                'if(!imgs.length){doPrint();return}' +
+                'var pending=imgs.length;var done=false;' +
+                'function tick(){pending--;if(pending<=0&&!done){done=true;doPrint()}}' +
+                'for(var i=0;i<imgs.length;i++){' +
+                  'if(imgs[i].complete){tick()}' +
+                  'else{imgs[i].addEventListener("load",tick);imgs[i].addEventListener("error",tick)}' +
+                '}' +
+                // safety net: nao espera mais de 2s pelo QR
+                'setTimeout(function(){if(!done){done=true;doPrint()}},2000);' +
+              '}' +
+              'if(document.readyState==="complete"){waitImages()}' +
+              'else{window.addEventListener("load",waitImages)}' +
+            '})();<\/script>' +
             '</body></html>';
 
         w.document.write(html);

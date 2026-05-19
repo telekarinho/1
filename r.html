@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Raspinha MilkyPot</title>
+<meta name="theme-color" content="#6C63FF">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#E3F2FD 0%,#F0E0FF 40%,#FFF0C8 100%);min-height:100vh;color:#3D2A55;padding:24px;display:flex;align-items:center;justify-content:center}
+.box{background:#fff;border-radius:22px;padding:28px 22px;box-shadow:0 12px 38px rgba(108,99,255,.18);max-width:380px;width:100%;text-align:center}
+.logo{height:54px;margin-bottom:6px}
+h1{font-family:'Baloo 2',cursive;font-size:24px;font-weight:800;color:#5A4570;margin-bottom:6px}
+p{font-size:14px;color:#7E6A95;margin-bottom:18px;line-height:1.4}
+.code-input{width:100%;padding:14px 16px;border:2px solid #E3F2FD;border-radius:12px;font-family:monospace;font-size:22px;font-weight:800;text-align:center;text-transform:uppercase;letter-spacing:3px;outline:none;color:#3D2A55}
+.code-input:focus{border-color:#42A5F5}
+.btn{display:block;width:100%;padding:14px;background:linear-gradient(135deg,#FFD54F,#FF9800);color:#fff;border:0;border-radius:50px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Baloo 2',cursive;box-shadow:0 6px 20px rgba(255,152,0,.35);margin-top:14px;text-decoration:none;text-align:center}
+.btn:active{transform:scale(.97)}
+.loading{display:inline-block;width:32px;height:32px;border:4px solid #F0E0FF;border-top-color:#6C63FF;border-radius:50%;animation:spin .8s linear infinite;margin:14px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tip{font-size:11px;color:#9484A8;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="box">
+    <img class="logo" src="/images/logo-milkypot.png" alt="MilkyPot" onerror="this.style.display='none'">
+    <h1>🎰 Raspinha da Sorte</h1>
+    <div id="redirecting" style="display:none">
+        <p>Abrindo sua raspinha...</p>
+        <div class="loading"></div>
+    </div>
+    <div id="manualEntry">
+        <p>Digite o código que está no seu recibo:</p>
+        <input type="text" class="code-input" id="codeInput" placeholder="XXX-XXX" autocomplete="off" autocapitalize="characters" maxlength="12">
+        <button class="btn" onclick="go()">✨ Raspar agora</button>
+        <p class="tip">O código tem 6 ou 8 caracteres e está logo abaixo do QR no recibo.</p>
+    </div>
+</div>
+<script>
+(function(){
+    // Aceita TUDO: ?c=CODE, ?CODE, #CODE, /r/CODE (via 404.html fallback), location.pathname
+    var p = new URLSearchParams(location.search);
+    var code = p.get('c') || p.get('code');
+    if (!code && location.search && location.search.length > 1) {
+        // ?ABC-DEF — sem chave, só o valor
+        var raw = location.search.slice(1);
+        if (/^[A-Z0-9\-]{4,16}$/i.test(raw)) code = raw;
+    }
+    if (!code && location.hash) {
+        var h = location.hash.replace('#','');
+        if (/^[A-Z0-9\-]{4,16}$/i.test(h)) code = h;
+    }
+    if (!code) {
+        // Tenta path: /r/AB12CD
+        var seg = location.pathname.replace(/\/$/,'').split('/').pop();
+        if (seg && seg !== 'r' && seg !== 'r.html' && /^[A-Z0-9\-]{4,16}$/i.test(seg)) code = seg;
+    }
+    if (code) {
+        document.getElementById('redirecting').style.display = 'block';
+        document.getElementById('manualEntry').style.display = 'none';
+        location.replace('/raspinha.html?c=' + encodeURIComponent(code.toUpperCase()));
+    }
+    window.go = function(){
+        var c = document.getElementById('codeInput').value.trim().toUpperCase();
+        if (!c || c.length < 4) {
+            alert('Digite o código completo do seu recibo');
+            return;
+        }
+        location.href = '/raspinha.html?c=' + encodeURIComponent(c);
+    };
+    // Enter pressionado no input
+    var inp = document.getElementById('codeInput');
+    if (inp) {
+        inp.addEventListener('keydown', function(e){
+            if (e.key === 'Enter') go();
+        });
+        inp.focus();
+    }
+})();
+</script>
+</body>
+</html>

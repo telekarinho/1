@@ -167,7 +167,7 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
     </div>
 </div>
 
-<!-- Reveal Overlay -->
+<!-- Reveal Overlay — v308: card de compartilhamento bonito + propaganda + botoes funcionais -->
 <div class="reveal-overlay" id="revealOverlay">
     <div class="reveal-card">
         <div class="confetti" id="confetti"></div>
@@ -177,9 +177,44 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         <div class="reveal-desc" id="revealDesc"></div>
         <!-- Endcard MilkyPot — copy por tier (calibrado pelo agente Behavioral) -->
         <div id="revealEndcard" style="font-size:13px;color:#5A4570;margin:14px 0 18px;line-height:1.45;padding:12px;background:#F0F7FF;border-radius:10px;border:1px dashed #B8D8F8"></div>
+
+        <!-- CARD DE COMPARTILHAMENTO (propaganda) -->
+        <div id="shareCard" style="background:linear-gradient(135deg,#FFD54F 0%,#FF6B6B 50%,#6C63FF 100%);border-radius:16px;padding:18px;margin:8px 0 16px;color:#fff;position:relative;overflow:hidden">
+            <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.15);border-radius:50%"></div>
+            <div style="position:absolute;bottom:-30px;left:-30px;width:100px;height:100px;background:rgba(255,255,255,.1);border-radius:50%"></div>
+            <div style="position:relative;z-index:1">
+                <div style="font-size:11px;font-weight:800;letter-spacing:2px;opacity:.95;margin-bottom:4px">🍦 MILKYPOT</div>
+                <div style="font-family:'Baloo 2',cursive;font-size:18px;font-weight:800;line-height:1.15;margin-bottom:8px">Eu acabei de ganhar <span id="shareCardPrize">um prêmio</span> raspando a Raspinha da Sorte!</div>
+                <div style="font-size:13px;font-weight:600;opacity:.95;line-height:1.4">Bora você tirar a sua sorte também? 🎰<br>É grátis, é divertido — e tem prêmio toda hora!</div>
+                <div style="margin-top:10px;font-size:11px;font-weight:700;letter-spacing:1px">milkypot.com/raspinha · @milkypot</div>
+            </div>
+        </div>
+
+        <div style="text-align:center;font-size:12px;color:#7E6A95;margin-bottom:10px;font-weight:700">📲 Conta pra todo mundo:</div>
+
+        <!-- BOTOES DE COMPARTILHAR — 3 colunas mobile-friendly -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+            <button onclick="shareWhatsAppFull()" style="background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border:0;border-radius:14px;padding:14px 4px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(37,211,102,.35);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px">
+                <span style="font-size:22px">📲</span>
+                WhatsApp
+            </button>
+            <button onclick="shareInstagramStories()" style="background:linear-gradient(135deg,#F58529,#DD2A7B,#8134AF);color:#fff;border:0;border-radius:14px;padding:14px 4px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(221,42,123,.35);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px">
+                <span style="font-size:22px">📸</span>
+                Instagram
+            </button>
+            <button onclick="shareNative()" style="background:linear-gradient(135deg,#42A5F5,#6C63FF);color:#fff;border:0;border-radius:14px;padding:14px 4px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 4px 12px rgba(108,99,255,.35);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px">
+                <span style="font-size:22px">↗️</span>
+                Mais
+            </button>
+        </div>
+
+        <!-- COPIAR TEXTO PRONTO -->
+        <button onclick="copyShareText()" id="copyShareBtn" style="background:#fff;color:#6C63FF;border:2px solid #D4A5FF;border-radius:12px;padding:10px;width:100%;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;margin-bottom:10px">
+            📋 Copiar texto pronto pra colar
+        </button>
+
         <div class="reveal-actions">
-            <button class="btn gold" onclick="closeReveal()">Entendi, quero usar!</button>
-            <button class="btn secondary" onclick="shareInstagram()">📱 Postar no Instagram</button>
+            <button class="btn gold" onclick="closeReveal()">✨ Entendi, quero usar meu prêmio!</button>
         </div>
     </div>
 </div>
@@ -554,6 +589,11 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         if (endcardEl) {
             endcardEl.innerHTML = buildEndcard(tier, currentScratch.validityDays, tipo);
         }
+        // v308: popula o card de compartilhamento com o nome do premio
+        var sharePrizeEl = document.getElementById('shareCardPrize');
+        if (sharePrizeEl) {
+            sharePrizeEl.textContent = currentScratch.prizeName || 'um prêmio incrível';
+        }
         // Confetti
         var confetti = document.getElementById('confetti');
         confetti.innerHTML = '';
@@ -577,31 +617,164 @@ h1{font-family:'Baloo 2',cursive;font-size:32px;font-weight:800;color:#5A4570;te
         document.getElementById('actionArea').style.display = 'block';
     };
 
-    window.openInstagramShare = function(){
-        var text = 'Acabei de raspar minha Raspinha MilkyPot e ganhei: ' + currentScratch.prizeName + '! 🍨 @milkypot #RaspinhaMilkyPot';
-        if(navigator.share){
+    // ============================================
+    // v308: SISTEMA DE COMPARTILHAMENTO COMPLETO
+    // - WhatsApp com texto rico + URL pra outras pessoas rasparem
+    // - Instagram Stories deep-link (mobile abre stories direto)
+    // - Web Share API nativa (cobre TikTok, Twitter/X, Messenger, etc)
+    // - Copy-to-clipboard com toast feedback
+    // ============================================
+
+    function getShareCopy(){
+        // Copy padronizado com propaganda + chamada pra acao
+        var prizeName = (currentScratch && currentScratch.prizeName) || 'um prêmio incrível';
+        var storeName = (currentScratch && currentScratch.storeName) || 'MilkyPot';
+        return {
+            text: '🎰 Eu acabei de raspar a Raspinha da Sorte da MilkyPot e ganhei: *' + prizeName + '*! 🍦✨\n\n' +
+                  'Bora você tirar a sua sorte também? É grátis e tem prêmio toda hora!\n\n' +
+                  '👉 milkypot.com/raspinha\n' +
+                  '📍 ' + storeName + '\n' +
+                  '#RaspinhaMilkyPot #MilkyPot @milkypot',
+            url: 'https://milkypot.com/raspinha',
+            title: 'Raspinha da Sorte MilkyPot — Ganhei ' + prizeName + '!'
+        };
+    }
+
+    function toast(msg, ok){
+        var t = document.createElement('div');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);' +
+            'background:' + (ok === false ? '#C62828' : '#2E7D32') + ';color:#fff;' +
+            'padding:12px 22px;border-radius:30px;font-weight:800;z-index:9999;' +
+            'box-shadow:0 8px 24px rgba(0,0,0,.25);font-family:Nunito,sans-serif;font-size:14px';
+        document.body.appendChild(t);
+        setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity .3s'; }, 1600);
+        setTimeout(function(){ try { document.body.removeChild(t); } catch(e){} }, 2000);
+    }
+
+    // WhatsApp — abre app/web com texto pre-pronto
+    window.shareWhatsAppFull = function(){
+        var copy = getShareCopy();
+        var fullText = copy.text;
+        var url = 'https://wa.me/?text=' + encodeURIComponent(fullText);
+        window.open(url, '_blank');
+        // Tracking
+        try {
+            if (window.firebase && firebase.firestore) {
+                firebase.firestore().collection('scratch_shares').add({
+                    channel: 'whatsapp',
+                    scratchCode: currentScratch.code,
+                    franchiseId: currentScratch.franchiseId || 'muffato-quintino',
+                    timestamp: new Date().toISOString()
+                }).catch(function(){});
+            }
+        } catch(e){}
+    };
+
+    // Instagram Stories — copia texto e abre app
+    // (Instagram nao permite postar texto direto via URL scheme do navegador,
+    // entao copiamos o texto pra clipboard e instruimos o user a colar)
+    window.shareInstagramStories = function(){
+        var copy = getShareCopy();
+        try { navigator.clipboard.writeText(copy.text); } catch(e){}
+        toast('📋 Texto copiado! Abrindo Instagram...', true);
+        // No mobile, tenta abrir o app direto via deep link
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        setTimeout(function(){
+            if (isMobile) {
+                // Instagram stories camera (funciona se o app estiver instalado)
+                // Como fallback, abre o perfil @milkypot
+                window.location.href = 'instagram://story-camera';
+                setTimeout(function(){
+                    // Se o deep link falhou (app nao instalado), abre o perfil
+                    window.location.href = 'https://www.instagram.com/milkypot/';
+                }, 800);
+            } else {
+                // Desktop: abre o perfil
+                window.open('https://www.instagram.com/milkypot/', '_blank');
+            }
+        }, 600);
+        // Tracking
+        try {
+            if (window.firebase && firebase.firestore) {
+                firebase.firestore().collection('scratch_shares').add({
+                    channel: 'instagram',
+                    scratchCode: currentScratch.code,
+                    franchiseId: currentScratch.franchiseId || 'muffato-quintino',
+                    timestamp: new Date().toISOString()
+                }).catch(function(){});
+            }
+        } catch(e){}
+    };
+
+    // Web Share API nativa — cobre TikTok, Twitter, Messenger, Telegram, SMS, etc
+    window.shareNative = function(){
+        var copy = getShareCopy();
+        if (navigator.share) {
             navigator.share({
-                title:'Raspinha MilkyPot',
-                text:text,
-                url:location.origin + '/raspinha.html?code=' + currentScratch.code
-            }).catch(function(){});
+                title: copy.title,
+                text: copy.text,
+                url: copy.url
+            }).then(function(){
+                try {
+                    if (window.firebase && firebase.firestore) {
+                        firebase.firestore().collection('scratch_shares').add({
+                            channel: 'native',
+                            scratchCode: currentScratch.code,
+                            franchiseId: currentScratch.franchiseId || 'muffato-quintino',
+                            timestamp: new Date().toISOString()
+                        }).catch(function(){});
+                    }
+                } catch(e){}
+            }).catch(function(err){
+                if (err && err.name !== 'AbortError') {
+                    copyShareText();
+                }
+            });
         } else {
-            // Fallback: copy + open instagram
-            try { navigator.clipboard.writeText(text); } catch(e){}
-            alert('Texto copiado! Agora abra o Instagram e cole na sua story.');
-            location.href = 'https://www.instagram.com/milkypot/';
+            // Fallback: copia texto
+            copyShareText();
         }
     };
 
-    window.shareInstagram = window.openInstagramShare;
-
-    window.shareWhatsApp = function(){
-        var text = 'Olha o que ganhei na MilkyPot! 🍨 ' + currentScratch.prizeName +
-                   '\n\nAbra a raspinha aqui: ' + location.origin + '/raspinha.html?code=' + currentScratch.code +
-                   '\n\nManda tua raspinha tambem pra gente ir junto na loja!';
-        var url = 'https://wa.me/?text=' + encodeURIComponent(text);
-        window.open(url, '_blank');
+    // Copia texto pra clipboard
+    window.copyShareText = function(){
+        var copy = getShareCopy();
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(copy.text).then(function(){
+                var btn = document.getElementById('copyShareBtn');
+                if (btn) {
+                    var orig = btn.innerHTML;
+                    btn.innerHTML = '✅ Copiado! Agora cole onde quiser';
+                    btn.style.background = '#E8F5E9';
+                    btn.style.color = '#2E7D32';
+                    btn.style.borderColor = '#4CAF50';
+                    setTimeout(function(){
+                        btn.innerHTML = orig;
+                        btn.style.background = '#fff';
+                        btn.style.color = '#6C63FF';
+                        btn.style.borderColor = '#D4A5FF';
+                    }, 2200);
+                }
+            }).catch(function(){
+                // Fallback antigo
+                var ta = document.createElement('textarea');
+                ta.value = copy.text;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); toast('📋 Texto copiado!', true); }
+                catch(e){ toast('Não foi possível copiar', false); }
+                document.body.removeChild(ta);
+            });
+        } else {
+            toast('Selecione e copie o texto manualmente', false);
+        }
     };
+
+    // Aliases pra compatibilidade com codigo legado (botoes na pagina principal)
+    window.openInstagramShare = window.shareInstagramStories;
+    window.shareInstagram = window.shareInstagramStories;
+    window.shareWhatsApp = window.shareWhatsAppFull;
 
     window.goToMenu = function(){
         location.href = '/cardapio.html';

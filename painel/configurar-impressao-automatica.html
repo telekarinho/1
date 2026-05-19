@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Configurar Impressão Automática - MilkyPot</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/shared-panel.css">
+<style>
+body{font-family:'Nunito',sans-serif;background:#F8F5FF;color:#3D2A55;padding:24px}
+.wrap{max-width:780px;margin:0 auto}
+h1{font-family:'Baloo 2',cursive;font-size:28px;color:#5A4570;margin-bottom:6px}
+.sub{color:#7E6A95;margin-bottom:24px}
+.card{background:#fff;border-radius:18px;padding:22px 24px;box-shadow:0 8px 24px rgba(108,99,255,.10);margin-bottom:18px}
+.card h2{font-family:'Baloo 2',cursive;font-size:20px;color:#42A5F5;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.step{background:#F0F7FF;border-left:4px solid #42A5F5;padding:14px 18px;border-radius:8px;margin:12px 0}
+.step strong{color:#1565C0}
+code{background:#F5F0FF;color:#5A4570;padding:3px 8px;border-radius:6px;font-family:'Courier New',monospace;font-weight:700;font-size:14px;display:inline-block;margin:2px 0;word-break:break-all}
+.warn{background:#FFF3E0;border-left:4px solid #FF9800;padding:14px 18px;border-radius:8px;margin:12px 0;color:#BF360C}
+.warn strong{color:#E65100}
+.ok{background:#E8F5E9;border-left:4px solid #4CAF50;padding:14px 18px;border-radius:8px;margin:12px 0;color:#1B5E20}
+ol{padding-left:22px}
+ol li{margin:8px 0;line-height:1.5}
+.cmd{background:#1E1E3F;color:#FFD54F;padding:14px 18px;border-radius:10px;font-family:'Courier New',monospace;font-size:13px;white-space:pre-wrap;word-break:break-all;line-height:1.5;margin:10px 0}
+.btn-back{display:inline-block;padding:10px 20px;background:#fff;color:#6C63FF;border:2px solid #6C63FF;border-radius:50px;text-decoration:none;font-weight:800;margin-bottom:18px;font-family:'Baloo 2',cursive}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:8px 16px;background:#F0E0FF;color:#5A4570;border-radius:50px;cursor:pointer;font-weight:700;border:0;font-family:'Nunito',sans-serif}
+.tab.active{background:linear-gradient(135deg,#42A5F5,#6C63FF);color:#fff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.copy-btn{background:#FFD54F;color:#5A4570;border:0;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:12px;margin-left:8px;font-family:'Nunito',sans-serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+    <a href="/painel/pdv.html" class="btn-back">← Voltar ao PDV</a>
+    <h1>🖨️ Impressão Automática (sem clicar)</h1>
+    <p class="sub">Configure o Chrome do PDV para imprimir o recibo direto na impressora sem mostrar a janela de "Imprimir".</p>
+
+    <div class="warn">
+        <strong>⚡ Resultado:</strong> Depois desse setup, ao clicar em <strong>Fechar</strong> no PDV o recibo sai direto na impressora térmica — sem dialog, sem clique extra. A atendente não para o atendimento.
+    </div>
+
+    <div class="card">
+        <h2>📋 Passo 1: Definir a impressora térmica como padrão do Windows</h2>
+        <ol>
+            <li>Abra <strong>Configurações do Windows → Bluetooth e dispositivos → Impressoras e scanners</strong></li>
+            <li>Procure sua impressora térmica (ex.: <code>Elgin i9</code>, <code>Bematech MP-4200</code>, <code>Epson TM-T20</code>)</li>
+            <li>Clique nela → <strong>Definir como impressora padrão</strong></li>
+            <li>Imprima uma <strong>página de teste</strong> pra confirmar que tá imprimindo certo</li>
+        </ol>
+        <div class="ok"><strong>✅ Importante:</strong> Desmarque a opção "Permitir que o Windows gerencie minha impressora padrão" no Windows 11, senão ele troca sozinho.</div>
+    </div>
+
+    <div class="card">
+        <h2>🚀 Passo 2: Abrir o Chrome com a flag <code>--kiosk-printing</code></h2>
+        <p>Essa flag faz o Chrome imprimir <strong>silenciosamente</strong> na impressora padrão sem mostrar janela.</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('win')">🪟 Windows</button>
+            <button class="tab" onclick="showTab('mac')">🍎 macOS</button>
+            <button class="tab" onclick="showTab('linux')">🐧 Linux</button>
+        </div>
+
+        <div id="win" class="tab-content active">
+            <p><strong>2.1.</strong> Clique com o botão direito no atalho do Chrome (área de trabalho ou barra de tarefas) → <strong>Propriedades</strong></p>
+            <p><strong>2.2.</strong> No campo <strong>Destino</strong>, adicione <code>--kiosk-printing</code> no final (depois das aspas e com um espaço):</p>
+            <div class="cmd">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing</div>
+            <button class="copy-btn" onclick="copy('&quot;C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe&quot; --kiosk-printing')">📋 Copiar</button>
+            <p style="margin-top:14px"><strong>2.3.</strong> Clique em <strong>Aplicar</strong> → <strong>OK</strong></p>
+            <p><strong>2.4.</strong> Feche TODAS as janelas do Chrome abertas (importante!)</p>
+            <p><strong>2.5.</strong> Abra o Chrome pelo atalho modificado</p>
+
+            <div class="warn"><strong>💡 Dica:</strong> Crie um atalho dedicado <strong>"MilkyPot PDV"</strong> que já abre direto em <code>milkypot.com/painel/pdv.html</code>:</div>
+            <div class="cmd">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing --app=https://milkypot.com/painel/pdv.html</div>
+            <button class="copy-btn" onclick="copy('&quot;C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe&quot; --kiosk-printing --app=https://milkypot.com/painel/pdv.html')">📋 Copiar</button>
+        </div>
+
+        <div id="mac" class="tab-content">
+            <p>No Terminal:</p>
+            <div class="cmd">open -a "Google Chrome" --args --kiosk-printing</div>
+            <button class="copy-btn" onclick="copy('open -a &quot;Google Chrome&quot; --args --kiosk-printing')">📋 Copiar</button>
+            <p style="margin-top:14px">Pra criar um atalho permanente, salve isso como <code>milkypot-pdv.command</code> e dê permissão de execução:</p>
+            <div class="cmd">#!/bin/bash
+open -a "Google Chrome" --args --kiosk-printing --app=https://milkypot.com/painel/pdv.html</div>
+        </div>
+
+        <div id="linux" class="tab-content">
+            <div class="cmd">google-chrome --kiosk-printing --app=https://milkypot.com/painel/pdv.html</div>
+            <button class="copy-btn" onclick="copy('google-chrome --kiosk-printing --app=https://milkypot.com/painel/pdv.html')">📋 Copiar</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🧪 Passo 3: Testar</h2>
+        <ol>
+            <li>Abra o PDV pelo atalho modificado</li>
+            <li>Faça uma venda de teste (R$ 1,00 por exemplo)</li>
+            <li>Clique em <strong>Fechar Pedido</strong></li>
+            <li>O recibo deve sair direto na impressora <strong>sem mostrar a janela "Imprimir"</strong> 🎉</li>
+        </ol>
+        <div class="ok">
+            <strong>✅ Funcionou?</strong> Pronto, agora toda venda imprime automaticamente. A atendente só precisa clicar em "Fechar Pedido" uma vez.
+        </div>
+        <div class="warn">
+            <strong>❌ Não funcionou?</strong> Verifique:
+            <ul style="margin-top:8px;padding-left:20px">
+                <li>Você fechou TODAS as janelas do Chrome antes de reabrir?</li>
+                <li>A flag tá no destino do atalho (não no Chrome aberto)?</li>
+                <li>Impressora térmica tá definida como padrão do Windows?</li>
+                <li>Bloqueador de popup do Chrome permite milkypot.com?</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🛡️ Passo 4 (opcional): Modo Kiosk Completo</h2>
+        <p>Pra deixar o PDV em <strong>tela cheia sem bordas do Chrome</strong> (parece um caixa de verdade):</p>
+        <div class="cmd">"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing https://milkypot.com/painel/pdv.html</div>
+        <button class="copy-btn" onclick="copy('&quot;C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe&quot; --kiosk --kiosk-printing https://milkypot.com/painel/pdv.html')">📋 Copiar</button>
+        <p style="margin-top:10px">Pra sair do modo kiosk: <code>Alt+F4</code> ou <code>Ctrl+W</code></p>
+    </div>
+
+    <div class="card">
+        <h2>❓ FAQ</h2>
+        <p style="margin:10px 0"><strong>Posso usar Edge / Firefox?</strong></p>
+        <p>Edge funciona igual ao Chrome: <code>msedge.exe --kiosk-printing</code>. Firefox não suporta impressão silenciosa via flag — fica no Chrome ou Edge.</p>
+        <p style="margin:14px 0 6px"><strong>Funciona com qualquer impressora?</strong></p>
+        <p>Sim, qualquer impressora reconhecida pelo Windows. Térmica USB (Elgin, Bematech, Epson, Daruma) ou rede.</p>
+        <p style="margin:14px 0 6px"><strong>E se eu tiver 2 impressoras (balcão + cozinha)?</strong></p>
+        <p>Por enquanto sai tudo na impressora padrão. Pra ter impressora dedicada da cozinha, precisamos integrar via servidor de impressão (Print Server) — abre um chamado pra Belinha.</p>
+    </div>
+</div>
+
+<script>
+function showTab(id){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(id).classList.add('active');
+}
+function copy(text){
+    navigator.clipboard.writeText(text).then(()=>{
+        var b=event.target;var orig=b.textContent;
+        b.textContent='✅ Copiado!';
+        setTimeout(()=>{b.textContent=orig},1400);
+    });
+}
+</script>
+</body>
+</html>
