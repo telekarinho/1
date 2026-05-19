@@ -2881,20 +2881,55 @@ function showLockoutModal(){
     document.body.insertAdjacentHTML('beforeend', html);
 }
 
-/* Auto-return to attract after 60s inactivity */
+/* Auto-return to attract after inactivity.
+   FIX TV: em modo TV (loja), tambem volta de stepDiff/step1/step2 — sem isso
+   um voucher liberado pelo PDV que ninguem joga deixava a tela travada.
+   Mobile mantem comportamento original (so step0/step3) pra nao interromper
+   o jogador que esta lendo regras ou escolhendo. */
 var idleTimer;
+var IDLE_MS_TV = 75000;       /* 75s em TV — tempo de ler regras + escolher dificuldade */
+var IDLE_MS_MOBILE = 60000;
 function resetIdle(){
 clearTimeout(idleTimer);
+var ms = isStoreTvMode ? IDLE_MS_TV : IDLE_MS_MOBILE;
 idleTimer=setTimeout(function(){
-if(document.getElementById('step0').classList.contains('active')||document.getElementById('step3').classList.contains('active')){
+var s0 = document.getElementById('step0');
+var s3 = document.getElementById('step3');
+var sDiff = document.getElementById('stepDiff');
+var s1 = document.getElementById('step1');
+var s2 = document.getElementById('step2');
+var shouldReturn;
+if (isStoreTvMode) {
+  /* TV: qualquer step != attract que esta parado por 75s volta pro attract */
+  shouldReturn = (s0&&s0.classList.contains('active'))
+              || (s3&&s3.classList.contains('active'))
+              || (sDiff&&sDiff.classList.contains('active'))
+              || (s1&&s1.classList.contains('active'))
+              || (s2&&s2.classList.contains('active'));
+} else {
+  shouldReturn = (s0&&s0.classList.contains('active'))
+              || (s3&&s3.classList.contains('active'));
+}
+if(shouldReturn){
 document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active')});
 document.getElementById('stepAttract').classList.add('active');
-startAttract();
+if(typeof startAttract==='function') startAttract();
+if(isStoreTvMode){
+  /* Limpa estado de voucher pra TV aceitar proximo cliente do PDV */
+  if(typeof activeVoucher!=='undefined'){activeVoucher=null;activeVoucherCode=null}
+  if(typeof setTvReleaseStatus==='function') setTvReleaseStatus('Aguardando liberacao do PDV...');
+  var vs=document.getElementById('voucherStatus'); if(vs)vs.style.display='none';
 }
-},60000);
+}
+},ms);
 }
 document.addEventListener('click',resetIdle);
 document.addEventListener('touchstart',resetIdle);
+/* TV: inicia o idle timer no LOAD pra cobrir caso o voucher chegue sem
+   interacao humana (cliente nao chega na frente da TV). */
+if (typeof isStoreTvMode !== 'undefined' && isStoreTvMode) {
+  resetIdle();
+}
 
 /* Fullscreen on first touch */
 document.addEventListener('click',function fs(){
