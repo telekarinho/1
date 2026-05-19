@@ -919,30 +919,89 @@ module.exports = async (req, res) => {
     const isMediaMarker = /^\[(sticker|image|imagem|figurinha|audio|áudio|voice|video|vídeo|location|localização|document|documento|contact|contato|gif|reaction|rea[cç][aã]o|mensagem n[aã]o suportada|unsupported message)\]$/i.test(textTrim);
     if (isMediaMarker) {
         const lower = textTrim.toLowerCase();
+        // Conta quantas mídias o cliente já mandou em sequência (3 últimas msgs)
+        const recentUserMsgs = (history.messages || []).filter(m => m.role === "user").slice(-4);
+        const recentMediaCount = recentUserMsgs.filter(m =>
+            /^\[(sticker|image|imagem|figurinha|audio|áudio|voice|video|vídeo|location|document|contact|gif|reaction|rea[cç][aã]o|mensagem n[aã]o suportada)\]$/i.test((m.text || "").trim())
+        ).length;
+        const repeatedMedia = recentMediaCount >= 2; // já mandou outras antes
+
+        // Nome do cliente se conhecido (resposta mais pessoal)
+        let nomeVoc = "";
+        try {
+            const customer = await Customers.getCustomer(accountId, phoneClean);
+            if (customer?.name) nomeVoc = customer.name;
+        } catch (e) {}
+
+        // Variações pra não ficar mecânico em msgs repetidas
+        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+        const heyName = nomeVoc ? `${nomeVoc}, ` : "";
+
         let mediaReply;
         if (/sticker|figurinha/.test(lower)) {
-            mediaReply = "Aaai amei a figurinha! 🐑💜✨\nMe conta o que vai ser hoje? 🍨";
+            mediaReply = repeatedMedia
+                ? pick([
+                    `Hahaha ${heyName}adorei essas figurinhas! 😂💜\nMas me conta em palavrinhas o que tu tá querendo hoje? 🍨🐑`,
+                    `${heyName}as figurinhas tão demais, mas pra te ajudar direitinho me escreve em texto o que precisa 💜✨`
+                  ])
+                : pick([
+                    `Aaai amei a figurinha! 🐑💜✨\nMe conta o que vai ser hoje? 🍨`,
+                    `Eba, figurinha fofa! 💜\nO que ${heyName}tu tá pensando em pedir? 🍨🐑`
+                  ]);
         } else if (/audio|áudio|voice/.test(lower)) {
-            mediaReply = "Oi querida(o)! 💜🐑 Tô surda agorinha (tô com fone ruim) — manda por escrito que eu te ajudo na hora ✨";
+            mediaReply = repeatedMedia
+                ? pick([
+                    `${heyName}me desculpa de novo, mas hoje meu ouvido tá péssimo 😅\nManda em texto pra mim que eu te respondo na hora 💜🐑`,
+                    `Aaai ${heyName}tô tendo dificuldade com áudio agora 💜 escreve aí pra mim que eu cuido pra você ✨`
+                  ])
+                : pick([
+                    `${heyName}desculpa, hoje tô sem fone bom aqui 😅\nManda por texto que eu te ajudo na hora 💜🐑`,
+                    `Oi ${heyName}meu áudio tá meio ruim hoje 💜 me escreve em palavras o que precisa? ✨`
+                  ]);
         } else if (/image|imagem|gif/.test(lower)) {
-            mediaReply = "Recebi a foto amorzinho! 📸💜\nMe conta em palavras o que você quer pedir? 🍨🐑";
+            mediaReply = repeatedMedia
+                ? pick([
+                    `${heyName}vi essas fotos, mas pra eu te ajudar direito me explica em texto o que tu quer? 📸💜`,
+                    `Recebi as fotos 📸 mas me conta em palavras o que tá precisando que aí cuido direitinho 💜🐑`
+                  ])
+                : pick([
+                    `Recebi a foto! 📸💜\nMe conta em palavras o que ${heyName}tu tá pensando em pedir? 🍨🐑`,
+                    `${heyName}adorei a foto! 📸✨ Agora me explica em texto o que precisa? 💜`
+                  ]);
         } else if (/video|vídeo/.test(lower)) {
-            mediaReply = "Vi o vídeo! 🎥💜\nMe escreve o que precisa que eu cuido pra você 🐑✨";
+            mediaReply = pick([
+                `Vi o vídeo! 🎥💜\n${heyName}me escreve o que tá precisando que eu cuido pra você 🐑✨`,
+                `${heyName}assisti o vídeo 🎥 mas explica em palavras pra eu te ajudar direitinho 💜`
+            ]);
         } else if (/location|localização/.test(lower)) {
-            mediaReply = "Recebi sua localização! 📍💜\nÉ pra delivery? Me conta o que vai querer e eu já calculo a entrega 🛵🐑";
+            mediaReply = `Recebi sua localização! 📍💜\nÉ pra delivery, ${heyName}? Me conta o que vai querer e eu já calculo a entrega pra esse endereço 🛵🐑`;
         } else if (/document|documento/.test(lower)) {
-            mediaReply = "Recebi o documento amorzinho! 📄💜\nMe diz em palavras como posso te ajudar? 🐑";
+            mediaReply = `Recebi o documento! 📄💜\n${heyName}me diz em palavras como posso te ajudar? 🐑`;
         } else if (/contact|contato/.test(lower)) {
-            mediaReply = "Recebi o contato! 📇💜\nMe conta o que precisa que eu cuido 🐑✨";
+            mediaReply = `Recebi o contato! 📇💜\n${heyName}me conta o que precisa que eu cuido 🐑✨`;
         } else if (/reaction|rea[cç][aã]o/.test(lower)) {
-            mediaReply = "Aii amei a reação! 💜🐑✨"; // não conta como necessidade de resposta de pedido
+            // Reação não exige resposta de pedido — só simpática
+            mediaReply = pick([
+                `Aii ${heyName}amei a reação! 💜🐑✨`,
+                `❤️ Obrigada ${heyName}!`,
+                `Tu é fofa(o) ${heyName}😊💜`
+            ]);
         } else {
-            // [mensagem não suportada] / [unsupported message] / outros
-            mediaReply = "Oi querida(o)! 💜🐑 Não consegui abrir essa mensagem aqui — manda por texto ou foto que eu te ajudo na hora ✨";
+            // [mensagem não suportada] / [unsupported message]
+            // Tom acolhedor pedindo desculpa pelo problema técnico
+            mediaReply = repeatedMedia
+                ? pick([
+                    `${heyName}desculpa mesmo, não tô conseguindo abrir essas mensagens aqui 😔💜\nTenta mandar em texto que aí eu te respondo certinho?`,
+                    `Aaai ${heyName}me perdoa, tá com algum probleminha aqui e essas mensagens não chegam direito pra mim 💜\nManda em texto pra eu cuidar de tudo direitinho ✨`
+                  ])
+                : pick([
+                    `${heyName}não consegui abrir essa mensagem aqui 💜🐑\nManda por texto que eu te ajudo na hora ✨`,
+                    `Oi ${heyName}! 💜 Essa mensagem não chegou direito pra mim — me escreve aí o que precisa? 🐑✨`
+                  ]);
         }
-        console.log(`[whatsapp-webhook] media marker detected: ${textTrim} → canned reply`);
+        console.log(`[whatsapp-webhook] media marker: ${textTrim} → reply variável (repeated=${repeatedMedia})`);
         await saveMessageToFirestore(phoneClean, customerName, "bot", mediaReply, { accountId });
-        res.status(200).json({ reply: mediaReply, source: "media_marker", marker: textTrim });
+        res.status(200).json({ reply: mediaReply, source: "media_marker", marker: textTrim, repeated: repeatedMedia });
         return;
     }
 
