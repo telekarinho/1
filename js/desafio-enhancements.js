@@ -377,6 +377,82 @@ function watchHallSlide() {
 }
 
 // ============================================================
+// 4d. PROVA SOCIAL AO VIVO no slide 300g — tentativas hoje + campeoes
+// ============================================================
+// Fonte primaria: datastore/challenge_300g_winners_{fid} (cron-ig-stories
+// vai popular quando rolar). Fallback: placeholder motivacional.
+function fetchAcerta300LiveStats() {
+  return new Promise(function(resolve) {
+    var out = { tentativas: 0, vencedores: 0, winners: [] };
+    try {
+      if (typeof firebase === 'undefined' || !firebase.firestore) return resolve(out);
+      var db = firebase.firestore();
+      var fid = getFranchiseId();
+      // 1. tenta doc agregado challenge_300g_winners_{fid}
+      db.collection('datastore').doc('challenge_300g_winners_' + fid).get()
+        .then(function(doc) {
+          if (doc.exists) {
+            var raw = doc.data().value || '{}';
+            try {
+              var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+              if (Array.isArray(parsed.winners)) {
+                out.winners = parsed.winners.slice(0, 5).map(function(w){ return { name: w.name || 'Cliente', weight: w.weight || '300g' }; });
+                out.vencedores = parsed.winners.length;
+              }
+              if (typeof parsed.tentativasHoje === 'number') out.tentativas = parsed.tentativasHoje;
+            } catch(e) {}
+          }
+          resolve(out);
+        })
+        .catch(function() { resolve(out); });
+    } catch(e) { resolve(out); }
+  });
+}
+MPx.fetchAcerta300LiveStats = fetchAcerta300LiveStats;
+
+function injectAcerta300LiveSocial() {
+  try {
+    var ph = document.querySelector('[data-mpx-300g-live="1"]');
+    if (!ph || ph.dataset.mpxFilled) return;
+    fetchAcerta300LiveStats().then(function(s) {
+      var p2 = document.querySelector('[data-mpx-300g-live="1"]');
+      if (!p2 || p2.dataset.mpxFilled) return;
+      var hasWinners = s.winners && s.winners.length > 0;
+      var tentativasTxt = s.tentativas > 0 ? s.tentativas : '—';
+      var vencedoresTxt = s.vencedores > 0 ? s.vencedores : (hasWinners ? s.winners.length : '—');
+      var winnersHtml = hasWinners
+        ? '<div class="mp-300g-live-winners">' +
+          s.winners.map(function(w){ return '<span>🏆 ' + escapeHTML(w.name) + ' — ' + escapeHTML(w.weight) + '</span>'; }).join('') +
+          '</div>'
+        : '<div class="mp-300g-live-winners"><span>🐑 Seja o primeiro lendário de hoje</span></div>';
+      var html =
+        '<div class="mp-300g-live-card">' +
+          '<h4>🔥 Hoje no Muffato Quintino</h4>' +
+          '<div class="mp-300g-live-row">' +
+            '<div class="mp-300g-live-stat">👀 Tentativas<b>' + tentativasTxt + '</b></div>' +
+            '<div class="mp-300g-live-stat">🏆 Vencedores<b>' + vencedoresTxt + '</b></div>' +
+            '<div class="mp-300g-live-stat">⚖️ Peso alvo<b>300g</b></div>' +
+          '</div>' +
+          winnersHtml +
+        '</div>';
+      p2.innerHTML = html;
+      p2.dataset.mpxFilled = '1';
+    });
+  } catch (e) { warn(e); }
+}
+MPx.injectAcerta300LiveSocial = injectAcerta300LiveSocial;
+
+function watchAcerta300Slide() {
+  try {
+    var mo = new MutationObserver(function() {
+      if (document.querySelector('.promo-slide-300g')) injectAcerta300LiveSocial();
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+    setTimeout(injectAcerta300LiveSocial, 1500);
+  } catch(e) { warn(e); }
+}
+
+// ============================================================
 // 5. HERO HINTS — injeta no stepAttract
 // ============================================================
 function renderHintsStrip(stats) {
@@ -561,6 +637,7 @@ function init() {
     startCounterWatcher();
     rotateHeroTagline();
     watchHallSlide();
+    watchAcerta300Slide();
 
     // hints iniciais (placeholder estatico) + carrega stats reais async
     renderHintsStrip(STATS_CACHE);
