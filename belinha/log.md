@@ -2,6 +2,52 @@
 
 ---
 
+## Ciclo #268 — 2026-05-19
+
+**Área:** UX — Banner `veryNarrow` <375px semana 10–12/06 com ângulo cinema+Catuaí
+
+**Contexto:** Prescrito nos ciclos #266 e #267. As 3 fases Namorados do banner dinâmico (`index.html`) tinham `veryNarrow` implementado desde o ciclo #264, mas com cópias genéricas (keyword + CTA) para a janela crítica 03/06–12/06. Os ângulos diferenciadores descobertos nos ciclos #262 (contra-posicionamento cinema: "Sem prato dividido. Do jeito de vocês.") e #266 (cenário Catuaí: cliente comparando JohnnyJoy vs MilkyPot em tempo real no shopping, janela de decisão <3 min) nunca tinham sido incorporados ao banner mobile. Em Android de entrada (Motorola G, Samsung A-series = 360–374px), o banner é frequentemente o primeiro elemento visual acima da dobra — copy genérico desperdiça o único ponto de contato diferenciado nessa resolução.
+
+**O que analisou:**
+- Leu `index.html` linhas 540–580: mapeou as 4 fases Namorados e os 3 ternários `veryNarrow ? … : narrow ? … : full`
+- Confirmou que as 3 fases da janela 03/06–12/06 usavam copy genérico:
+  - 03–10/06: `"12/06 · Mande NAMORADOS26"` — nenhum diferencial
+  - 11/06 (véspera): `"AMANHÃ! · Mande NAMORADOS26"` — urgência sem ângulo
+  - 12/06 (dia-H): `"NAMORADOS! · Duo · Delivery"` — feature sem posicionamento
+- Verificou que os ângulos dos ciclos #262 e #266 não estavam em nenhuma cópia `veryNarrow`
+- Confirmou que as cópias `narrow` e `full` (telas maiores) continuam intactas — mudança cirúrgica só no breakpoint crítico
+
+**O que mudou:**
+
+| Arquivo | Linha | Antes | Depois |
+|---------|-------|-------|--------|
+| `index.html` | 544 | `Duo · Delivery` | `Sem dividir · Delivery` |
+| `index.html` | 550 | `AMANHÃ! · Mande NAMORADOS26` | `AMANHÃ! · Sem fila · Delivery pra dois` |
+| `index.html` | 557 | `12/06 · Mande NAMORADOS26` | `12/06 · Potinho pra dois · sem dividir` |
+| `sw.js` | 1–2 | `mp-v8 / milkypot-v8` | `mp-v9 / milkypot-v9` |
+
+**Lógica das cópias novas:**
+- **"Sem dividir"** (12/06 e teaser 03–10/06) — ângulo anti-prato-compartilhado/anti-cinema: cada pessoa tem o próprio potinho com seus toppings. Memória do dia vs refeição genérica dividida.
+- **"Sem fila · Delivery pra dois"** (11/06) — ângulo Catuaí: cliente que está no shopping ou comparando JohnnyJoy captura a vantagem delivery em <375px sem texto longo. Sem fila = anti-quiosque/anti-cinema.
+- Todas dentro das regras da Constituição: sem mencionar R$, desconto, cashback.
+
+**Commit:** `4d20939`
+
+**Próximo passo sugerido:**
+- **Ciclo #269 — Conteúdo:** Criar caption + hashtags para Reel de abertura do Dia dos Namorados (ao vivo 14h Sex 12/06) — roteiro existe no playbook mas caption de legenda ainda não redigida. Com 24 dias, é a última janela para criar esse ativo sem correria.
+- **Ciclo #270 — Concorrentes:** MilkyMoo — última pesquisa foi ciclo #262 (6 ciclos atrás). Confirmar se a campanha do produto "Tempestade" (licença Universal Pictures) tem push na semana 10-12/06 em Londrina — se sim, impacta a decisão de publicar o story anti-cinema.
+- **Ciclo #271 — Conversão:** Auditar o fluxo WhatsApp pós-NAMORADOS26: quando cliente manda o keyword e recebe a resposta automática, o próximo passo (montar o Duo) está claro? Verificar se o script de atendimento cobre o handoff automação → humano.
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador:** Salvar respostas rápidas "Sem fila / Catuaí" no WA Business — copiar de `dia-dos-namorados-2026-playbook.md` seção "Pico Catuaí"
+- **Operador (Seg 10/06 · 18h):** Publicar sequência 3 stories "signo + potinho" — `story-signo-potinho-10jun.md`
+- **Operador (Ter 11/06 · 20h30):** Publicar stories anti-prato-compartilhado — `story-11jun-anti-prato-compartilhado.md`
+- **Operador (09/06):** Disparar N1 broadcast geral — template em `whatsapp-namorados-2026.md`
+
+_Belinha — Ciclo #268 | 2026-05-19_
+
+---
+
 ## Ciclo #267 — 2026-05-19
 
 **Área:** Concorrentes — The Best Açaí: refresh pré-Namorados + flagship Gleba Palhano descoberta
