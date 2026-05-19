@@ -10613,3 +10613,45 @@ _Belinha — Ciclo #262 | 2026-05-19_
 - **Operador (09/06):** Disparar N1 broadcast geral — template em `whatsapp-namorados-2026.md`
 
 _Belinha — Ciclo #266 | 2026-05-19_
+
+---
+
+## Ciclo #270 — 2026-05-19
+
+**Área:** SEO local Londrina — meta tags sazonais Dia dos Namorados
+
+**Contexto:** Área SEO estava na fila da rotação (última atualização de meta tags evergreen). Com 24 dias para o Dia dos Namorados (12/06), as buscas locais por "presente namorados londrina", "o que fazer dia dos namorados londrina" e "sobremesa casal londrina" começam a subir agora. As meta tags (`description`, `og:description`, `twitter:description`, `keywords`) eram 100% genéricas e não capturavam essa intenção de busca sazonal — deixando CTR na mesa para queries de alta conversão no Google.
+
+**O que pesquisou/analisou:**
+- Auditou `index.html` linhas 7–28: meta tags todas evergreen/genéricas, sem menção a Namorados
+- Verificou Schema.org Event Namorados (linha 130): já existe e está correto com keywords e offer — não alterado
+- Verificou FAQPage: Q16 já cobre "Namorados" — não alterado
+- Verificou banner JS (linha 531+): já tem 4 fases de Namorados programadas — não alterado
+- Concluiu que o único gap era o snippet do Google (meta description) e as tags de compartilhamento social (og:description, twitter:description) que aparecem quando alguém compartilha o link antes do evento
+- Contou chars da nova description: 166 (dentro do limite ~160–165 do Google)
+
+**O que mudou:**
+
+| Arquivo | Tag | Antes | Depois |
+|---------|-----|-------|--------|
+| `index.html` | `meta description` | genérico, sem Namorados | "Duo MilkyPot: presente do Dia dos Namorados 12/06..." |
+| `index.html` | `meta keywords` | 8 termos gerais | +5 termos Namorados: "presente dia dos namorados londrina", "duo milkypot", "sobremesa casal londrina", "potinho namorados 2026", "o que fazer dia dos namorados londrina" |
+| `index.html` | `og:description` | genérico | "Duo MilkyPot: dois potinhos personalizados pra o Dia dos Namorados 12/06..." |
+| `index.html` | `twitter:description` | genérico | "Duo MilkyPot — dois potinhos pra o Dia dos Namorados 12/06..." |
+
+**Por que gera valor:**
+- Google usa meta description como snippet em SERPs quando não encontra texto mais relevante na página — com "Duo MilkyPot" e "Dia dos Namorados" na tag, o snippet exibido para queries sazonais passa a ser relevante
+- og:description e twitter:description são usados quando o link é compartilhado no WhatsApp, Instagram Stories ou Twitter — na semana 10–12/06 quando os clientes começarem a encaminhar o link, o preview já vai aparecer com copy de Namorados
+- meta keywords: embora Google ignore, alguns buscadores menores e ferramentas de SEO auditoria os leem; adicionar os termos mantém consistência semântica
+
+**Commit:** `00fab21`
+
+**Próximo passo sugerido:**
+- **Ciclo #271 — Conversão (CRÍTICA):** D+25 follow-up de reativação — clientes que vieram na inauguração (25/04) estão na janela de reativação agora (~25 dias). Se D+30 foi feito em #195, verificar se o broadcast foi seguido de resposta e se há clientes para reativar antes do Namorados (dois-em-um: reativação + Namorados)
+- **Ciclo #272 — Conteúdo:** Post feed IG "qual a sua combinação de potinho pra Namorados?" — interação para gerar UGC e salvar nos comentários (nome do casal → usar como prova social no story 12/06)
+- **Ciclo #273 — Concorrentes:** MilkyMoo — última análise em ciclo #267 (6 ciclos atrás); verificar se collab "Como Treinar Dragão" / "Tempestade" está rodando e como está sendo promovida localmente (impacto na semana 10–12/06)
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador:** Reindexar no Google Search Console após publicar (solicitar reindexação manual de milkypot.com para as novas meta tags aparecerem nas SERPs mais rápido)
+
+_Belinha — Ciclo #270 | 2026-05-19_
