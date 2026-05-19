@@ -2,6 +2,54 @@
 
 ---
 
+## Ciclo #265 — 2026-05-19
+
+**Área:** Conteúdo — Story "signo + potinho" para 10–11/06 (trend astrologia sem citar JohnnyJoy)
+
+**Contexto:** Prescrito no ciclo #263 como próximo passo prioritário após mapear a campanha JohnnyJoy "Joy Fidelidade por signo" (Gêmeos até 20/06 = upgrade grátis). O spike de visitas JohnnyJoy no Catuaí cai exatamente na semana 09–12/06, quando Gêmeos está ativo. O ciclo #263 identificou a oportunidade: criar conteúdo de astrologia para MilkyPot no mesmo trend, sem mencionar concorrente, com ângulo de personalização — o único que nenhum concorrente usa para este tema.
+
+**O que pesquisou/analisou:**
+- Releu `belinha/competitors/johnnyjoy.md` §ciclo #263 — campanha Joy Fidelidade Gêmeos, spike semana 09–12/06, oportunidade explicitada
+- Releu `story-11jun-anti-prato-compartilhado.md` — estrutura de referência (gancho implícito + reveal + CTA)
+- Identificou que Gêmeos (símbolo do par/dualidade) mapeia narrativamente para Namorados sem forçar: "nunca é um só, sempre dois" = dois potinhos, um para cada um
+- Verificou encaixe na programação: story de segunda 10/06 às 18h cria primeira onda de conscientização antes do countdown de terça
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/story-signo-potinho-10jun.md` | Novo arquivo: roteiro completo de 3 stories + variante rápida 1 story + checklist + encaixe na programação 10–12/06 |
+
+**Destaques do conteúdo criado:**
+1. **Story 1/3 — Gancho** (Seg 10/06 · 18h): fundo azul noite + ovelhinha com luneta + poll sticker ("Qual é o seu signo?") — engajamento e coleta de dados de DM
+2. **Story 2/3 — Revelação Gêmeos**: "Nunca é um só. Sempre dois." + dois potinhos com etiquetas — copy que ressoa com Gêmeos E com casais simultaneamente
+3. **Story 3/3 — CTA**: "Coincidência? ♊ Gêmeos no ar. 💕 Namorados em 2 dias." + keyword `NAMORADOS26` + link WA
+4. **Variante 1 story** para operador com pouco tempo — mesmo ângulo em formato compacto
+5. **Notas estratégicas**: por que astrologia funciona, o que NÃO fazer (sem desconto, sem R$, sem listar 12 signos), extensão futura para Câncer
+
+**Por que este conteúdo gera valor:**
+- Entra no trend validado pelo concorrente (JohnnyJoy) sem copiar nem citar
+- Personalização narrativa sem custo técnico — a copy faz o trabalho
+- Gêmeos = par/dois = casal = Namorados: convergência genuína de narrativa, não forçada
+- Poll sticker gera respostas de DM que o operador usa para followup com `wa-business-setup-namorados.md`
+- Encaixe às 18h de segunda cria "primeira onda" 2 dias antes do evento
+
+**Commit:** (a seguir)
+
+**Próximo passo sugerido:**
+- **Ciclo #266 — Conversão:** Verificar se `dia-dos-namorados-2026-playbook.md` cobre cenário "pico de visitas orgânicas no Catuaí" (clientes comparando preço na hora) — copy de resposta rápida WA para esse cenário
+- **Ciclo #267 — Concorrentes:** TheBest Açaí — não pesquisado nos últimos 15 ciclos; atualizar intel pré-Namorados (piscininha "afeto" ainda ativa? nova promoção para 12/06?)
+- **Ciclo #268 — UX:** Verificar se o counter-posicionamento cinema (ciclo #262) tem versão mobile adequada no playbook — conferir viewport 360px
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (Seg 10/06 · 18h):** Publicar sequência de 3 stories "signo + potinho" — roteiro em `story-signo-potinho-10jun.md`
+- **Operador (Ter 11/06 · 20h30):** Publicar stories anti-prato-compartilhado — `story-11jun-anti-prato-compartilhado.md`
+- **Operador (09/06):** Disparar N1 broadcast geral — template em `whatsapp-namorados-2026.md`
+
+_Belinha — Ciclo #265 | 2026-05-19_
+
+---
+
 ## Ciclo #264 — 2026-05-19
 
 **Área:** UX — Banner Namorados `veryNarrow` <375px (postergado 5 ciclos desde #259)
