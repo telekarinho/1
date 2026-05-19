@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>MilkyPot — Hub de Promoções</title>
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<style>
+body{font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#FAF9FC 0%,#F3EEFC 100%);margin:0;min-height:100vh}
+.page{padding:24px 28px;max-width:1400px;margin:0 auto}
+.title{font-family:'Baloo 2',cursive;color:#2D1747;font-size:32px;margin:0 0 6px;display:flex;align-items:center;gap:12px;font-weight:900}
+.subtitle{color:#6B7280;font-size:15px;margin:0 0 26px;line-height:1.5;max-width:780px}
+
+/* Sumário global */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px}
+.kpi{background:#fff;border:1.5px solid #E5E7EB;border-radius:16px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(126,87,194,.06),transparent 60%);pointer-events:none}
+.kpi-label{font-size:11px;color:#6B7280;font-weight:800;letter-spacing:.6px;text-transform:uppercase}
+.kpi-value{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;color:#2D1747;margin-top:4px;letter-spacing:-0.5px}
+.kpi-value.green{color:#16A34A}
+.kpi-value.red{color:#DC2626}
+.kpi-value.orange{color:#F97316}
+.kpi-sub{font-size:11px;color:#9CA3AF;margin-top:2px}
+
+/* Grid de promoções */
+.promo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.promo-card{
+  background:#fff;border:1.5px solid #E5E7EB;border-radius:18px;padding:18px;
+  position:relative;cursor:pointer;text-decoration:none;color:inherit;
+  transition:transform .2s,box-shadow .2s,border-color .2s;
+  display:flex;flex-direction:column;gap:10px;min-height:200px;
+}
+.promo-card:hover{transform:translateY(-3px);box-shadow:0 14px 32px rgba(126,87,194,.16);border-color:rgba(126,87,194,.4)}
+.promo-card.disabled{opacity:.65}
+.promo-card.disabled:hover{transform:none;box-shadow:none}
+
+.promo-head{display:flex;align-items:flex-start;gap:12px;justify-content:space-between}
+.promo-emoji{font-size:34px;line-height:1;filter:drop-shadow(0 4px 8px rgba(0,0,0,.1))}
+.promo-name{font-family:'Baloo 2',cursive;font-weight:800;font-size:17px;color:#2D1747;line-height:1.15;margin:0;flex:1}
+
+.promo-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:100px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+.promo-status.on{background:rgba(22,163,74,.12);color:#16A34A}
+.promo-status.off{background:#F3F4F6;color:#6B7280}
+.promo-status.warn{background:rgba(249,115,22,.12);color:#F97316}
+
+.promo-desc{font-size:12px;color:#6B7280;line-height:1.4;margin:0;flex:1}
+
+.promo-stats{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#6B7280;padding-top:10px;border-top:1px dashed #E5E7EB}
+.promo-stat{display:flex;flex-direction:column}
+.promo-stat b{font-family:'Orbitron',monospace;color:#2D1747;font-size:14px;font-weight:800}
+.promo-stat.green b{color:#16A34A}
+.promo-stat.red b{color:#DC2626}
+
+.promo-cta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;font-weight:800;color:#7E57C2}
+.promo-cta .arrow{transition:transform .2s}
+.promo-card:hover .promo-cta .arrow{transform:translateX(4px)}
+
+.section-title{font-family:'Baloo 2',cursive;font-size:18px;color:#2D1747;margin:28px 0 12px;font-weight:800}
+
+.legend{margin:14px 0 18px;padding:12px 16px;background:rgba(126,87,194,.06);border:1px dashed rgba(126,87,194,.3);border-radius:12px;font-size:13px;color:#5A4570;line-height:1.5}
+.legend strong{color:#7E57C2}
+
+.btn-back{display:inline-flex;align-items:center;gap:8px;color:#7E57C2;font-weight:700;text-decoration:none;font-size:14px;margin-bottom:16px}
+.btn-back:hover{text-decoration:underline}
+
+@media (max-width:600px){
+  .title{font-size:24px}
+  .promo-card{min-height:auto}
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="configuracoes.html" class="btn-back">← Voltar pra Configurações</a>
+
+  <h1 class="title">🎯 Hub de Promoções</h1>
+  <p class="subtitle">
+    Central única pra ativar, configurar e medir <strong>ROI</strong> de todas as promoções da MilkyPot.
+    Cada promoção pode ser <strong>condicionada a recompra</strong> pra garantir que custo &lt; receita gerada.
+  </p>
+
+  <!-- KPIs globais -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-label">Promoções ativas</div>
+      <div class="kpi-value" id="kpiAtivas">—</div>
+      <div class="kpi-sub" id="kpiAtivasSub">de 12 disponíveis</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Resgates (30d)</div>
+      <div class="kpi-value" id="kpiResgates">—</div>
+      <div class="kpi-sub">cupons usados</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Custo total (30d)</div>
+      <div class="kpi-value orange" id="kpiCusto">R$ —</div>
+      <div class="kpi-sub">prêmios concedidos</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">ROI consolidado</div>
+      <div class="kpi-value green" id="kpiROI">—</div>
+      <div class="kpi-sub" id="kpiROISub">receita / custo</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    💡 <strong>Regra de ouro:</strong> toda promoção deve estar condicionada a uma <strong>recompra</strong>
+    (cliente só resgata se voltar e fazer pedido novo). Promoção sem essa regra vira <strong>custo puro</strong>.
+    Promoções com ⚠️ no card NÃO têm essa proteção configurada.
+  </div>
+
+  <h2 class="section-title">🎁 Promoções de cliente (recompra)</h2>
+  <div class="promo-grid" id="gridRecompra"></div>
+
+  <h2 class="section-title">📱 Promoções de viralização</h2>
+  <div class="promo-grid" id="gridViral"></div>
+
+  <h2 class="section-title">🏆 Desafios & status</h2>
+  <div class="promo-grid" id="gridDesafios"></div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  if (typeof Auth!=='undefined' && !Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  var session = Auth.getSession();
+  var fid = session.franchiseId;
+
+  // ============================================================
+  // CATÁLOGO DE PROMOÇÕES — fonte única da verdade
+  // ============================================================
+  var PROMOTIONS = [
+    // ===== RECOMPRA =====
+    {
+      id:'raspinha', emoji:'🎫', name:'Raspadinha da Sorte', group:'recompra',
+      desc:'Toda compra acima de R$15 gera um QR único raspável com prêmio (sundae, casquinha, etc).',
+      configUrl:'raspinha-config.html',
+      activeKey:'scratch_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'scratches_'+fid,
+      requireRebuyDefault:true,
+      statsType:'scratch'
+    },
+    {
+      id:'roleta', emoji:'🎰', name:'Roleta da Sorte', group:'recompra',
+      desc:'Roda automaticamente no celular do cliente após fechar pedido online. 8 prêmios sorteados, cupom válido 7 dias.',
+      configUrl:'roleta-config.html',
+      activeKey:'roleta_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'roleta_spins_'+fid,
+      requireRebuyDefault:true,
+      statsType:'roleta'
+    },
+    {
+      id:'milkyclube', emoji:'🪙', name:'MilkyClube Cashback', group:'recompra',
+      desc:'Cada R$1 que cliente gasta vira moedinha. Acumula no próximo pedido. Status VIP por tier.',
+      configUrl:'#',
+      activeKey:'club_config', activeField:'enabled', activeDefault:true,
+      statsKey:'club_members',
+      requireRebuyDefault:true,
+      statsType:'club'
+    },
+    {
+      id:'milkypass', emoji:'👑', name:'MilkyPass (Wallet)', group:'recompra',
+      desc:'Cartão VIP no Apple/Google Wallet. Sem app pra baixar. Mostra QR no caixa pra acumular pontos.',
+      configUrl:'#',
+      activeKey:'milkypass_config', activeField:'enabled', activeDefault:true,
+      statsKey:'milkypass_users',
+      requireRebuyDefault:false,
+      statsType:'wallet'
+    },
+    {
+      id:'streak', emoji:'🔥', name:'Missão Streak (3/7/14/30d)', group:'recompra',
+      desc:'Cliente que volta dias seguidos desbloqueia +moedas, sundae grátis, camiseta lendária.',
+      configUrl:'#',
+      activeKey:'streak_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'desafio_streaks',
+      requireRebuyDefault:true,
+      statsType:'streak'
+    },
+
+    // ===== VIRALIZAÇÃO =====
+    {
+      id:'googlereview', emoji:'⭐', name:'Google Review · 5 estrelas', group:'viral',
+      desc:'5 estrelas no Google = raspadinha premium + 50 moedas no clube. Atendente valida a avaliação.',
+      configUrl:'#',
+      activeKey:'googlereview_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'google_reviews_'+fid,
+      requireRebuyDefault:false,
+      statsType:'review'
+    },
+    {
+      id:'instagram', emoji:'📸', name:'Instagram · 150 moedas', group:'viral',
+      desc:'Cliente posta marcando @milkypotbr → ganha 150 moedas na hora. Foto/story/reel.',
+      configUrl:'#',
+      activeKey:'instagram_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'instagram_bonus_'+fid,
+      requireRebuyDefault:false,
+      statsType:'social'
+    },
+    {
+      id:'influencer', emoji:'💸', name:'Link de Indicação', group:'viral',
+      desc:'Cliente gera link único. Cada amigo que pede com o link → ganha moedas + bônus dobrado 1ª semana.',
+      configUrl:'#',
+      activeKey:'influencer_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'influencer_links_'+fid,
+      requireRebuyDefault:true,
+      statsType:'referral'
+    },
+    {
+      id:'compartilha', emoji:'📲', name:'Compartilhar Cardápio', group:'viral',
+      desc:'Cliente compartilha cardápio no WhatsApp/grupos. Ações trackedas via UTM. Sem prêmio direto.',
+      configUrl:'#',
+      activeKey:'share_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'shares_'+fid,
+      requireRebuyDefault:false,
+      statsType:'share'
+    },
+
+    // ===== DESAFIOS =====
+    {
+      id:'desafio10s', emoji:'⏱️', name:'Desafio 10 Segundos Cravados', group:'desafios',
+      desc:'Cliente para o cronômetro em 5/10/30s cravados pelo celular ou TV. Acertou = prêmio (sorvete grátis).',
+      configUrl:'#',
+      activeKey:'desafio_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'desafio_10000',
+      requireRebuyDefault:false,
+      statsType:'desafio10s'
+    },
+    {
+      id:'acerta300', emoji:'⚖️', name:'Desafio 300g Cravados', group:'desafios',
+      desc:'Cliente monta pote no buffet → balança decide. 300g exatos = NÃO PAGA. 299g/301g = paga normal.',
+      configUrl:'#',
+      activeKey:'acerta300_config_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'challenge_300g_winners_'+fid,
+      requireRebuyDefault:false,
+      statsType:'acerta300'
+    },
+    {
+      id:'halldafama', emoji:'🏆', name:'Hall da Fama', group:'desafios',
+      desc:'Fotos dos vencedores 300g + desafio 10s. Rotaciona na TV indoor + bot IG stories diário.',
+      configUrl:'hall-fama.html',
+      activeKey:'hall_da_fama_'+fid, activeField:'enabled', activeDefault:true,
+      statsKey:'hall_da_fama_'+fid,
+      requireRebuyDefault:false,
+      statsType:'hall'
+    }
+  ];
+
+  // ============================================================
+  // FETCH STATUS + STATS DE CADA PROMOÇÃO
+  // ============================================================
+  function getEnabled(p) {
+    var cfg = DataStore.get(p.activeKey);
+    if (cfg && typeof cfg[p.activeField] !== 'undefined') return !!cfg[p.activeField];
+    return !!p.activeDefault;
+  }
+
+  function getStatsCount(p) {
+    // Cada tipo le sua propria estrutura. Generico: conta entradas no DataStore.
+    try {
+      if (p.statsType === 'scratch') {
+        var arr = DataStore.get(p.statsKey) || [];
+        var redeemed = arr.filter(function(s){return s.status==='redeemed'}).length;
+        return { primary: redeemed, label: 'resgatadas' };
+      }
+      if (p.statsType === 'streak') {
+        // sem dado local
+        return { primary: '—', label: 'streakers' };
+      }
+      var arr = DataStore.get(p.statsKey);
+      if (Array.isArray(arr)) return { primary: arr.length, label: 'registros' };
+      return { primary: '—', label: '—' };
+    } catch(e) { return { primary: '—', label: '—' }; }
+  }
+
+  function getRequireRebuy(p) {
+    var cfg = DataStore.get('promocoes_config_'+fid) || {};
+    var pc = cfg[p.id] || {};
+    if (typeof pc.requireRebuy === 'boolean') return pc.requireRebuy;
+    return !!p.requireRebuyDefault;
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+  function renderCard(p) {
+    var enabled = getEnabled(p);
+    var stats = getStatsCount(p);
+    var requireRebuy = getRequireRebuy(p);
+    var hasConfig = p.configUrl && p.configUrl !== '#';
+
+    var statusBadge;
+    if (!enabled) {
+      statusBadge = '<span class="promo-status off">⚪ Desativado</span>';
+    } else if (!requireRebuy && (p.group === 'recompra' || p.group === 'viral')) {
+      statusBadge = '<span class="promo-status warn">⚠️ Sem recompra</span>';
+    } else {
+      statusBadge = '<span class="promo-status on">🟢 Ativo</span>';
+    }
+
+    var ctaText = hasConfig ? 'Configurar →' : 'Em construção 🚧';
+    var ctaClass = hasConfig ? '' : 'style="color:#9CA3AF;cursor:not-allowed"';
+
+    var card = document.createElement(hasConfig ? 'a' : 'div');
+    if (hasConfig) card.href = p.configUrl;
+    card.className = 'promo-card' + (!enabled ? ' disabled' : '');
+
+    card.innerHTML =
+      '<div class="promo-head">' +
+        '<div style="display:flex;gap:12px;align-items:flex-start;flex:1">' +
+          '<div class="promo-emoji">' + p.emoji + '</div>' +
+          '<h3 class="promo-name">' + p.name + '</h3>' +
+        '</div>' +
+        statusBadge +
+      '</div>' +
+      '<p class="promo-desc">' + p.desc + '</p>' +
+      '<div class="promo-stats">' +
+        '<div class="promo-stat"><span>' + stats.label + '</span><b>' + stats.primary + '</b></div>' +
+        '<div class="promo-stat"><span>recompra?</span><b class="' + (requireRebuy?'green':'red') + '">' + (requireRebuy?'sim':'não') + '</b></div>' +
+      '</div>' +
+      '<div class="promo-cta" ' + ctaClass + '>' +
+        '<span>' + ctaText + '</span>' +
+        '<span class="arrow">→</span>' +
+      '</div>';
+
+    return card;
+  }
+
+  function render() {
+    var groups = { recompra: 'gridRecompra', viral: 'gridViral', desafios: 'gridDesafios' };
+    Object.keys(groups).forEach(function(g) {
+      var el = document.getElementById(groups[g]);
+      el.innerHTML = '';
+      PROMOTIONS.filter(function(p){ return p.group === g; }).forEach(function(p) {
+        el.appendChild(renderCard(p));
+      });
+    });
+
+    // KPIs globais
+    var ativas = PROMOTIONS.filter(getEnabled).length;
+    document.getElementById('kpiAtivas').textContent = ativas;
+    document.getElementById('kpiAtivasSub').textContent = 'de ' + PROMOTIONS.length + ' disponíveis';
+
+    // Resgates 30d — soma simples de scratches resgatadas
+    var scratchArr = DataStore.get('scratches_'+fid) || [];
+    var thirtyAgo = new Date(); thirtyAgo.setDate(thirtyAgo.getDate()-30);
+    var recent = scratchArr.filter(function(s){ return new Date(s.createdAt||0) >= thirtyAgo && s.status==='redeemed'; });
+    document.getElementById('kpiResgates').textContent = recent.length;
+
+    // Custo total — soma cost dos prêmios resgatados (raspinha)
+    var custo = 0;
+    var prizes = DataStore.get('scratch_prizes_'+fid) || [];
+    recent.forEach(function(s){
+      var p = prizes.find(function(x){return x.code===s.prizeCode});
+      if (p) custo += (p.cost||0);
+    });
+    document.getElementById('kpiCusto').textContent = 'R$ ' + custo.toFixed(2).replace('.', ',');
+
+    // ROI — sem dado real ainda (requer tracking de orderTotal dos resgates)
+    document.getElementById('kpiROI').textContent = recent.length ? '🚧' : '—';
+    document.getElementById('kpiROISub').textContent = recent.length ? 'tracking em construção' : 'sem resgates';
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
