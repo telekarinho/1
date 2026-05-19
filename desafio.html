@@ -779,7 +779,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="attract-logo">
 <div class="attract-title">Desafio 10 MilkyPot</div>
-<div class="attract-sub">😳 Pare o cronômetro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong>.<br>🔥 Quem acerta leva prêmio — quase ninguém pega de primeira.</div>
+<div class="attract-sub">😳 Pare o cronômetro em <strong style="color:#FF0040">5, 10 ou 30 segundos CRAVADOS</strong>. Sem margem.<br>🔥 Quem acerta leva prêmio — quase ninguém pega de primeira.</div>
 <!-- Demo counter preview -->
 <div class="counter-box" style="margin:12px 0;padding:clamp(16px,3vw,32px) clamp(24px,5vw,60px)">
 <div class="counter-label">CRONOMETRO</div>
@@ -802,7 +802,7 @@ background:rgba(255,255,255,0.7);padding:6px 16px;border-radius:50px;
 <div class="badge-top">&#127942; Desafio Oficial MilkyPot</div>
 <img src="images/logo-milkypot.png" alt="MilkyPot" class="logo-img">
 <h1 class="main-title" id="mainTitle">Desafio 10 MilkyPot</h1>
-<p class="main-sub" id="mainSub">Pare o cronometro em <strong style="color:#FF0040">exatamente 5, 10 ou 30 segundos</strong> e ganhe premio!</p>
+<p class="main-sub" id="mainSub">Pare o cronometro em <strong style="color:#FF0040">5, 10 ou 30 segundos CRAVADOS</strong>. Sem margem. Acertou = prêmio.</p>
 <div class="tv-release-status" id="tvReleaseStatus" style="display:none">Aguardando liberacao do PDV...</div>
 
 <!-- Free Mode Banner (mostrado quando admin libera acesso sem codigo) -->
@@ -1166,7 +1166,10 @@ updatedAt:new Date().toISOString()
 
 /* Aplica o modo de acesso (com codigo vs gratis) na UI */
 function applyAccessMode(){
-isFreeMode=(prizeConfig.requireVoucher===false);
+/* MODO TV (loja): SEMPRE depende de voucher do PDV, NUNCA entra em isFreeMode.
+   Sem essa guarda, prizeConfig.requireVoucher===false fazia isFreeMode=true
+   tambem em TV, e dai o anti-fraude do free mode travava em "ja jogou 1 vez" + step0. */
+isFreeMode = isStoreTvMode ? false : (prizeConfig.requireVoucher===false);
 var voucherWrap=document.getElementById('voucherCodeWrap');
 var voucherStatus=document.getElementById('voucherStatus');
 var voucherHelper=document.getElementById('voucherHelper');
@@ -1557,6 +1560,17 @@ var s=document.getElementById('voucherStatus');
 s.style.display='';
 s.className='voucher-status error';
 s.textContent='Voce ja jogou '+usedToday+' vez'+(usedToday>1?'es':'')+' hoje. Volte amanha ou faca uma compra pra jogar mais!';
+/* MODO TV: nao trava em step0. Volta pra attract apos 6s pra liberar o
+   rotator de slides + esperar proxima liberacao do PDV. */
+if(isStoreTvMode){
+  setTimeout(function(){
+    if(typeof activeVoucher!=='undefined'){activeVoucher=null;activeVoucherCode=null}
+    showStep('Attract');
+    if(typeof startAttract==='function') startAttract();
+    setTvReleaseStatus('Aguardando liberacao do PDV...');
+    s.style.display='none';
+  }, 6000);
+}
 return;
 }
 playerProduct=document.getElementById('productSelect').value||'';
@@ -2312,7 +2326,17 @@ var s=document.getElementById('voucherStatus');
 s.style.display='';
 s.className='voucher-status error';
 s.textContent='Voce ja usou suas tentativas gratis hoje! Volte amanha ou faca uma compra na loja para jogar mais.';
-showStep(0);
+/* MODO TV: nao trava em step0. Volta pra attract em 6s pra liberar rotator. */
+if(isStoreTvMode){
+  setTimeout(function(){
+    showStep('Attract');
+    if(typeof startAttract==='function') startAttract();
+    setTvReleaseStatus('Aguardando liberacao do PDV...');
+    s.style.display='none';
+  }, 6000);
+} else {
+  showStep(0);
+}
 return;
 }
 showStep(2);
@@ -3226,10 +3250,10 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   // 1 segundo e entende DE PRIMEIRA. Cada slide diz: o que é, qual
   // a regra, o que faz. Sem firula.
   var SLIDES = [
-    { id:'raspadinha', emoji:'🎫', eyebrow:'TODA COMPRA PREMIA',
-      headline:'Pediu? Já ganhou alguma coisa.',
-      subtext:'Cada compra acima de R$ 15 sai com seu QR ÚNICO no recibo.\nVocê raspa pelo celular e leva o prêmio. Validade 7 dias.',
-      cta:'Pede no caixa que sai seu QR na hora',
+    { id:'raspadinha', emoji:'🎫', eyebrow:'🎫 RASPADINHA DA SORTE',
+      headline:'Toda compra acima de R$ 15 SAI com prêmio raspável.',
+      subtext:'😳 Não tem sorteio. Não tem cupom. É na hora.\n🎫 Sundae, casquinha, brinde, moeda… ou o lendário 50% off.\n🏆 Quem rasparia recebe o prêmio em 7 dias.',
+      cta:'🎫 Pega teu QR no caixa AGORA',
       // SEM QR no slide: o QR é UNICO e impresso na nota da compra.
       // Cada cliente recebe o SEU codigo individual ao pagar.
       qr: null,
@@ -3237,10 +3261,10 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       // Demo visual: simula a raspadinha real raspando sozinha em loop,
       // mostrando os 11 premios reais que estao ATIVOS no admin agora.
       raspDemo: true },
-    { id:'milkyclube', emoji:'🐑', eyebrow:'PROGRAMA MILKYCLUBE',
-      headline:'Gasta agora, ganha desconto depois.',
-      subtext:'Cada R$1 que você paga vira moedinha pro próximo sorvete.\nDe graça. Tipo o cashback do banco.',
-      cta:'Cadastra rapidinho — só precisa do email',
+    { id:'milkyclube', emoji:'🪙', eyebrow:'🪙 MILKYCLUBE · CASHBACK',
+      headline:'Cada R$ 1 que você gasta vira moeda. Pro próximo sorvete.',
+      subtext:'🪙 Cashback automático — sem letra miúda.\n🎁 Membros desbloqueiam prêmios secretos.\n📲 Sem app pra baixar. Só email.',
+      cta:'🪙 Quero juntar moeda pro próximo',
       qr: qrUrl('/clube.html', 'milkyclube'),
       bg:'linear-gradient(135deg,#7E57C2 0%,#42A5F5 100%)', dur:30000 },
     { id:'roleta', emoji:'🎰', eyebrow:'ROLETA DA SORTE',
@@ -3250,19 +3274,20 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       // SEM QR: roleta abre sozinha apos o pagamento (modal no checkout).
       qr: null,
       bg:'linear-gradient(135deg,#FFD700 0%,#FF4F8A 100%)', dur:30000 },
-    { id:'desafio10s', emoji:'⏱️', eyebrow:'DESAFIO 10 SEGUNDOS',
-      headline:'Para o cronômetro em 10s cravado e ganha.',
-      subtext:'Margem de 0,3 segundo. Acertou? Sorvete por nossa conta.\nDá pra jogar aqui mesmo, dessa tela.',
-      cta:'Toca a tela ou escaneia pra jogar do celular',
+    { id:'desafio10s', emoji:'⏱️', eyebrow:'⏱️ DESAFIO 10 SEGUNDOS CRAVADOS',
+      headline:'Para o cronômetro em 10 segundos exatos. Sem margem.',
+      subtext:'😳 Quase ninguém pega de primeira.\n🏆 Quem acerta: sorvete por nossa conta + entra pro Hall da Fama.',
+      cta:'👉 Toca aqui ou escaneia pra jogar do celular',
       qr: qrUrl('/desafio.html', 'desafio10s'),
       bg:'linear-gradient(135deg,#42A5F5 0%,#FF4F8A 100%)', dur:30000 },
-    { id:'acerta300', emoji:'⚖️', eyebrow:'⚠️ DESAFIO REAL: 300G EXATOS',
-      headline:'Acertou 300g cravados? A sobremesa sai GRÁTIS.',
-      subtext:'⚖️ Você monta seu potinho e a gente pesa AO VIVO.\n😳 Margem de 3g. Quase ninguém pega de primeira.\n🏆 Quem acerta: NÃO PAGA + vai pro Hall da Fama.',
-      cta:'Vai no buffet e tenta — sem pegadinha',
+    { id:'acerta300', emoji:'⚖️', eyebrow:'⚖️ ACERTOU 300G? NÃO PAGA.',
+      headline:'',  // gerenciado por renderAcerta300Live (rotativo)
+      subtext:'',  // idem
+      cta:'⚖️ Pega o pote e vai no buffet — desafio é AO VIVO',
       // SEM QR: desafio e fisico (cliente monta no buffet da loja).
       qr: null,
-      bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:30000 },
+      bg:'linear-gradient(135deg,#FF8A65 0%,#FFD700 100%)', dur:30000,
+      acerta300Live: true },
     { id:'googlereview', emoji:'⭐', eyebrow:'AVALIA NO GOOGLE',
       headline:'5 estrelas vale raspadinha premium + 50 moedas.',
       subtext:'Foi bom o sorvete? Conta pro Google.\nA gente te recompensa por isso.',
@@ -3281,18 +3306,19 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       cta:'Não precisa ser famoso — só ter amigos guloso',
       qr: qrUrl('/influencer.html', 'influencer'),
       bg:'linear-gradient(135deg,#FF4F8A 0%,#FF8A65 100%)', dur:30000 },
-    { id:'streak', emoji:'🔥', eyebrow:'CLIENTE FIEL GANHA MAIS',
-      headline:'Veio 3 dias seguidos? +25 moedas.',
-      subtext:'7 dias = sundae GRÁTIS. 14 dias = +100 moedas.\n30 dias seguidos = camiseta exclusiva LENDÁRIO.',
-      cta:'É automático, só não pular dia — entre no MilkyClube',
-      // SEM QR: streak e automatico pra quem ta no MilkyClube.
-      // Se cliente quer entrar no clube, ja tem o slide MilkyClube com QR.
-      qr: null,
-      bg:'linear-gradient(135deg,#FF4F8A 0%,#FFD700 100%)', dur:30000 },
-    { id:'milkypass', emoji:'📱', eyebrow:'CARTÃO NO CELULAR',
-      headline:'Teu cartão do clube mora no celular.',
-      subtext:'Salva no Apple Wallet ou Google Wallet — sem app pra baixar.\nNa hora de pagar, mostra o QR. Pronto.',
-      cta:'Entra no clube e clica em "Adicionar ao Wallet"',
+    { id:'streak', emoji:'🔥', eyebrow:'🔥 MISSÃO STREAK ATIVA',
+      headline:'Quanto mais dias seguidos, mais absurda fica sua recompensa.',
+      subtext:'',
+      cta:'👑 Quero virar LENDÁRIO',
+      // QR aponta pro MilkyClube (entrada da missao). renderStreakLive
+      // monta visual de ladder + FOMO + top streakers da semana.
+      qr: qrUrl('/clube.html', 'streak'),
+      bg:'linear-gradient(135deg,#FF4F8A 0%,#FFD700 100%)', dur:30000,
+      streakLive: true },
+    { id:'milkypass', emoji:'👑', eyebrow:'👑 MILKYCLUBE — CARTÃO VIP',
+      headline:'Algumas recompensas só aparecem pra membros do clube.',
+      subtext:'🍦 Sobremesas grátis · 🪙 Moedas bônus · 🎁 Desafios secretos · 👕 Recompensas exclusivas.\n📲 Um toque. Mostra no caixa. Acumula sozinho.',
+      cta:'🔥 Ativar minhas recompensas',
       qr: qrUrl('/clube.html#pass', 'milkypass'),
       bg:'linear-gradient(135deg,#7E57C2 0%,#1A1A2E 100%)', dur:30000 },
     { id:'ganhadores', emoji:'⚖️', eyebrow:'⚖️ DESAFIO 300G EXATOS',
@@ -3536,6 +3562,111 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
   }
   function escapeText(s){ return String(s||'').replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]}); }
 
+  /**
+   * MISSAO STREAK — ladder visual + FOMO + container pra top streakers.
+   * Top streakers e injetado por js/desafio-enhancements.js (fetchTopStreakers)
+   * quando ha dados em `desafio_streaks`. Sem dado: fica so o ladder + FOMO.
+   * Reuso das classes .mp-hall-selos / .mp-hall-fomo do desafio-premium.css.
+   */
+  function renderStreakLive(slide){
+    var ladder = '<div class="mp-streak-ladder">' +
+                   '<div class="mp-streak-tier">✅ 3 dias → <b>+25 moedas bônus</b></div>' +
+                   '<div class="mp-streak-tier">✅ 7 dias → <b>SUNDAE GRÁTIS</b></div>' +
+                   '<div class="mp-streak-tier">✅ 14 dias → <b>+100 moedas raras</b></div>' +
+                   '<div class="mp-streak-tier mp-streak-tier-top">👑 30 dias → <b>camiseta LENDÁRIO</b></div>' +
+                 '</div>';
+    var selos = '<div class="mp-hall-selos">' +
+                  '<span class="mp-selo">🔥 SEQUÊNCIA REAL</span>' +
+                  '<span class="mp-selo">🪙 MOEDAS AUTOMÁTICAS</span>' +
+                  '<span class="mp-selo mp-selo-pulse">👑 STATUS LENDÁRIO</span>' +
+                '</div>';
+    var fomo = '<div class="mp-hall-fomo">' +
+                 '😳 <b>Tem cliente vindo TODO DIA</b> só pra não perder a sequência. 👀' +
+               '</div>';
+    // Container vazio pro JS injetar top streakers (.mp-streak-top)
+    var topPlaceholder = '<div class="mp-streak-top" data-mpx-streak-top="1"></div>';
+    return '<div class="promo-emoji">'+ slide.emoji +'</div>' +
+           selos +
+           ladder +
+           topPlaceholder +
+           fomo;
+  }
+
+  /**
+   * DESAFIO 300G — slide com 10 copys rotativas + animacao de peso AO VIVO.
+   * REGRA OFICIAL: 300g CRAVADOS. Sem margem. 299g e 301g PERDEM.
+   * Animacao do peso: 287g -> 293g -> 299g -> 301g -> 300g 🎉 (looping).
+   * Copys giram a cada 4s mantendo o slide vivo.
+   */
+  var ACERTA300_COPIES = [
+    { hl: '⚖️ Acertou 300g? 🍦 Não paga.',           sb: '😳 Parece fácil… até a balança aparecer.' },
+    { hl: '🔥 O DESAFIO MAIS VICIANTE DA MILKYPOT',  sb: '⚖️ Acerte 300g EXATOS. 🍦 E o buffet sai GRÁTIS.' },
+    { hl: '😳 Quase ninguém acerta 300g.',           sb: '👀 Será que você consegue?' },
+    { hl: '⚠️ 299g NÃO ganha. 301g também NÃO.',    sb: '🍦 Só 300g CRAVADOS.' },
+    { hl: '🏆 Eles acertaram 300g…',                 sb: 'E saíram sem pagar nada.' },
+    { hl: '🔥 Tem cliente pegando MAIS sorvete',     sb: 'só pra tentar acertar os 300g 👀' },
+    { hl: '⚖️ A balança decide tudo.',               sb: 'Sem pegadinha. Sem sorteio. Sem cupom.' },
+    { hl: '😳 Parece fácil…',                        sb: 'até chegar na balança.' },
+    { hl: '⚡ Você tem UMA chance.',                  sb: 'Acertar 300g exatos. Sem margem.' },
+    { hl: '👑 Cliente lendário paga R$ 0.',          sb: '⚖️ Monta o pote. Bate na balança. 300g CRAVADOS = leva GRÁTIS.' }
+  ];
+  var acerta300CopyIdx = 0;
+  var acerta300CopyTimer = null;
+  function renderAcerta300Live(slide){
+    // Reseta timer (slide pode entrar/sair)
+    if (acerta300CopyTimer) { clearInterval(acerta300CopyTimer); acerta300CopyTimer = null; }
+    acerta300CopyIdx = Math.floor(Math.random() * ACERTA300_COPIES.length);
+
+    // Animacao de peso: 8 frames sequenciais terminando em 300g 🎉
+    var weights = ['287g', '293g', '299g', '301g', '298g', '302g', '299g', '300g'];
+    var weightSpans = weights.map(function(w, i) {
+      var isWin = (w === '300g');
+      var cls = isWin ? 'mp-300g-frame mp-300g-frame-win' : 'mp-300g-frame';
+      return '<span class="' + cls + '" style="animation-delay:' + (i*0.6) + 's">' + w + (isWin ? ' 🎉' : '') + '</span>';
+    }).join('');
+
+    var selos = '<div class="mp-hall-selos">' +
+                  '<span class="mp-selo">⚖️ PRÊMIO REAL</span>' +
+                  '<span class="mp-selo">🍦 SEM PEGADINHA</span>' +
+                  '<span class="mp-selo mp-selo-pulse">⚠️ 300G CRAVADOS</span>' +
+                '</div>';
+
+    var fomo = '<div class="mp-hall-fomo">' +
+                 '⚠️ <b>299g e 301g NÃO ganham.</b> Só <b>300g exatos</b>. 👀' +
+               '</div>';
+
+    // Placeholders pros textos rotativos
+    var initialCopy = ACERTA300_COPIES[acerta300CopyIdx];
+    var rotativeHtml = '<h2 class="mp-300g-headline" data-mpx-300g-hl>' + initialCopy.hl + '</h2>' +
+                       '<p class="mp-300g-sub" data-mpx-300g-sb>' + initialCopy.sb + '</p>';
+
+    // Container do peso
+    var weightDisplay = '<div class="mp-300g-scale">⚖️</div>' +
+                        '<div class="mp-300g-weight">' + weightSpans + '</div>';
+
+    // Inicia rotacao das copys (4s cada). MutationObserver vai limpar quando o
+    // slide sair de cena.
+    setTimeout(function() {
+      acerta300CopyTimer = setInterval(function() {
+        var hlEl = document.querySelector('[data-mpx-300g-hl]');
+        var sbEl = document.querySelector('[data-mpx-300g-sb]');
+        if (!hlEl || !sbEl) { clearInterval(acerta300CopyTimer); acerta300CopyTimer = null; return; }
+        acerta300CopyIdx = (acerta300CopyIdx + 1) % ACERTA300_COPIES.length;
+        var c = ACERTA300_COPIES[acerta300CopyIdx];
+        hlEl.classList.add('mp-fade-swap');
+        sbEl.classList.add('mp-fade-swap');
+        setTimeout(function() {
+          hlEl.textContent = c.hl;
+          sbEl.textContent = c.sb;
+          hlEl.classList.remove('mp-fade-swap');
+          sbEl.classList.remove('mp-fade-swap');
+        }, 220);
+      }, 4000);
+    }, 200);
+
+    return weightDisplay + selos + rotativeHtml + fomo;
+  }
+
   function renderRaspadinhaDemo(){
     // Demo cicla pelos 11 premios reais, cada um aparece por 900ms,
     // com efeito de "raspa" revelando o premio. Total: ~11s
@@ -3566,10 +3697,14 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
     var extraClass = '';
     if (s.raspDemo) extraClass = ' promo-slide-rasp';
     if (s.hallFamaLive) extraClass = ' promo-slide-hall';
-    // Centro do slide: raspadinha demo / hall fama live / emoji default
+    if (s.streakLive) extraClass = ' promo-slide-streak';
+    if (s.acerta300Live) extraClass = ' promo-slide-300g';
+    // Centro do slide: raspadinha demo / hall / streak / 300g / emoji default
     var middleHtml;
     if (s.raspDemo) middleHtml = renderRaspadinhaDemo();
     else if (s.hallFamaLive) middleHtml = renderHallFamaLive(s);
+    else if (s.streakLive) middleHtml = renderStreakLive(s);
+    else if (s.acerta300Live) middleHtml = renderAcerta300Live(s);
     else middleHtml = '<div class="promo-emoji">'+ s.emoji +'</div>';
     // QR no Hall da Fama so aparece se admin manteve showQr ativo
     var qrHtml = '';
@@ -3582,8 +3717,8 @@ if(cv){cv.width=window.innerWidth;cv.height=window.innerHeight}
       '<div class="promo-slide' + extraClass + '">' +
         '<div class="promo-eyebrow">'+ s.eyebrow +'</div>' +
         middleHtml +
-        '<h1 class="promo-headline">'+ s.headline +'</h1>' +
-        '<p class="promo-subtext">'+ s.subtext.replace(/\n/g,'<br>') +'</p>' +
+        (s.headline ? '<h1 class="promo-headline">'+ s.headline +'</h1>' : '') +
+        (s.subtext ? '<p class="promo-subtext">'+ s.subtext.replace(/\n/g,'<br>') +'</p>' : '') +
         '<div class="promo-cta">📱 '+ s.cta +'</div>' +
         qrHtml +
         '<div class="promo-tap">👆 Toque pra jogar o Desafio 10s · Aponta a câmera no QR pra promo</div>' +
