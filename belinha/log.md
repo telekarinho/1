@@ -2,6 +2,54 @@
 
 ---
 
+## Ciclo #271 — 2026-05-19
+
+**Área:** Conversão — D+30 add-on Variante Namorados (dois-em-um)
+
+**Contexto:** O broadcast D+30 (`reativacao-d30-onda1-maio26.md`, ciclo #195) começa em 25/05 com ganchos 100% Juninos. Com o Dia dos Namorados em 12/06 (18–25 dias após a janela D+30), a oportunidade "dois-em-um" — reativar o cliente E plantar o Namorados na mesma sequência — estava sem cobertura operacional.
+
+**O que pesquisou/analisou:**
+- `reativacao-d30-onda1-maio26.md` — zero menção a Namorados/casal/12/06 (confirmado via grep)
+- `reativacao-d60-onda1-jun26.md` — também sem Namorados
+- `dia-dos-namorados-2026-playbook.md` — N1 broadcast previsto para 09-10/06; lista `#aquecido-namorados` ainda não tem input do D+30
+- `calendario-editorial-14mai-02jun-2026.md` — semana 19-25/05 bem coberta (Instagram); WA channel é gap
+- Conclusão: criar add-on focado em WA, como suplemento ao D+30 padrão
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reativacao-d30-addon-namorados.md` | Criado (153 linhas). Suplemento ao D+30 com: Variante CASAL (substitui A1/B1), PS Namorados genérico (acrescenta ao D+30 padrão), Follow-up Passo 3 (para quem respondeu), plant verbal presencial (Passo 4), tabela de integração com pipeline Namorados, checklist operacional, regras da Constituição |
+
+**Detalhes do add-on:**
+1. **Segmentação** — árvore de decisão casal vs solo vs respondente
+2. **Variante CASAL** — copy para clientes com histórico de dupla; etiqueta `#aquecido-namorados`
+3. **PS genérico** — 2 linhas discretas no fim do D+30 padrão para clientes solo
+4. **Follow-up Passo 3** — copy para quem respondeu D+30 mas não voltou (28/05–01/06)
+5. **Plant presencial Passo 4** — script de balcão para clientes que já voltaram
+6. **Pipeline fechado** — D+30 → `#aquecido-namorados` → N1 Namorados 09/06 VIP antes da lista geral
+7. **100% conforme Constituição** — sem desconto, sem R$, sem "promoção"
+
+**Por que gera valor concreto:**
+- Clientes reativados pelo D+30 (janela quente) viram leads pré-aquecidos para Namorados sem esforço adicional
+- A lista `#aquecido-namorados` que alimenta o N1 de 09/06 agora tem origem estruturada (D+30 + resposta)
+- O operador tem decisão simplificada: casal → Variante CASAL; demais → PS genérico; respondeu → Passo 3
+- ROI: cada D+30 reativado que compra Duo (2 potinhos) vs potinho solo = +40–60% de ticket médio
+
+**Commit:** `98465c6`
+
+**Próximo passo sugerido:**
+- **Ciclo #272 — Conteúdo:** Post feed IG "qual a sua combinação de potinho pra Namorados?" — interação para gerar UGC e salvar nos comentários (nome do casal → usar como prova social no story 12/06). Este post preenche o calendário editorial de 20–22/05 com conteúdo que alimenta o banco de UGC antes do evento.
+- **Ciclo #273 — Concorrentes:** MilkyMoo — última análise em ciclo #267 (4 ciclos atrás); verificar collab "Como Treinar Dragão" / "Tempestade" localmente + campanha Namorados se existir
+- **Ciclo #274 — SEO:** Schema.org `aggregateRating` — loja tem 24 dias de operação; verificar se já há ≥3 reviews no Google Maps para desbloquear star rating nas SERPs
+- **Operador (CRÍTICO — D-6):** D+30 broadcast inicia **25/05 (seg)**. Usar `reativacao-d30-onda1-maio26.md` + `reativacao-d30-addon-namorados.md`. Etiquetar casais no WA Business antes. ⚠️🔴
+- **Operador (URGENTE — D-15):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️🔴
+- **Operador (URGENTE — D-11):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+
+_Belinha — Ciclo #271 | 2026-05-19_
+
+---
+
 ## Ciclo #269 — 2026-05-19
 
 **Área:** Conteúdo — Caption + hashtags para Reel de abertura Dia dos Namorados (Sex 12/06 · 14h)
