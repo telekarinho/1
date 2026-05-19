@@ -2,6 +2,59 @@
 
 ---
 
+## Ciclo #269 — 2026-05-19
+
+**Área:** Conteúdo — Caption + hashtags para Reel de abertura Dia dos Namorados (Sex 12/06 · 14h)
+
+**Contexto:** Prescrito nos ciclos #266, #267 e #268 como próxima ação de conteúdo prioritária. O `dia-dos-namorados-2026-playbook.md` já continha o roteiro visual do Reel 15s (hook, telas, CTA em vídeo) mas a caption de legenda era apenas 2 linhas genéricas ("Dois potinhos = dois sorrisos 💕" + 7 hashtags básicas). Para um Reel publicado às 14h do Dia H — que serve como principal ativo de alcance orgânico do evento — caption estratégica e hashtags categorizadas fazem diferença concreta em distribuição e conversão. Com 24 dias para o evento, esta era a última janela sem pressão para criar esse ativo com qualidade.
+
+**O que pesquisou/analisou:**
+- Leu `dia-dos-namorados-2026-playbook.md` seção "REEL 15S" — roteiro existente, confirmou que caption era apenas placeholder genérico
+- Releu `story-11jun-anti-prato-compartilhado.md` — extraiu ângulo "sem dividir" e tom de voz dos stories (ciclo #257)
+- Releu `story-signo-potinho-10jun.md` — confirmou brand voice: warm, ovelhinha, personalização como diferencial
+- Revisou intel competitiva consolidada nos ciclos #262, #266, #267: ângulo "anti-prato-compartilhado" (nenhum concorrente usa "cada um tem o seu"), timing crítico 14h00, janela de decisão <3 min no WA, 8 unidades TheBest no iFood como contexto de por que o canal próprio importa
+- Releu `belinha/content/wa-business-setup-namorados.md` para confirmar keyword NAMORADOS26 e link WA antes de incluir no CTA
+- Validou Constituição: captions sem R$, desconto, cupom, loot, chance — agrega valor pelo produto e experiência
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-abertura-namorados-12jun.md` | Criado: 199 linhas — 3 versões de caption + estratégia de hashtags + texto stories ao vivo + checklist operacional + instruções publicação |
+
+**Detalhes do arquivo criado:**
+1. **Caption Versão A (recomendada)** — Hook: "Potinho com o nome dele. Potinho com o nome dela. 💕" → corpo emocional (personalização + sem dividir + delivery 40min) → CTA duplo (NAMORADOS26 + número) → endereço/horário → 20 hashtags estratégicas
+2. **Caption Versão B (minimalista)** — para correria operacional: "Sem dividir. Do jeito de cada um." + CTA direto + 5 hashtags core
+3. **Caption Versão C (narrativa emocional)** — hook pergunta: "Você sabe qual é o topping favorito dela?" → frame de "ato de cuidado" → 12 hashtags mix
+4. **Estratégia de hashtags categorizadas:** local (8), evento/data (7), produto/nicho (8), brand (4), mix recomendado de 20 com fundamentação
+5. **Texto stories ao vivo 14h:** 3 stories sequenciais (abertura, bastidor montagem, CTA delivery) com timing e instruções
+6. **Checklist operacional:** 6 ações com hora exata (14h00–21h00)
+7. **Instruções para operador:** regras de publicação, timing crítico 14h00 exatos, referência ao guia WA Business, regra de 2 min de resposta
+
+**Por que gera valor concreto:**
+- A caption genérica anterior ("Dois potinhos = dois sorrisos") não diferencia, não tem CTA, não tem localização, não tem keyword. A versão A corrige tudo isso.
+- Hook "Potinho com o nome dele/dela" — concreto, visual, imediato. Antes do "mais", o leitor entende produto + ângulo de personalização.
+- "Sem dividir" integra o ângulo anti-prato-compartilhado (ciclos #257/#262) sem citar concorrentes — o contraste acontece na cabeça de quem viu propaganda de açaí sharing.
+- 20 hashtags categorizadas (local + data + produto + brand) substituem as 7 genéricas anteriores — especialmente as locais (#LondrinaFoods, #SobremesaLondrina, #AçaíLondrina) que têm menos volume mas maior conversão para delivery em Londrina.
+- Checklist operacional com horários exatos evita improvisação no Dia H — operador executa, não decide.
+
+**Commit:** `8431248`
+
+**Próximo passo sugerido:**
+- **Ciclo #270 — Concorrentes:** MilkyMoo — última pesquisa foi ciclo #262 (8 ciclos atrás). A campanha do produto "Tempestade" (licença Universal Pictures, *Como Treinar o Seu Dragão* live-action) pode ter push local em Londrina na semana 10–12/06. Se ativa no Catuaí, impacta a decisão de publicar o story counter-cinema (`story-11jun-anti-prato-compartilhado.md` instrução condicional). Confirmar estado da campanha antes de 03/06 (data limite configuração WA).
+- **Ciclo #271 — Conversão:** Auditar fluxo WA pós-NAMORADOS26: quando cliente manda o keyword e recebe a resposta automática, o próximo passo (montar o Duo) está claro? Verificar se o script de atendimento cobre o handoff automação → humano e se os 4 gatilhos do cenário Catuaí (ciclo #266) foram salvos como Respostas Rápidas no WA Business.
+- **Ciclo #272 — UX:** Auditar a página de cardápio mobile (`/cardapio` ou `index.html` seção produtos) para ver se existe algum CTA para Namorados ou se o usuário que entra no site sem ser via Reel não recebe nenhuma comunicação do evento — gap de funil.
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (09/06):** Disparar N1 broadcast geral — template em `whatsapp-namorados-2026.md`
+- **Operador (Seg 10/06 · 18h):** Publicar sequência 3 stories "signo + potinho" — `story-signo-potinho-10jun.md`
+- **Operador (Ter 11/06 · 20h30):** Publicar stories anti-prato-compartilhado — `story-11jun-anti-prato-compartilhado.md`
+- **Operador (Sex 12/06 · 14h00):** Publicar Reel abertura com caption Versão A — `reel-abertura-namorados-12jun.md` ⭐ novo
+
+_Belinha — Ciclo #269 | 2026-05-19_
+
+---
+
 ## Ciclo #268 — 2026-05-19
 
 **Área:** UX — Banner `veryNarrow` <375px semana 10–12/06 com ângulo cinema+Catuaí
