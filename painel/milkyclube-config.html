@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>MilkyPot — MilkyClube (Sistema Central + Níveis VIP)</title>
+<link rel="stylesheet" href="../css/shared-panel.css">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800;900&family=Nunito:wght@400;600;700;800&family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/auth.js"></script>
+<style>
+body{font-family:'Nunito',sans-serif;background:linear-gradient(180deg,#1A1A2E 0%,#2D1747 60%,#4C1D95 100%);margin:0;min-height:100vh;color:#fff}
+.page{padding:24px 28px;max-width:1300px;margin:0 auto}
+.btn-back{display:inline-flex;align-items:center;gap:8px;color:#FFD700;font-weight:700;text-decoration:none;font-size:14px;margin-bottom:16px;opacity:.9}
+.btn-back:hover{opacity:1}
+
+.hero-tag{font-family:'Baloo 2',cursive;font-size:11px;font-weight:900;letter-spacing:3px;color:#FFD700;text-transform:uppercase}
+h1{font-family:'Baloo 2',cursive;font-size:36px;margin:6px 0 6px;font-weight:900;letter-spacing:-0.5px}
+.sub{font-size:14px;color:rgba(255,255,255,.78);margin:0 0 26px;line-height:1.55;max-width:780px}
+.sub b{color:#FFD700}
+
+.master{background:linear-gradient(135deg,#FFD700,#FF9800);color:#1A1A2E;border-radius:18px;padding:20px 22px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;box-shadow:0 10px 30px rgba(255,179,0,.4)}
+.master h2{font-family:'Baloo 2',cursive;font-size:20px;margin:0;font-weight:900}
+.master p{margin:4px 0 0;font-size:13px;opacity:.85}
+.tog{position:relative;display:inline-block;width:64px;height:34px;cursor:pointer}
+.tog input{opacity:0;width:0;height:0}
+.tog-s{position:absolute;cursor:pointer;inset:0;background:rgba(26,26,46,.25);border-radius:34px;transition:.3s}
+.tog-s::before{position:absolute;content:'';height:26px;width:26px;left:4px;top:4px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.tog input:checked + .tog-s{background:rgba(26,26,46,.55)}
+.tog input:checked + .tog-s::before{transform:translateX(30px)}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:26px}
+.kpi{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;padding:14px;backdrop-filter:blur(8px)}
+.kpi-lbl{font-size:11px;color:rgba(255,255,255,.65);font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.kpi-v{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:#FFD700;margin-top:4px}
+
+.section{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:18px;padding:22px;margin-bottom:20px;backdrop-filter:blur(6px)}
+.section h2{font-family:'Baloo 2',cursive;font-size:18px;color:#fff;margin:0 0 6px;font-weight:800;display:flex;align-items:center;gap:8px}
+.section h2 .badge{font-size:11px;font-weight:800;letter-spacing:1px;padding:3px 10px;border-radius:100px;background:rgba(255,215,0,.18);color:#FFD700;text-transform:uppercase}
+.section-desc{color:rgba(255,255,255,.7);font-size:13px;margin:0 0 16px;line-height:1.55}
+
+.config-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08);flex-wrap:wrap;gap:12px}
+.config-row:last-child{border-bottom:0}
+.config-lbl{flex:1;min-width:220px}
+.config-lbl strong{display:block;color:#fff;font-size:14px}
+.config-lbl small{display:block;color:rgba(255,255,255,.6);font-size:12px;margin-top:2px}
+.inp{padding:8px 12px;border:1.5px solid rgba(255,255,255,.18);border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;width:120px;text-align:right;background:rgba(255,255,255,.08);color:#fff}
+.inp:focus{outline:none;border-color:#FFD700}
+.tog-sm{position:relative;display:inline-block;width:46px;height:24px;cursor:pointer}
+.tog-sm input{opacity:0;width:0;height:0}
+.tog-sm-s{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,.2);border-radius:24px;transition:.3s}
+.tog-sm-s::before{position:absolute;content:'';height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.tog-sm input:checked + .tog-sm-s{background:#FFD700}
+.tog-sm input:checked + .tog-sm-s::before{transform:translateX(22px)}
+
+/* TIERS VIP */
+.tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.tier-card{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.04));
+  border:2px solid rgba(255,255,255,.12);
+  border-radius:18px;padding:18px;
+  transition:transform .2s,box-shadow .2s;
+}
+.tier-card:hover{transform:translateY(-3px)}
+.tier-card.bronze   { border-color:#CD7F32; box-shadow:0 8px 24px rgba(205,127,50,.25) }
+.tier-card.silver   { border-color:#C0C0C0; box-shadow:0 8px 24px rgba(192,192,192,.25) }
+.tier-card.gold     { border-color:#FFD700; box-shadow:0 8px 24px rgba(255,215,0,.35) }
+.tier-card.legendary{ border-color:#A855F7; box-shadow:0 8px 30px rgba(168,85,247,.45) }
+.tier-card.bronze::before, .tier-card.silver::before, .tier-card.gold::before, .tier-card.legendary::before{
+  content:'';position:absolute;inset:0;opacity:.10;pointer-events:none
+}
+.tier-card.bronze::before   { background:radial-gradient(circle at 80% 20%, #CD7F32, transparent 50%) }
+.tier-card.silver::before   { background:radial-gradient(circle at 80% 20%, #C0C0C0, transparent 50%) }
+.tier-card.gold::before     { background:radial-gradient(circle at 80% 20%, #FFD700, transparent 50%) }
+.tier-card.legendary::before{ background:radial-gradient(circle at 80% 20%, #A855F7, transparent 50%); animation:tierLegPulse 3s ease-in-out infinite}
+@keyframes tierLegPulse{0%,100%{opacity:.10}50%{opacity:.25}}
+
+.tier-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.tier-icon{font-size:44px;line-height:1}
+.tier-name{font-family:'Baloo 2',cursive;font-weight:900;font-size:20px;color:#fff;letter-spacing:.5px}
+.tier-tag{font-size:10px;font-weight:800;letter-spacing:2px;padding:3px 10px;border-radius:100px;color:#1A1A2E}
+.tier-card.bronze    .tier-tag{background:#CD7F32}
+.tier-card.silver    .tier-tag{background:#E5E5E5}
+.tier-card.gold      .tier-tag{background:#FFD700}
+.tier-card.legendary .tier-tag{background:linear-gradient(135deg,#A855F7,#FFD700);color:#fff}
+
+.tier-req{font-size:13px;color:rgba(255,255,255,.85);margin:6px 0 12px;line-height:1.4}
+.tier-req b{font-family:'Orbitron',monospace;color:#FFD700}
+.tier-perks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tier-perks li{font-size:12px;color:rgba(255,255,255,.85);padding:5px 8px;background:rgba(255,255,255,.06);border-radius:8px}
+.tier-perks li b{color:#FFD700;font-weight:800}
+
+.tier-input-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.tier-input-row label{font-size:10px;color:rgba(255,255,255,.55);font-weight:700;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:3px}
+.tier-input-row input{width:100%;padding:6px 10px;border:1.5px solid rgba(255,255,255,.18);border-radius:6px;background:rgba(0,0,0,.25);color:#fff;font-family:'Orbitron',monospace;font-weight:800;text-align:right;box-sizing:border-box}
+.tier-input-row input:focus{outline:none;border-color:#FFD700}
+
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;flex-wrap:wrap;position:sticky;bottom:14px;background:rgba(26,26,46,.85);padding:14px;border-radius:14px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1)}
+.btn{padding:10px 18px;border:1.5px solid rgba(255,255,255,.25);border-radius:10px;background:rgba(255,255,255,.06);color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.btn:hover:not(:disabled){background:rgba(255,255,255,.12)}
+.btn.primary{background:linear-gradient(135deg,#FFD700,#FF9800);color:#1A1A2E;border:0;font-weight:900}
+.btn.primary:hover{box-shadow:0 10px 24px rgba(255,179,0,.45)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#16A34A;color:#fff;padding:12px 22px;border-radius:100px;font-weight:700;box-shadow:0 8px 22px rgba(22,163,74,.45);z-index:1000;display:none}
+.toast.show{display:block;animation:tIn .35s ease-out}
+@keyframes tIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.legend{margin:10px 0 18px;padding:14px 18px;border-radius:12px;font-size:13px;line-height:1.55;background:rgba(255,215,0,.08);border:1px dashed rgba(255,215,0,.35);color:rgba(255,255,255,.85)}
+.legend b{color:#FFD700}
+
+@media (max-width:600px){h1{font-size:26px}.tier-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+  <a href="promocoes-hub.html" class="btn-back">← Voltar pro Hub</a>
+
+  <div class="hero-tag">👑 SISTEMA CENTRAL DA MILKYPOT</div>
+  <h1>MilkyClube</h1>
+  <p class="sub">
+    Onde <b>tudo</b> que o cliente conquista vive: raspadinhas, moedas, streak, desafios, recompensas, ranking.
+    O cliente sobe de <b>nível VIP</b> (Bronze → Silver → Gold → Lendário) com base em compras, visitas e desafios.
+    Cada nível desbloqueia <b>prêmios melhores</b> nas outras promoções. Não é cashback — é progresso premium.
+  </p>
+
+  <!-- Master toggle -->
+  <div class="master">
+    <div>
+      <h2>👑 Sistema MilkyClube</h2>
+      <p>Quando ligado, todo cliente que pedir online ganha conta automática + tier.</p>
+    </div>
+    <label class="tog">
+      <input type="checkbox" id="masterEnabled" checked>
+      <span class="tog-s"></span>
+    </label>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">Membros ativos</div><div class="kpi-v" id="kpiMembers">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">🥉 Bronze</div><div class="kpi-v" id="kpiBronze">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">🥈 Silver</div><div class="kpi-v" id="kpiSilver">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">🥇 Gold</div><div class="kpi-v" id="kpiGold">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">👑 Lendário</div><div class="kpi-v" id="kpiLegendary">—</div></div>
+  </div>
+
+  <!-- Configurações de pontos -->
+  <div class="section">
+    <h2>🪙 Economia de MilkyCoins <span class="badge">moedas</span></h2>
+    <p class="section-desc">
+      Define quantas moedas o cliente ganha. As moedas são <b>progresso</b>, não dinheiro — usadas pra desbloquear prêmios dentro do MilkyClube.
+    </p>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>💰 Moedas por R$ 1 gasto</strong>
+        <small>Cliente gasta R$ 30 → ganha 30 × X moedas. Recomendado: 1 moeda por R$ 1.</small>
+      </div>
+      <div><input type="number" id="cfgCoinsPerReal" value="1" min="0" step="0.1" class="inp"></div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>🎁 Moedas-bônus de cadastro</strong>
+        <small>Cliente novo recebe X moedas pra começar engajado.</small>
+      </div>
+      <div><input type="number" id="cfgWelcomeBonus" value="50" min="0" step="10" class="inp"></div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>⏱️ Validade das moedas (meses)</strong>
+        <small>Moedas expiram pra incentivar uso. 6 meses recomendado.</small>
+      </div>
+      <div><input type="number" id="cfgCoinsValidity" value="6" min="1" max="36" step="1" class="inp"></div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>🚫 Bloquear cliente de virar dinheiro</strong>
+        <small>Moedas só podem ser usadas pra desbloquear recompensas — nunca viram cashback em R$. PADRÃO LIGADO.</small>
+      </div>
+      <label class="tog-sm"><input type="checkbox" id="cfgNoCashConversion" checked><span class="tog-sm-s"></span></label>
+    </div>
+  </div>
+
+  <!-- NÍVEIS VIP -->
+  <div class="section">
+    <h2>👑 Níveis VIP <span class="badge">progressão</span></h2>
+    <p class="section-desc">
+      4 níveis com requisitos progressivos. Cada nível desbloqueia recompensas melhores em <b>todas</b> as outras promoções:
+      raspadinha lendária mais provável, desafios VIP, multiplicador de moedas, prêmios secretos.
+    </p>
+
+    <div class="legend">
+      💡 <b>Filosofia:</b> requisitos NÃO são "ganhar dinheiro" — são <b>frequência + ticket + engajamento</b>.
+      Cliente passivo nunca chega em Lendário. Cliente que volta toda semana e acerta desafios chega rápido.
+    </div>
+
+    <div class="tier-grid" id="tierGrid"></div>
+  </div>
+
+  <!-- Anti-prejuízo global -->
+  <div class="section">
+    <h2>🔒 Regras anti-prejuízo <span class="badge">margem</span></h2>
+    <p class="section-desc">
+      Garantem que o sistema NUNCA vira "dar dinheiro". Tudo aqui é invisível pro cliente.
+    </p>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>💸 Limite mensal de prêmios por cliente</strong>
+        <small>Cliente não pode resgatar mais que X em prêmios/mês (proteção anti-oportunista).</small>
+      </div>
+      <div>R$ <input type="number" id="cfgMaxRedeemPerMonth" value="60" min="0" step="10" class="inp"></div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>📈 ROI mínimo aceitável das promoções</strong>
+        <small>Sistema alerta quando ROI consolidado cai abaixo desse %. 120% recomendado (receita gerada = 1,2× custo).</small>
+      </div>
+      <div><input type="number" id="cfgMinROI" value="120" min="50" max="500" step="10" class="inp">%</div>
+    </div>
+
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>🛡️ Bloquear prêmios em pedido com desconto ativo</strong>
+        <small>Cliente não acumula moedas em compras já com promoção (evita double-dip). PADRÃO LIGADO.</small>
+      </div>
+      <label class="tog-sm"><input type="checkbox" id="cfgNoDoubleDip" checked><span class="tog-sm-s"></span></label>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" onclick="window.location.href='promocoes-hub.html'">Cancelar</button>
+    <button class="btn primary" onclick="saveAll()">💾 Salvar configurações</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ MilkyClube atualizado!</div>
+
+<script>
+(function(){
+  'use strict';
+  if (typeof Auth!=='undefined' && !Auth.requireAuth('franchisee')) return;
+  DataStore.init();
+  var session = Auth.getSession();
+  var fid = session.franchiseId;
+
+  // ============================================================
+  // 4 TIERS VIP — requisitos + perks padrão
+  // ============================================================
+  var DEFAULT_TIERS = [
+    {
+      id:'bronze', icon:'🥉', name:'Bronze', tag:'INICIANTE',
+      req:'A partir da <b>1ª compra</b>',
+      minVisits:1, minSpend:0,
+      perks:[
+        '🎫 Raspadinha em compras acima de <b>R$ 15</b>',
+        '🪙 <b>1×</b> moedas por R$ gasto',
+        '⏱️ Acesso ao desafio dos 10s'
+      ]
+    },
+    {
+      id:'silver', icon:'🥈', name:'Silver', tag:'FREQUENTE',
+      req:'<b>4 visitas</b> ou <b>R$ 150</b> em compras',
+      minVisits:4, minSpend:150,
+      perks:[
+        '🎫 Raspadinha tem chance <b>+10%</b> de prêmio raro',
+        '🪙 <b>1.2×</b> moedas (multiplicador)',
+        '🎰 Roleta libera prêmios da categoria <b>RARA</b>',
+        '⚖️ Desafio 300g VIP: 1 tentativa extra por semana'
+      ]
+    },
+    {
+      id:'gold', icon:'🥇', name:'Gold', tag:'FIEL',
+      req:'<b>10 visitas</b> ou <b>R$ 400</b> em compras + <b>streak de 5 dias</b>',
+      minVisits:10, minSpend:400, minStreak:5,
+      perks:[
+        '🎫 Raspadinha chance <b>+25%</b> de épico/lendário',
+        '🪙 <b>1.5×</b> moedas',
+        '🎰 Roleta libera <b>todas</b> as categorias incluindo épicos',
+        '⚖️ Desafio 300g: 2 tentativas extras por semana',
+        '🎁 Aniversário: prêmio lendário automático',
+        '🍦 Sundae upgrade grátis na primeira visita do mês'
+      ]
+    },
+    {
+      id:'legendary', icon:'👑', name:'Lendário', tag:'ELITE',
+      req:'<b>30 visitas</b> ou <b>R$ 1.000</b> + <b>streak de 14 dias</b> + <b>1 desafio 300g</b>',
+      minVisits:30, minSpend:1000, minStreak:14,
+      perks:[
+        '🎫 Raspadinha tem chance <b>2× maior</b> de lendário',
+        '🪙 <b>2×</b> moedas',
+        '🎰 Roleta tem prêmio garantido (sem repetição)',
+        '⚖️ Desafios 300g e 10s: <b>ilimitado</b>',
+        '👑 Camiseta exclusiva LENDÁRIO',
+        '🏆 Aparece no <b>Hall da Fama</b> permanentemente',
+        '📲 Acesso antecipado a novos sabores e promoções'
+      ]
+    }
+  ];
+
+  var workingTiers = [];
+
+  function loadConfig() {
+    var saved = DataStore.get('milkyclube_config_'+fid) || {};
+    document.getElementById('masterEnabled').checked = saved.enabled !== false;
+    document.getElementById('cfgCoinsPerReal').value = saved.coinsPerReal || 1;
+    document.getElementById('cfgWelcomeBonus').value = saved.welcomeBonus || 50;
+    document.getElementById('cfgCoinsValidity').value = saved.coinsValidityMonths || 6;
+    document.getElementById('cfgNoCashConversion').checked = saved.noCashConversion !== false;
+    document.getElementById('cfgMaxRedeemPerMonth').value = saved.maxRedeemPerMonth || 60;
+    document.getElementById('cfgMinROI').value = saved.minROI || 120;
+    document.getElementById('cfgNoDoubleDip').checked = saved.noDoubleDip !== false;
+
+    var savedTiers = saved.tiers || [];
+    workingTiers = DEFAULT_TIERS.map(function(def){
+      var found = savedTiers.find(function(t){ return t.id === def.id; });
+      return Object.assign({}, def, found || {});
+    });
+  }
+
+  function renderTiers() {
+    var grid = document.getElementById('tierGrid');
+    grid.innerHTML = workingTiers.map(function(t){
+      return '<div class="tier-card ' + t.id + '" data-tier="' + t.id + '">' +
+        '<div class="tier-head">' +
+          '<div><div class="tier-icon">' + t.icon + '</div></div>' +
+          '<span class="tier-tag">' + t.tag + '</span>' +
+        '</div>' +
+        '<div class="tier-name">' + t.name + '</div>' +
+        '<div class="tier-req">📊 ' + t.req + '</div>' +
+        '<ul class="tier-perks">' + t.perks.map(function(p){ return '<li>' + p + '</li>'; }).join('') + '</ul>' +
+        '<div class="tier-input-row">' +
+          '<div><label>Min. visitas</label><input type="number" data-field="minVisits" value="' + (t.minVisits||0) + '" min="0" step="1"></div>' +
+          '<div><label>Min. R$ acumulado</label><input type="number" data-field="minSpend" value="' + (t.minSpend||0) + '" min="0" step="10"></div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    grid.querySelectorAll('[data-field]').forEach(function(el){
+      var tierId = el.closest('.tier-card').dataset.tier;
+      el.addEventListener('input', function(){
+        var t = workingTiers.find(function(x){ return x.id === tierId; });
+        if (!t) return;
+        t[el.dataset.field] = parseFloat(el.value) || 0;
+      });
+    });
+  }
+
+  function loadKpis() {
+    var members = DataStore.get('club_members_'+fid) || [];
+    document.getElementById('kpiMembers').textContent = members.length || '—';
+    ['bronze','silver','gold','legendary'].forEach(function(t){
+      var count = members.filter(function(m){ return m.tier === t; }).length;
+      var elId = 'kpi' + t.charAt(0).toUpperCase() + t.slice(1);
+      var el = document.getElementById(elId);
+      if (el) el.textContent = count;
+    });
+  }
+
+  window.saveAll = function() {
+    var cfg = {
+      enabled: document.getElementById('masterEnabled').checked,
+      coinsPerReal: parseFloat(document.getElementById('cfgCoinsPerReal').value) || 1,
+      welcomeBonus: parseInt(document.getElementById('cfgWelcomeBonus').value, 10) || 0,
+      coinsValidityMonths: parseInt(document.getElementById('cfgCoinsValidity').value, 10) || 6,
+      noCashConversion: document.getElementById('cfgNoCashConversion').checked,
+      maxRedeemPerMonth: parseFloat(document.getElementById('cfgMaxRedeemPerMonth').value) || 0,
+      minROI: parseInt(document.getElementById('cfgMinROI').value, 10) || 100,
+      noDoubleDip: document.getElementById('cfgNoDoubleDip').checked,
+      tiers: workingTiers,
+      updatedAt: new Date().toISOString()
+    };
+    DataStore.set('milkyclube_config_'+fid, cfg);
+
+    // Sincroniza com promocoes_config_<fid>
+    var pcfg = DataStore.get('promocoes_config_'+fid) || {};
+    pcfg.milkyclube = { enabled: cfg.enabled, updatedAt: cfg.updatedAt };
+    DataStore.set('promocoes_config_'+fid, pcfg);
+
+    var t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 2400);
+  };
+
+  loadConfig();
+  renderTiers();
+  loadKpis();
+})();
+</script>
+</body>
+</html>
