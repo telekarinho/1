@@ -1,6 +1,6 @@
 # The Best Açaí — Análise Competitiva
 
-**Última atualização:** 2026-05-17 (Ciclo #246 — Piscininha campanha 06/06–06/07 + Aurora Shopping quiosque Londrina confirmado + preço R$6,49 + waffle bites)
+**Última atualização:** 2026-05-19 (Ciclo #267 — Flagship Gleba Palhano 310m² descoberta + mapa iFood expandido para 8 unidades Londrina + confirmação Piscininha como único veículo Namorados + JAH Caio Castro update)
 **Fontes ciclo #246:** patoshoje.com.br, abcdacomunicacao.com.br, jornaldobras.com.br, thebestacai.com.br/blog, portaldofranchising.com.br, aurorashopping.com.br, exame.com, revistasaoroque.com.br, WebSearch
 **Fontes ciclo #196:** folhadecuritiba.com.br, abcdacomunicacao.com.br, cervanacaneca.blogspot.com, foodbizbrasil.com, vipzinho.com.br, tiktok @marceladegusta, WebSearch
 **Fontes ciclo #187:** gomesaltimari.com.br, mercadoeconsumo.com.br, meioemensagem.com.br, exame.com, thebestacai.com.br, WebSearch
@@ -1165,3 +1165,88 @@ Copy sugerida para Story 11/06 (complementa stories da série ciclo #255):
 **Fontes ciclo #256:** thebestacai.com.br/blog (snippet), patoshoje.com.br (snippet), abcdacomunicacao.com.br (snippet), mapadasfranquias.com.br (snippet), promoview.com.br (snippet), ifood.com.br (loja), catuailondrina.com.br, WebSearch 18/05/2026
 
 _Belinha — Ciclo #256 | 2026-05-18_
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #267 — 2026-05-19
+
+### Flagship Gleba Palhano (nova), Mapa iFood Expandido e Namorados: Piscininha é o produto único
+
+#### 1. ⚠️ NOVO — Flagship The Best Gleba Palhano (não mapeada anteriormente)
+
+**Descoberta:** O ciclo #256 mapeou 3 unidades TheBest em Londrina (Catuaí, Aeroporto, Higienópolis). Existe uma **quarta unidade — a maior de toda a rede —** que estava fora do radar.
+
+| Atributo | Dado |
+|----------|------|
+| Endereço | Rua Caracas, 159 — Gleba Palhano, Londrina |
+| Tamanho | **310 m²** (maior unidade da rede nacional) |
+| Capacidade | 100+ pessoas sentadas |
+| Inauguração | Setembro 2024 (antes da abertura do Muffato em abr/2026) |
+| Diferencias | Espaço pet · TVs digitais · bleachers · The Best Club |
+| Preço | R$6,29/100g (set/2024) → ajustado para R$6,49/100g (mai/2026) |
+
+**Contexto Gleba Palhano:** Bairro premium de Londrina, uma das regiões de maior poder aquisitivo da cidade. Público-alvo: famílias classe A/B, jovens adultos, casal com ticket médio alto.
+
+**Implicação para MilkyPot:** Esta unidade não compete por localização física (MilkyPot está no Muffato, zona distinta), mas compete por **memória de marca no público de alta renda** — exatamente o público que encomenda delivery no 12/06. A TheBest já está instalada como opção "premium" na cabeça desse público há 8 meses antes do MilkyPot abrir.
+
+**Ação recomendada:** Na semana de Namorados, qualquer campanha que posicione MilkyPot como "personalização para dois" deve antecipar que esse público já conhece a Piscininha da TheBest (que também é premium e instagramável). O diferencial MilkyPot não é o formato — é o **nome, a escolha individual e o canal WhatsApp sem fricção**.
+
+#### 2. Mapa Revisado — Unidades The Best Açaí em Londrina (mai/2026)
+
+| Unidade | Bairro / Referência | Canal | Status |
+|---------|---------------------|-------|--------|
+| The Best Açaí Gleba Palhano | Rua Caracas, 159 — Gleba Palhano | iFood + presencial | ✅ Confirmada (maior da rede, 310m²) |
+| The Best Açaí Catuaí | Shopping Catuaí | iFood + presencial | ✅ Confirmada (ciclo #256) |
+| The Best Açaí Higienópolis | Av. Higienópolis — Jd. Higienópolis | iFood | ✅ Confirmada |
+| The Best Açaí Aeroporto | Av. Arthur Thomas 831 — San Conrado | iFood | ✅ Confirmada |
+| The Best Açaí Av. JK | Vila Ipiranga | iFood | ✅ Nova (ciclo #267) |
+| The Best Açaí Av. Arthur Thomas | Rodocentro | iFood | ✅ Nova (ciclo #267) |
+| The Best Açaí Zona Norte 2 | Conj. Habitacional Violim | iFood | ✅ Nova (ciclo #267) |
+| The Best Açaí Aurora Shopping | Aurora Shopping (ciclo #246) | iFood + presencial | ✅ Confirmada (ciclo #246) |
+
+> **Total revisado: 8 unidades** em Londrina (eram 3 mapeadas). The Best tem cobertura de delivery em praticamente toda a cidade via iFood.
+
+**Implicação crítica:** A TheBest tem capilaridade massiva de delivery em Londrina. A vantagem competitiva do MilkyPot não é velocidade ou cobertura geográfica — é **o canal WhatsApp próprio** (sem comissão iFood/Rappi, com dados do cliente, com possibilidade de personalização no pedido via conversa).
+
+#### 3. Namorados 12/06: Piscininha = Único Produto, Sem Campanha Dedicada
+
+**Confirmação ciclo #267:** Nenhum anúncio de ação exclusiva de Dia dos Namorados da TheBest além da Piscininha. A marca absorve a data emocionalmente pelo posicionamento "afeto no inverno" — sem SKU de casal, sem promoção de desconto, sem campanha de 12/06 separada.
+
+**O que isso significa para MilkyPot:**
+- Janela aberta: nenhum concorrente tem um produto **nominalmente** dedicado ao casal no 12/06 (JAH tem a Jahckeline mas é mascote, TheBest tem Piscininha mas é produto mensal, JohnnyJoy tem "Dois Amores" mas é format genérico)
+- MilkyPot pode ser o único que diz explicitamente: *"Feito pra você e pra quem você ama — com o nome de cada um"*
+
+| Ação Namorados | The Best | JAH | JohnnyJoy | MilkyPot |
+|----------------|----------|-----|-----------|----------|
+| Produto especial | Piscininha (mensal) | Nenhum novo | "Dois Amores" | Potinho Duo |
+| Campanha nomeada | Não | Jahckeline reveal | Sim | NAMORADOS26 |
+| Personalização | Não | Polaroid (genérica) | Não | Nome no potinho |
+| Canal de venda | iFood / PDV | Apps + PDV | Apps + PDV | **WhatsApp próprio** |
+| Dados capturados | Não | Não | Não | **Sim (phone + nome)** |
+
+#### 4. JAH Açaí — Update Namorados 2026: Caio Castro + Ação Nacional
+
+**Novo dado:** JAH Açaí lançou ação de Namorados com celebridade Caio Castro (ator + piloto de Porsche) incluindo sorteio de passeio no Interlagos. Mecânica: seguir JAH no Instagram + taggear parceiro + compartilhar story.
+
+**Relevância para Londrina:** JAH **não tem unidade confirmada em Londrina** até mai/2026 (expansão nacional a 900 unidades até fim de 2026, mas cobertura no Paraná não verificada). A ação com Caio Castro é visível nas redes mas não gera tráfego físico local.
+
+**Conclusão:** JAH é concorrente de mindshare (presença nas redes), não de delivery em Londrina. A ação Caio Castro pode aumentar o desejo por açaí/sorvete no 12/06 — o que favorece MilkyPot se o WhatsApp estiver pronto para capturar.
+
+#### 5. Síntese Estratégica — Pré-Namorados (24 dias para 12/06)
+
+| Dimensão | O que a TheBest faz | O que MilkyPot deve fazer |
+|----------|---------------------|--------------------------|
+| Cobertura delivery | 8 unidades iFood em Londrina | 1 canal WhatsApp + sem comissão |
+| Produto | Piscininha (premium, fondue, para dois dividir) | Duo (dois potinhos, cada um do seu jeito) |
+| Naming | Genérico ("afeto no inverno") | Personalizado (nome da pessoa amada) |
+| Captura de dados | Nenhuma | Lead WA com nome + telefone |
+| Instagramabilidade | Alta (piscininha fotogênica) | Alta (potinho com nome = UGC espontâneo) |
+| Friction | iFood: 4-5 cliques + cadastro | WA: 1 mensagem + nome |
+
+**Vantagem competitiva MilkyPot que a TheBest NÃO pode copiar em 24 dias:**
+> *"Você escreve o nome dela. A gente faz o potinho com esse nome. É só isso."*
+> — Simplicidade + personalização + zero fricção de cadastro. TheBest com 8 unidades e iFood ainda precisa de login, menu, carrinho.
+
+**Fontes ciclo #267:** ifood.com.br (Londrina listings), gazetadopovo.com.br (snippet), abcdacomunicacao.com.br (snippet), mapadasfranquias.com.br, suafranquia.com, tiktok @marceladegusta (Rua Caracas 159), WebSearch 19/05/2026
+
+_Belinha — Ciclo #267 | 2026-05-19_
