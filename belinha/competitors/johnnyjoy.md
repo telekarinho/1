@@ -1,6 +1,7 @@
 # JohnnyJoy — Análise Competitiva
 
-**Última atualização:** 2026-05-18 (Ciclo #252 — "Dois Amores" sabores confirmados + copy exata + contra-posicionamento Duo atualizado)
+**Última atualização:** 2026-05-19 (Ciclo #263 — "Dois Amores" semana 09–12/06: sem nova comunicação detectada + campanha astrologia/signo mapeada)
+**Fontes ciclo #263:** WebSearch 2026, gkpb.com.br/178878 (snippet), portalg.com.br, amostrasgratis.shop, idealmarketing.com.br
 **Fontes ciclo #252:** gkpb.com.br/178878 (snippet), WebSearch 2026, portalg.com.br, catuailondrina.com.br, idealmarketing.com.br
 **Fontes ciclo #222:** gkpb.com.br/178878, WebSearch 2026
 **Fontes ciclo #202:** amostrasgratis.shop, publicitarioscriativos.com, foodbizbrasil.com, gkpb.com.br, WebSearch 2025-2026
@@ -8,6 +9,80 @@
 **Fontes ciclo #160:** gkpb.com.br, ondecomernorio.com, amostrasgratis.shop, Instagram @johnnyjoy.br, riomarfortaleza.com.br, portalg.com.br
 **Fontes ciclo #151:** johnnyjoy.com.br, buscacliente.com.br, gkpb.com.br, amostrasgratis.shop, TikTok @aproveiteacidade, overblur.com, Instagram @johnnyjoy.br
 **Fontes originais:** johnnyjoy.com.br, buscas orgânicas
+
+---
+
+## ⚡ ATUALIZAÇÃO CICLO #263 — 2026-05-19
+
+### "Dois Amores" Semana 09–12/06: Sem Nova Comunicação + Campanha Astrologia Mapeada
+
+**Fontes:** WebSearch 2026, gkpb.com.br/178878 (snippet), portalg.com.br, amostrasgratis.shop, idealmarketing.com.br
+**Objetivo do ciclo:** Última janela de intel JohnnyJoy antes do Dia dos Namorados (12/06) — 24 dias para o evento
+
+---
+
+#### 1. "Dois Amores" — Semana Final (09–12/06): SEM intensificação detectada
+
+- **Resultado da pesquisa:** Zero nova comunicação de 2026 para semana específica 09–12/06
+- **Conclusão:** JohnnyJoy trata "Dois Amores" como campanha de "todo junho" sem push especial na semana do evento. Nenhum reel/story/copy novo identificado além do artigo GKPB original (ciclo #252)
+- **Sabores do "Dois Amores" 2026 (reconfirmados):** Brigadeiro Tradicional · Brigadeiro Ninho · Brigadeiro Pink
+- **Preço:** R$20,90–R$24,90 (todo junho, todas as unidades)
+- **Risco semana 09-12/06:** 🟡 MÉDIO (mantido) — sem campanha de mídia intensificada, mas produto disponível e preço visível
+
+**Implicação MilkyPot:** JohnnyJoy não vai "atacar" a semana final com comunicação direcionada. MilkyPot tem espaço para dominar o feed local (Londrina) nos dias 10–12/06 com conteúdo próprio sem "ruído" de concorrente.
+
+---
+
+#### 2. NOVA CAMPANHA DETECTADA — Astrologia + Joy Fidelidade (Upgrade por Signo)
+
+**Fontes:** portalg.com.br, amostrasgratis.shop
+
+| Atributo | Detalhe |
+|---|---|
+| **Mecânica** | Aniversariantes do mês com signo ativo recebem upgrade: 500ml pelo preço de 300ml (+200ml grátis) |
+| **Signos confirmados** | Peixes (fev/mar) · Capricórnio (dez/jan) — padrão continuado |
+| **Requisito** | Cadastro no Joy Fidelidade com data de nascimento atualizada |
+| **Janela** | 7 dias antes + 7 dias após a data de aniversário |
+| **Canal** | Reconhecimento automático pelo sistema — sem necessidade de comprovante |
+
+**⚠️ Alerta para semana 09–12/06:** Gêmeos (21/05–20/06) são elegíveis até 20/06 — clientes JohnnyJoy com aniversário em junho podem buscar upgrade na semana do Namorados. Cria spike de visitas Joy Fidelidade no Catuaí **exatamente na semana 09-12/06**.
+
+**Insight criativo para MilkyPot:**
+- JohnnyJoy usa astrologia como pretexto de personalização → tendência real de nicho alimentício + fidelização
+- **Oportunidade:** MilkyPot pode criar "Qual é o potinho do seu signo?" como story/reels antes do Namorados — conteúdo de engajamento alto, sem custo, sem citar concorrente
+
+---
+
+#### 3. Ação Azul/Rosa — NÃO ativa em junho
+
+- **Confirmado:** Ação de roupa azul ou rosa (300ml grátis ao comprar 500ml) é **exclusiva de 12/09** (Dia do Milkshake — 2ª edição)
+- **Junho:** sem ação de traje/fantasia detectada
+
+---
+
+#### 4. Radar de Risco Atualizado — Semana 09–12/06
+
+| Ameaça | Nível | Status |
+|---|---|---|
+| "Dois Amores" no Catuaí Londrina | 🟡 MÉDIO | Produto disponível todo junho, sem push de semana final |
+| Spike Gêmeos/Joy Fidelidade Catuaí | 🟡 MÉDIO | Real — aniversariantes buscando upgrade na semana do evento |
+| Nova campanha específica 09-12/06 | 🟢 BAIXO | Zero evidência detectada — improvável no curto prazo |
+| UGC espontâneo "Dois Amores" Londrina | 🟡 MÉDIO | Principal risco real — não mitigável, monitorar |
+
+**Ação recomendada:** Publicar conteúdo MilkyPot nos dias **10–12/06** antes das 18h para ocupar feed antes do jantar. JohnnyJoy não vai "atacar" com mídia — o risco é orgânico (UGC de casais que foram ao Catuaí), não mídia paga.
+
+---
+
+#### 5. Calendário JohnnyJoy Consolidado — Próximas Datas
+
+| Data | Campanha | Mecânica | Risco MilkyPot |
+|---|---|---|---|
+| **Todo junho** | "Dois Amores" | Milkshake brigadeiro R$20,90–24,90 | 🟡 |
+| **09–20/06** | Joy Fidelidade Gêmeos | Upgrade 200ml grátis (aniversariantes) | 🟡 |
+| 12/06 (Dia H) | Sem campanha específica | "Dois Amores" padrão disponível | 🟡 |
+| 12/09/2026 | Dia do Milkshake 2ª ed. | Azul/rosa → 300ml grátis c/ 500ml | — |
+
+_Belinha — Ciclo #263 | 2026-05-19_
 
 ---
 
