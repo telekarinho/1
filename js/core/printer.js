@@ -11,8 +11,10 @@ const Printer = (function() {
         enabled: true,
         width: '80mm', // '80mm' or '58mm'
         charsPerLine: 32, // 32 for 58mm, 42-48 for 80mm
-        autoPrint: false,
-        useBrowserDialog: true,
+        autoPrint: true,           // v308: auto-print padrao ligado
+        useBrowserDialog: false,   // v308: assume Chrome com --kiosk-printing por padrao
+                                   // (se nao tiver flag, dialogo abre — mas sem flag exigir clique
+                                   // mesmo. Default false orienta o user pro setup recomendado)
         profiles: [
             // Padrão MilkyPot: imprime AMBOS — recibo cliente (não-fiscal, ainda não temos NFC-e)
             // + pedido cozinha. Ambos podem ser desligados em ⚙️ Configurações.
