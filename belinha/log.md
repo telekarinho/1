@@ -10749,3 +10749,42 @@ _Belinha — Ciclo #266 | 2026-05-19_
 - **Operador:** Reindexar no Google Search Console após publicar (solicitar reindexação manual de milkypot.com para as novas meta tags aparecerem nas SERPs mais rápido)
 
 _Belinha — Ciclo #270 | 2026-05-19_
+
+---
+
+## Ciclo #273 — 2026-05-19
+
+**Área:** Concorrentes — MilkyMoo (última análise: ciclo #260, 13 ciclos atrás)
+
+**Contexto:** Com 24 dias para o Dia dos Namorados (12/06), era urgente atualizar a inteligência competitiva de MilkyMoo. O ciclo #260 havia confirmado a campanha "Tempestade"/"Como Treinar Dragão" mas não tinha dados do que mais estava sendo preparado para Namorados. A rotação indicava MilkyMoo como próxima.
+
+**O que pesquisou/analisou:**
+- Campanha "Tempestade" × Universal Pictures (estreia 12/06 = Dia dos Namorados): **CONFIRMADA NACIONAL**, incluindo Londrina. Promoção: 2×500ml → par de ingressos via app. A unidade Catuaí fica em frente ao cinema.
+- **MooBai Chocolate** (produto especial Namorados 2026): **NÃO disponível em Londrina** — restrito a 5 lojas em SP e Goiânia. Preço: R$30–R$34.
+- **Collab O Boticário × MilkyMoo "Carameluda"** (abril–maio/2026): disponível nacional até ~31/05 → encerra ANTES do Dia dos Namorados. Em Londrina também disponível, mas termina antes de 12/06.
+- Preços Londrina atualizados: Clássicos 300ml R$18 / 500ml R$22 · Nutty Bavarian 300ml R$27 / 500ml R$32 · Alcoólicos 300ml R$25 / 500ml R$35 · 180ml day part R$12,90–R$14,90 (sem delivery).
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/competitors/milkymoo.md` | +64 linhas: seção "ATUALIZAÇÃO CICLO #273" com: tabela disponibilidade por produto em Londrina, preços atualizados, mapa de ameaças revisado, insights estratégicos + 2 copies pré-redigidos |
+
+**Insight mais importante do ciclo:**
+MilkyMoo Londrina chega ao Dia dos Namorados **sem produto especial para casais** — MooBai não vem aqui, Carameluda termina antes de 12/06. A única oferta deles no 12/06 será "Tempestade de dragão + ingresso via app" — posicionamento incongruente para romance. **MilkyPot tem o produto mais adequado ao Dia dos Namorados em Londrina**: Duo personalizado, sem app, delivery em casa, nome de cada um no potinho.
+
+Copies internos documentados no arquivo:
+- `"MilkyMoo tem dragão. MilkyPot tem o nome dele e o dela no potinho."` (briefing interno)
+- `"A gente não faz sorvete de personagem. A gente faz do jeito que vocês são."` (stories/WA)
+
+**Commit:** `2856ae9`
+
+**Próximo passo sugerido:**
+- **Ciclo #274 — Conteúdo (URGENTE):** Adicionar as 2 copies "dragão vs. nome no potinho" ao `dia-dos-namorados-2026-playbook.md` na seção "Inteligência Competitiva" como variantes de posicionamento — o playbook é o doc que o operador usa na hora, precisa ter isso visível antes de 12/06
+- **Ciclo #275 — UX:** Verificar se o banner de Namorados no mobile (<375px veryNarrow) já reflete o posicionamento "Duo personalizado, sem app" ou se ainda usa copy genérico
+- **Ciclo #276 — Concorrentes:** JohnnyJoy — não analisado desde ciclo #269 (4 ciclos); verificar se chegou à Londrina com campanha específica de Namorados (risco latente confirmado em ciclos anteriores)
+- **Operador (URGENTE — 15 dias):** Confirmar se promoção de ingresso de MilkyMoo afeta percepção de valor do Duo MilkyPot — considerar enfatizar no WA que o Duo tem nome personalizado (não genérico)
+- **Operador (URGENTE — 11 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️🔴
+- **Operador:** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+
+_Belinha — Ciclo #273 | 2026-05-19_
