@@ -386,5 +386,78 @@ E tem o potinho — feito pra uma pessoa só. 🐑💕
 
 ---
 
+### Cenário: "Pico de visitas Catuaí" — comparador ao vivo no WA (10–12/06)
+
+> **Contexto (Ciclo #266):** A campanha Joy Fidelidade do JohnnyJoy para o signo Gêmeos (válida até 20/06) gera um spike de tráfego no Catuaí Shopping exatamente na semana 10–12/06. Clientes que já estão lá — ou que viram UGC de Gêmeos no Instagram — podem abrir o WA do MilkyPot ao mesmo tempo que estão fisicamente perto de outro quiosque, comparando opções em tempo real antes de decidir.
+
+**Característica do cliente nesse cenário:**
+- Está "quente" — já decidiu comer sobremesa com alguém especial naquele dia
+- Está comparando preço/produto agora, no celular, possivelmente na fila ou sentado no shopping
+- Pergunta genérica: "quanto custa?", "o que vocês têm?", "vocês entregam hoje?"
+- Janela de decisão: **menos de 3 minutos** — se não responder com clareza e CTA rápido, ele pede no quiosque
+
+**O operador NÃO deve:** dar cardápio completo, listar preços de cada topping, pedir CPF ou dados cadastrais nesse momento.
+
+**O operador DEVE:** dar 1 anchor de preço + 1 diferencial + 1 CTA de ação imediata.
+
+---
+
+#### Respostas rápidas WA para comparador ao vivo
+
+**Quando o cliente perguntar "quanto custa?" ou "o que tem?":**
+```
+🐑 Oi! Potinho personalizado a partir de R$19,90 — você escolhe a base e os toppings.
+
+Se for pra hoje (Dia dos Namorados 💕), a gente entrega em 15–40min.
+
+Quer montar o seu? É só mandar os sabores aqui!
+```
+
+**Quando o cliente perguntar "vocês entregam?" ou "fica onde?":**
+```
+🐑 Entregamos sim! Estamos no Muffato (Av. Quintino Bocaiuva, 1045) mas fazemos delivery pra você — 15 a 40min.
+
+Hoje especial: dois potinhos, cada um do jeito do outro 💕
+
+Manda o pedido aqui e a gente cuida do resto!
+```
+
+**Quando o cliente chegar via Stories/Reel (signo/astrologia 10/06):**
+```
+🐑 Oi! Veio pelo story da ovelhinha? 😄
+
+Hoje o potinho é pra dois — você personaliza cada um separado, um do jeito dela, um do jeito dele.
+
+Pra receber hoje: manda o pedido até as 22h30!
+```
+
+**Quando o cliente perguntar "vocês têm promoção pra namorados?":**
+```
+🐑 Sim! Hoje a gente faz dois potinhos separados — cada um do jeito do outro 💕
+
+Sem desconto, sem cupom — mas com nome no potinho e embalagem especial de Namorados.
+
+Quer montar? É só chamar aqui!
+```
+
+> **Regra de ouro para comparador ao vivo:** responder em **menos de 2 minutos**. Uma resposta em 5 min chega depois que ele já pediu no quiosque. Se o operador estiver ocupado, usar resposta rápida salva no WA Business (ver `wa-business-setup-namorados.md` — seção "Respostas Rápidas /duo /gift /delivery").
+
+---
+
+#### Por que o MilkyPot vence nesse cenário
+
+| O que o comparador quer | Quiosque no shopping | MilkyPot |
+|---|---|---|
+| Decisão rápida, sem espera | ⚠️ Fila + monta na hora | ✅ Manda pedido no WA, entrega em casa |
+| Personalizado para duas pessoas | ❌ Mesmo produto para todos | ✅ Um potinho pra ela, um pra ele |
+| Presente que parece "preparado" | ❌ Produto genérico | ✅ Nome na embalagem, topping escolhido |
+| Sem baixar app | ⚠️ JohnnyJoy exige Joy Fidelidade app | ✅ Só WhatsApp |
+
+**Copy de fechamento rápido** (se cliente hesitar):
+> *"Não precisa sair do sofá. Você escolhe agora, a gente entrega."*
+
+---
+
 _Belinha — Ciclo #131 | 2026-05-06_
 _Seção "Inteligência Competitiva" adicionada — Ciclo #262 | 2026-05-19_
+_Seção "Pico Catuaí / comparador ao vivo" adicionada — Ciclo #266 | 2026-05-19_
