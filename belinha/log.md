@@ -2,6 +2,47 @@
 
 ---
 
+## Ciclo #264 — 2026-05-19
+
+**Área:** UX — Banner Namorados `veryNarrow` <375px (postergado 5 ciclos desde #259)
+
+**Contexto:** Prescrito desde ciclo #259. O banner dinâmico do site (`index.html`) usava apenas dois breakpoints: full (>440px) e `narrow` (<440px, adicionado no #259). Telas <375px (360px é o padrão de Android de entrada — Motorola G-series, Samsung A-series) ainda recebiam o copy intermediário, que continha keywords como "Duo MilkyPot", "Delivery 15–40min", "Presente mais gostoso de Londrina" — texto longo demais para 360px com `padding:9px 48px 9px 16px` (48px reservado para botão ✕). Risco real: com `flex-wrap:wrap` e CTA `white-space:nowrap;flex-shrink:0`, o CTA wrapeava para a linha 2, e o `✕` com `position:absolute;top:50%` ficava centralizado no banner 2-linha, potencialmente sobrepondo o link de CTA em dispositivos muito estreitos (320px).
+
+**O que pesquisou/analisou:**
+- Leu código atual `index.html` linhas 514–669 — mapeou todas as 4 fases Namorados com ternário `narrow ?`
+- Identificou que `narrow` cobre <440px mas não tem sub-breakpoint para <375px
+- Verificou que a função `configureBanner` é chamada no `resize` — garantia de que `veryNarrow` será reavaliado corretamente
+- Confirmou que a lógica de close/sessionStorage NÃO precisava de ajuste (ignora breakpoint)
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +1 linha: `var veryNarrow = window.innerWidth < 375;` (linha 537) |
+| `index.html` | 4 ternários `narrow ? A : B` → `veryNarrow ? Ultra : narrow ? A : B` nas fases: Dia-H, Véspera, VIP 03-10/06, Preview 26/05-02/06 |
+
+**Cópias veryNarrow adicionadas (ultra-compactas para 320–374px):**
+| Fase | Texto veryNarrow |
+|------|-----------------|
+| Dia-H 12/06 | `💕 NAMORADOS! · Duo · Delivery 🐑` |
+| Véspera 11/06 | `💕 AMANHÃ! · Mande NAMORADOS26 🐑` |
+| VIP 03–10/06 | `💕 12/06 · Mande NAMORADOS26 🐑` |
+| Preview 26/05–02/06 | `💕 12/06 NAMORADOS · Potinho pra dois 🐑` |
+
+**Commit:** `b6dedee`
+
+**Próximo passo sugerido:**
+- **Ciclo #265 — Conteúdo:** Criar roteiro story "signo + potinho" para 10–11/06 (resposta criativa ao trend astrologia JohnnyJoy Gêmeos até 20/06, sem citar concorrente). Prescrito no #263
+- **Ciclo #266 — Conversão:** Verificar se playbook Namorados cobre cenário "pico de visitas orgânicas no Catuaí" (clientes comparando na hora) — copy de resposta WA para esse cenário
+- **Ciclo #267 — Concorrentes:** TheBest Açaí — não foi pesquisado nos últimos 15 ciclos; atualizar intel pré-Namorados
+- **Operador (URGENTE — 15 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** · guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 11 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador (09/06):** Disparar N1 broadcast geral — template em `whatsapp-namorados-2026.md`
+
+_Belinha — Ciclo #264 | 2026-05-19_
+
+---
+
 ## Ciclo #263 — 2026-05-19
 
 **Área:** Concorrentes — JohnnyJoy intel semana 09–12/06 (última janela pré-Dia dos Namorados)
