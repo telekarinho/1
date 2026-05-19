@@ -626,13 +626,12 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
         <div class="mc-welcome">
             <img src="/images/logo-milkypot.png" alt="Logo MilkyPot" class="mc-logo-big">
             <h1 id="welcome-h">MilkyClube</h1>
-            <p>O programa de fidelidade MilkyPot. Acumule <strong>MilkyCoins</strong>, suba de tier e ganhe recompensas a cada compra em qualquer loja.</p>
+            <p>Seu nível, suas moedas, seus benefícios. <strong>Tudo num lugar só.</strong></p>
 
             <ul class="mc-benefits" aria-label="Benefícios">
-                <li>🥛 Cashback em todas as compras</li>
-                <li>🎁 Bônus de aniversário</li>
-                <li>👥 Ganhe ao indicar amigos</li>
-                <li>🎮 Prêmios nos jogos MilkyPot</li>
+                <li>🪙 Moedas a cada compra</li>
+                <li>👑 Sobe de nível conforme volta</li>
+                <li>🎁 Benefícios VIP no seu aniversário</li>
             </ul>
 
             <button id="btn-welcome-enter" class="mc-btn mc-btn-primary" aria-label="Entrar ou criar conta">Entrar / Cadastrar</button>
@@ -666,20 +665,20 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
                 </div>
             </div>
 
-            <article class="mc-card mc-hero" aria-label="Saldo de MilkyCoins">
+            <article class="mc-card mc-hero" aria-label="Seu progresso no MilkyClube">
                 <div class="mc-tier-badge">
                     <span id="tier-emoji" aria-hidden="true">🥛</span>
                     <span id="tier-label">Leite</span>
                 </div>
-                <div class="mc-coins" id="coins-value">G$ 0</div>
-                <div class="mc-coins-brl" id="coins-brl">R$ 0,00 em MilkyCoins</div>
-                <div class="mc-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso para próximo tier">
+                <div class="mc-coins" id="coins-value">0</div>
+                <div class="mc-coins-brl" id="coins-brl">moedas do clube</div>
+                <div class="mc-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Progresso para próximo nível">
                     <span id="tier-progress-bar" style="width:0%"></span>
                 </div>
                 <div class="mc-progress-label" id="tier-progress-label">&nbsp;</div>
                 <div class="mc-btn-row">
                     <button class="mc-btn mc-btn-outline-light" id="btn-open-qr">
-                        <span aria-hidden="true">📱</span> Apresentar no caixa
+                        <span aria-hidden="true">📱</span> Mostrar no caixa
                     </button>
                     <button class="mc-btn mc-btn-outline-light" id="btn-claim-bday">
                         <span aria-hidden="true">🎂</span> Aniversário
@@ -732,21 +731,21 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
 
         <!-- ============== Benefícios ============== -->
         <section id="route-beneficios" class="mc-route" aria-labelledby="ben-h">
-            <h2 id="ben-h" class="mc-section-title">Como ganhar MilkyCoins</h2>
+            <h2 id="ben-h" class="mc-section-title">Como ganhar moedas</h2>
             <div class="mc-card">
                 <p style="color:var(--mc-text-soft);font-size:0.92rem;line-height:1.6;margin-bottom:10px;">
-                    1 MilkyCoin = R$ 0,01. Quanto mais você compra, mais sobe de tier e ganha cashback maior.
+                    Quanto mais você volta, mais sobe de nível e desbloqueia benefícios VIP.
                 </p>
                 <ul style="list-style:none;padding:0;display:grid;gap:8px;font-size:0.92rem;">
-                    <li>🛒 <strong>Cashback em compras</strong> — % conforme tier</li>
+                    <li>🛒 <strong>Toda compra</strong> — moedas conforme seu nível</li>
                     <li>🎁 <strong>Primeira compra</strong> — bônus de boas-vindas</li>
-                    <li>🎂 <strong>Aniversário</strong> — bônus no seu dia</li>
-                    <li>👥 <strong>Indicação de amigos</strong> — ganha você e o amigo</li>
-                    <li>🎮 <strong>Jogos</strong> — Desafio 10 e Raspinha</li>
+                    <li>🎂 <strong>Aniversário</strong> — benefício VIP no seu dia</li>
+                    <li>👥 <strong>Indicar amigo</strong> — vocês dois ganham</li>
+                    <li>🎮 <strong>Desafios</strong> — Desafio 10s e 300g</li>
                 </ul>
             </div>
 
-            <h2 class="mc-section-title">Seus tiers</h2>
+            <h2 class="mc-section-title">Seus níveis</h2>
             <div id="tier-list" class="mc-tier-list"></div>
         </section>
 
@@ -1158,7 +1157,7 @@ h1, h2, h3, h4 { font-family: 'Baloo 2', cursive; font-weight: 700; line-height:
         // Saldo
         var coins = Number(member.coins || 0);
         $('#coins-value').textContent = MilkyClube.formatCoins(coins);
-        $('#coins-brl').textContent = MilkyClube.formatCoinsBRL(coins) + ' em MilkyCoins';
+        $('#coins-brl').textContent = coins === 1 ? 'moeda do clube' : 'moedas do clube';
 
         // Tier
         var t = MilkyClube.tierLabel(member.tier || 'leite');
