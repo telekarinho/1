@@ -227,11 +227,16 @@ service cloud.firestore {
     match /desafio_vouchers/{voucherId} {
       allow read: if true;
       allow create: if isAuthenticated();
-      // One-way: nao pode "desusar" um voucher. Apenas marca como usado e campos correlatos.
-      allow update: if (resource.data.used == false || resource.data.used == null)
-                       && request.resource.data.used == true
-                       && request.resource.data.diff(resource.data).affectedKeys()
-                          .hasOnly(['used','usedAt','usedBy','usedAtFranchise','redeemedOrderId']);
+      // Update permite todo o fluxo legitimo (TV claim, jogo, premio, bonus).
+      // Restrito a whitelist pra evitar adulteracao de campos sensiveis.
+      // BUG (2026-05-19): rule antiga so deixava used:false->true e bloqueava
+      // o TV claim (status ready->in_progress + tvAcceptedAt) — TV ficava
+      // pegando o mesmo voucher antigo em loop porque o write falhava silente.
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                          .hasOnly(['used','usedAt','usedBy','usedAtFranchise','redeemedOrderId',
+                                    'status','tvAcceptedAt','attemptsUsed','lastUsedAt',
+                                    'attempts','instagramBonusUsed',
+                                    'lastPrizeName','lastPrizeTier','lastPrizeRule','lastPrizeAt']);
       allow delete: if isSuperAdmin();
     }
 

@@ -86,7 +86,7 @@ h1{font-family:'Baloo 2',cursive;font-size:36px;margin:6px 0 6px;font-weight:900
 .tier-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .tier-icon{font-size:44px;line-height:1}
 .tier-name{font-family:'Baloo 2',cursive;font-weight:900;font-size:20px;color:#fff;letter-spacing:.5px}
-.tier-tag{font-size:10px;font-weight:800;letter-spacing:2px;padding:3px 10px;border-radius:100px;color:#1A1A2E}
+.tier-tag{font-size:11px;font-weight:800;letter-spacing:.3px;padding:4px 12px;border-radius:100px;color:#1A1A2E;white-space:nowrap;font-style:italic}
 .tier-card.bronze    .tier-tag{background:#CD7F32}
 .tier-card.silver    .tier-tag{background:#E5E5E5}
 .tier-card.gold      .tier-tag{background:#FFD700}
@@ -126,16 +126,17 @@ h1{font-family:'Baloo 2',cursive;font-size:36px;margin:6px 0 6px;font-weight:900
   <div class="hero-tag">👑 SISTEMA CENTRAL DA MILKYPOT</div>
   <h1>MilkyClube</h1>
   <p class="sub">
-    Onde <b>tudo</b> que o cliente conquista vive: raspadinhas, moedas, streak, desafios, recompensas, ranking.
-    O cliente sobe de <b>nível VIP</b> (Bronze → Silver → Gold → Lendário) com base em compras, visitas e desafios.
-    Cada nível desbloqueia <b>prêmios melhores</b> nas outras promoções. Não é cashback — é progresso premium.
+    O cliente <b>tem um nível</b>. Quanto mais ele volta, <b>mais ele evolui</b>.
+    Tudo fica salvo no <b>Milkypass</b> dele — sem regras complicadas, sem cassino, sem "promoção infinita".
+    Bronze → Silver → Gold → Lendário. Cada nível desbloqueia <b>benefícios VIP</b> melhores nas outras experiências.
+    Não é cashback. É <b>progresso</b>.
   </p>
 
   <!-- Master toggle -->
   <div class="master">
     <div>
       <h2>👑 Sistema MilkyClube</h2>
-      <p>Quando ligado, todo cliente que pedir online ganha conta automática + tier.</p>
+      <p>Quando ligado, todo cliente que pedir online vira <b>membro</b> automaticamente e começa a evoluir.</p>
     </div>
     <label class="tog">
       <input type="checkbox" id="masterEnabled" checked>
@@ -196,13 +197,13 @@ h1{font-family:'Baloo 2',cursive;font-size:36px;margin:6px 0 6px;font-weight:900
   <div class="section">
     <h2>👑 Níveis VIP <span class="badge">progressão</span></h2>
     <p class="section-desc">
-      4 níveis com requisitos progressivos. Cada nível desbloqueia recompensas melhores em <b>todas</b> as outras promoções:
-      raspadinha lendária mais provável, desafios VIP, multiplicador de moedas, prêmios secretos.
+      4 níveis com requisitos progressivos. Cada nível desbloqueia <b>benefícios VIP</b> melhores em todas as experiências:
+      raspadinha premium, fila VIP em desafios, streak protegido, multiplicador de moedas, recompensas surpresa.
     </p>
 
     <div class="legend">
-      💡 <b>Filosofia:</b> requisitos NÃO são "ganhar dinheiro" — são <b>frequência + ticket + engajamento</b>.
-      Cliente passivo nunca chega em Lendário. Cliente que volta toda semana e acerta desafios chega rápido.
+      💡 <b>Filosofia:</b> o cliente <b>não joga</b> — ele <b>evolui</b>. Requisitos são <b>frequência + ticket + engajamento</b>,
+      não sorte. Cliente fiel sobe naturalmente. O Milkypass dele guarda tudo — visitas, moedas, streak, nível.
     </div>
 
     <div class="tier-grid" id="tierGrid"></div>
@@ -261,7 +262,7 @@ h1{font-family:'Baloo 2',cursive;font-size:36px;margin:6px 0 6px;font-weight:900
   // ============================================================
   var DEFAULT_TIERS = [
     {
-      id:'bronze', icon:'🥉', name:'Bronze', tag:'INICIANTE',
+      id:'bronze', icon:'🥉', name:'Bronze', tag:'Começando sua jornada',
       req:'A partir da <b>1ª compra</b>',
       minVisits:1, minSpend:0,
       perks:[
@@ -271,41 +272,42 @@ h1{font-family:'Baloo 2',cursive;font-size:36px;margin:6px 0 6px;font-weight:900
       ]
     },
     {
-      id:'silver', icon:'🥈', name:'Silver', tag:'FREQUENTE',
+      id:'silver', icon:'🥈', name:'Silver', tag:'Cliente frequente',
       req:'<b>4 visitas</b> ou <b>R$ 150</b> em compras',
       minVisits:4, minSpend:150,
       perks:[
-        '🎫 Raspadinha tem chance <b>+10%</b> de prêmio raro',
+        '🎫 Raspadinha desbloqueia <b>recompensas surpresa</b> melhores',
         '🪙 <b>1.2×</b> moedas (multiplicador)',
-        '🎰 Roleta libera prêmios da categoria <b>RARA</b>',
-        '⚖️ Desafio 300g VIP: 1 tentativa extra por semana'
+        '🎁 Roleta libera <b>recompensas especiais</b> do clube',
+        '⚖️ Desafio 300g: 1 tentativa extra por semana'
       ]
     },
     {
-      id:'gold', icon:'🥇', name:'Gold', tag:'FIEL',
+      id:'gold', icon:'🥇', name:'Gold', tag:'Favorito da Milkypot',
       req:'<b>10 visitas</b> ou <b>R$ 400</b> em compras + <b>streak de 5 dias</b>',
       minVisits:10, minSpend:400, minStreak:5,
       perks:[
-        '🎫 Raspadinha chance <b>+25%</b> de épico/lendário',
+        '🎫 Raspadinha <b>premium</b> — recompensas de maior valor',
         '🪙 <b>1.5×</b> moedas',
-        '🎰 Roleta libera <b>todas</b> as categorias incluindo épicos',
+        '🎁 Roleta libera <b>todas</b> as recompensas do clube',
         '⚖️ Desafio 300g: 2 tentativas extras por semana',
-        '🎁 Aniversário: prêmio lendário automático',
+        '🎂 Benefício VIP de aniversário automático',
         '🍦 Sundae upgrade grátis na primeira visita do mês'
       ]
     },
     {
-      id:'legendary', icon:'👑', name:'Lendário', tag:'ELITE',
+      id:'legendary', icon:'👑', name:'Lendário', tag:'Elite Milkypot',
       req:'<b>30 visitas</b> ou <b>R$ 1.000</b> + <b>streak de 14 dias</b> + <b>1 desafio 300g</b>',
       minVisits:30, minSpend:1000, minStreak:14,
       perks:[
-        '🎫 Raspadinha tem chance <b>2× maior</b> de lendário',
-        '🪙 <b>2×</b> moedas',
-        '🎰 Roleta tem prêmio garantido (sem repetição)',
-        '⚖️ Desafios 300g e 10s: <b>ilimitado</b>',
-        '👑 Camiseta exclusiva LENDÁRIO',
+        '👑 <b>Fila VIP</b> nos desafios — sempre prioridade',
+        '👑 Raspadinha <b>premium</b> com recompensas top do clube',
+        '🛡️ <b>Streak protegido</b> — 1 dia perdido não zera o ritmo',
+        '🪙 <b>2×</b> moedas (multiplicador máximo)',
+        '🎂 Benefícios VIP de aniversário (mês inteiro)',
+        '🍦 <b>Toppings premium</b> liberados em qualquer pedido',
         '🏆 Aparece no <b>Hall da Fama</b> permanentemente',
-        '📲 Acesso antecipado a novos sabores e promoções'
+        '📲 Acesso antecipado a novos sabores e benefícios'
       ]
     }
   ];
