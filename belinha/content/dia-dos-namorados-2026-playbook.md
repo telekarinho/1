@@ -343,4 +343,48 @@ Dois potinhos = dois sorrisos 💕
 
 ---
 
+## INTELIGÊNCIA COMPETITIVA — SEMANA DE 12/06
+
+> **Leia antes do evento.** Condensado de `belinha/competitors/milkymoo.md` + `wa-business-setup-namorados.md` — operador não precisa abrir mais nenhum arquivo.
+
+### MilkyMoo × Cinema "Como Treinar o Seu Dragão" (live-action estreia ~12/06)
+
+**O que vai acontecer:** MilkyMoo roda campanha nacional vinculada ao lançamento do live-action *Como Treinar o Seu Dragão* (Universal Pictures, 2026) com produto temático chamado **"Tempestade"**. Franqueados em shoppings de Londrina (Catuaí, etc.) terão presença física + estímulo de cinema no mesmo dia.
+
+**Estratégia deles:** licença oficial Universal + produto fixo igual para todos, app-gated (cliente precisa baixar o app MilkyMoo para pedir). Visual forte. Mas o produto é o mesmo para qualquer casal.
+
+**Três vantagens do MilkyPot que o cinema não resolve:**
+
+| O que o casal quer | MilkyMoo + Cinema | MilkyPot |
+|----|----|----|
+| Sobremesa sem sair de casa | ❌ Só na loja, fila no shopping | ✅ Delivery 15–40min |
+| Personalização para a pessoa certa | ❌ "Tempestade" igual para todos | ✅ Potinho com os sabores favoritos DELA / DELE |
+| Sem cadastro / download de app | ❌ Exige app + cadastro + pedido no app | ✅ Só WhatsApp — zero fricção |
+
+**Copy de counter-posicionamento para atendimento manual** (nunca cite o concorrente por nome):
+> *"Cinema é pra ver o filme. O potinho é pra lembrar de quem você estava."*
+
+**Quando usar:** cliente mencionar cinema, shopping ou "aquele milkshake do dragão" — responder com foco na personalização e na experiência, não no produto deles. A resposta certa nunca ataca; apenas reposiciona.
+
+---
+
+### Story de counter-posicionamento (opcional)
+
+**Publicar Qui 11/06 — somente se** a campanha cinema MilkyMoo estiver visível nas redes nessa semana. Se não estiver rodando localmente, use o roteiro padrão de `story-11jun-anti-prato-compartilhado.md`.
+
+**Roteiro · 1 story · 6s · Fundo lilás/baunilha:**
+```
+Tem presente que você divide na metade.
+E tem o potinho — feito pra uma pessoa só. 🐑💕
+
+[Nome DELA no potinho DELA. Nome DELE no potinho DELE.]
+
+[CTA: Manda NAMORADOS26 aqui ↗]
+```
+
+> **Não usar o nome do filme nem do concorrente** — o ângulo implícito basta e evita qualquer risco de comparação direta.
+
+---
+
 _Belinha — Ciclo #131 | 2026-05-06_
+_Seção "Inteligência Competitiva" adicionada — Ciclo #262 | 2026-05-19_
