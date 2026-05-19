@@ -1354,3 +1354,67 @@ ou
 **Fontes ciclo #260:** promoview.com.br (snippet), gkpb.com.br (snippet), creativosbr.com.br (snippet), marcapop.com.br (snippet), foodbizbrasil.com, auroracultural.com, gironews.com, WebSearch 2026-05-18
 
 _Belinha — Ciclo #260 | 2026-05-18_
+
+---
+
+### ATUALIZAÇÃO CICLO #273 — 2026-05-19
+
+#### 1. Novos dados confirmados — Cenário MilkyMoo Londrina pré-Namorados
+
+**Insight mais importante:** o produto **MooBai Chocolate** (sabor premium lançado para o Dia dos Namorados 2026) **NÃO chegará a Londrina**. O lançamento é restrito a 5 unidades: Morumbi Shopping, Shopping Center Norte, SP Market e Paraíso (SP) + Flamboyant Shopping (GO). MilkyMoo Londrina (Catuaí) vai ao Dia dos Namorados **sem produto especial de namorados** — só com o "Tempestade" (campanha cinema) e promoções locais.
+
+| Produto | Disponível Londrina? | Preço (Londrina ref.) |
+|---------|----------------------|----------------------|
+| Tempestade (shake temático "Como Treinar Dragão") | ✅ SIM (nacional) | 500ml R$22 |
+| Promoção 2×500ml → par de ingressos | ✅ SIM (até esgotar) | 2× R$22 = R$44 para ganhar ingressos |
+| MooBai Chocolate Namorados (premium) | ❌ NÃO (só SP+GO) | R$30–R$34 (indisponível) |
+| Carameluda (collab O Boticário) | ✅ SIM mas termina ~fim de maio | a partir de R$25 (300ml) |
+| 180ml pós-almoço (day part) | ✅ SIM mas só balcão, sem delivery | R$12,90–R$14,90 |
+
+#### 2. Collab O Boticário × MilkyMoo — "Carameluda" (abril–maio/2026)
+
+Parceria lançada em abril/2026 para divulgar a linha **Cuide-se Bem Deleite Caramelizado** (O Boticário). O milkshake "Carameluda" combina sorvete de baunilha, recheio de caramelo salgado, doce de leite e biscoito especiaria. Preço: a partir de R$25 (300ml), disponível em 300ml/500ml/700ml.
+
+- **Gancho:** hashtag `#DoceLovers` + singeressa Desirée nas redes
+- **Encerramento:** até fim de maio/2026 → **NÃO estará mais ativa em 12/06**
+- **Impacto Londrina:** estará disponível em Catuaí até ~31/05, depois sai do cardápio. No Dia dos Namorados, a única "novidade" de MilkyMoo Londrina será a campanha Tempestade.
+
+#### 3. Preços de referência atualizados — MilkyMoo Londrina (Catuaí)
+
+| Linha | 300ml | 500ml | Nota |
+|-------|-------|-------|------|
+| Clássicos | R$18 | R$22 | Filó, Graciosa, Preta, Tempestade |
+| Nutty Bavarian | R$27 | R$32 | Estrela, Pistache Pérola, Macadâmia |
+| Alcoólicos | R$25 | R$35 | Joia Rara |
+| 180ml day part | R$12,90–R$14,90 | — | Só balcão, só até 13h59 |
+| Carameluda (collab) | a partir de R$25 | — | Só até ~31/05 |
+| MooBai Chocolate | — | — | Não disponível Londrina |
+
+**Comparativo direto com MilkyPot:** Potinho individual MilkyPot R$19,90 · Duo MilkyPot (2 potinhos) ~R$39,80 vs. 2× MilkyMoo 500ml Clássico R$44 + espera de ingresso pelo correio. MilkyPot é mais barato, personalizado e entrega em casa.
+
+#### 4. Mapa de ameaças atualizado — 12/06/2026 (Dia dos Namorados)
+
+| Ameaça | Status | Risco Londrina | Resposta MilkyPot |
+|--------|--------|----------------|-------------------|
+| Tempestade × Cinema (Catuaí) | ATIVO | **ALTO** — fluxo de casais no shopping pré/pós filme | Delivery sem shopping, sem app, sem fila |
+| MooBai Chocolate Namorados | SÓ SP/GO | **ZERO** em Londrina | — gap favorável ao MilkyPot |
+| Promoção ingressos 2×500ml | NACIONAL | **MÉDIO** — gatilho "ganhar algo" | Duo personalizado > ingresso genérico |
+| Carameluda (Boticário) | Encerra ~31/05 | **ZERO** no 12/06 | — |
+| App exclusivo MilkyMoo | ATIVO | **BAIXO** — barreira de download | WA sem fricção: "manda NAMORADOS26" |
+
+#### 5. Insights estratégicos ciclo #273
+
+**O gap mais importante:** MilkyMoo Londrina chega ao Dia dos Namorados **sem produto especial para casais** — o MooBai Namorados não chega aqui, e a Carameluda termina antes. A experiência deles será: "Tempestade temática de dragão + ingresso pelo app". Para um casal que quer **sobremesa romântica**, o posicionamento é incongruente (dragões ≠ romance).
+
+**MilkyPot tem o produto mais adequado ao Dia dos Namorados em Londrina:** Duo personalizado, entrega em casa, nome de cada um no potinho.
+
+**Copy recomendado (adicionar ao playbook de Namorados):**
+> *"MilkyMoo tem dragão. MilkyPot tem o nome dele e o dela no potinho."*
+> *(uso interno/briefing, nunca publicar citando a concorrente)*
+
+> *"A gente não faz sorvete de personagem. A gente faz do jeito que vocês são."*
+> *(versão para stories e WA, sem citar concorrente)*
+
+**Fontes ciclo #273:** mercadoeconsumo.com.br, gkpb.com.br, clubeag.com, foodbizbrasil.com, promoview.com.br, creativosbr.com.br, topsociety.com.br, TikTok @marceladegusta, instagram.com/milkymoo_londrina (snippet), WebSearch 2026-05-19
+
+_Belinha — Ciclo #273 | 2026-05-19_
