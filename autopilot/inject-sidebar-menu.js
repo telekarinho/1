@@ -12,25 +12,18 @@ const fs = require('fs');
 const path = require('path');
 
 const PANEL_DIR = path.join(__dirname, '..', 'painel');
-const SCRIPT_TAG = '<script src="../js/core/sidebar-menu.js?v=mp-v308" defer></script>';
+const SCRIPT_TAG = '<script src="../js/core/sidebar-menu.js?v=mp-v310" defer></script>';
 const MARKER = 'sidebar-menu.js';
 
 function processFile(filePath) {
     const name = path.basename(filePath);
     let content = fs.readFileSync(filePath, 'utf8');
 
-    // Skip pdv.html — tem layout proprio sem sidebar
-    if (name === 'pdv.html') return { name, status: 'skip-no-sidebar' };
-
-    // Skip se ja tem o script
+    // Skip se ja tem o script (idempotente)
     if (content.includes(MARKER)) return { name, status: 'already-has' };
 
-    // So pages que tem o menu duplicado
-    if (!content.includes('sidebar-nav-group') && !content.includes('class="sidebar-nav"')) {
-        return { name, status: 'no-sidebar-nav' };
-    }
-
-    // Insere antes de </body>
+    // Insere antes de </body> em TODAS as paginas — mesmo as sem sidebar
+    // recebem o script pra ter Ctrl+K command palette global
     const closingBody = content.lastIndexOf('</body>');
     if (closingBody === -1) {
         return { name, status: 'no-closing-body' };

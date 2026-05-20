@@ -285,16 +285,286 @@
         if (nav.dataset.mpRendered === '1') return true;
 
         var currentPage = getCurrentPage();
-        var html = MENU_STRUCTURE.map(function (cat) {
-            return renderCategory(cat, currentPage);
-        }).join('');
 
-        nav.innerHTML = html;
+        // BUSCA RAPIDA — input no topo do menu
+        var searchHtml = '<div class="mp-menu-search">' +
+            '<span class="mp-menu-search-icon">🔍</span>' +
+            '<input type="text" class="mp-menu-search-input" id="mpMenuSearchInput" ' +
+                'placeholder="Buscar página... (Ctrl+K)" autocomplete="off">' +
+            '<span class="mp-menu-search-shortcut">Ctrl K</span>' +
+            '</div>';
+
+        var menuHtml = '<div class="mp-menu-list">' +
+            MENU_STRUCTURE.map(function (cat) {
+                return renderCategory(cat, currentPage);
+            }).join('') +
+            '</div>';
+
+        // Resultados da busca (escondido por padrao)
+        var resultsHtml = '<div class="mp-menu-search-results" id="mpMenuSearchResults" style="display:none"></div>';
+
+        nav.innerHTML = searchHtml + resultsHtml + menuHtml;
         nav.dataset.mpRendered = '1';
         nav.classList.add('mp-menu-collapsible');
 
         bindToggleEvents(nav);
+        bindSearchEvents(nav);
+        bindCommandPalette();
         return true;
+    }
+
+    // ============================================================
+    // BUSCA RAPIDA + COMMAND PALETTE
+    // ============================================================
+
+    // Achata MENU_STRUCTURE numa lista plana com category breadcrumb
+    function getAllItems() {
+        var out = [];
+        MENU_STRUCTURE.forEach(function (cat) {
+            cat.items.forEach(function (item) {
+                if (!item.href || item.href === '#') return;
+                out.push({
+                    href: item.href,
+                    label: item.label,
+                    icon: item.icon,
+                    catLabel: cat.label,
+                    catIcon: cat.icon,
+                    keywords: (item.keywords || []).concat([item.label, cat.label]).join(' ').toLowerCase(),
+                    highlight: !!item.highlight,
+                    highlightColor: item.highlightColor
+                });
+            });
+        });
+        // Sinonimos extras pra ajudar busca em portugues
+        var EXTRA = {
+            'pdv.html': 'caixa venda atender finalizar pedido cartao dinheiro pix',
+            'pedidos.html': 'pedido entrega delivery ifood',
+            'entregas.html': 'delivery motoboy entregar',
+            'ponto.html': 'bater ponto funcionario clt jornada',
+            'financeiro.html': 'dinheiro lucro receita faturamento',
+            'despesas.html': 'gasto custo conta pagar',
+            'fiscal.html': 'nota nfce nfe imposto',
+            'estoque-inteligente.html': 'inventario produto faltando',
+            'compras.html': 'comprar fornecedor pedido compra',
+            'equipe.html': 'funcionario colaborador rh',
+            'fidelidade.html': 'clube milkyclube ponto cliente vip',
+            'raspinha-config.html': 'sorteio premio raspar',
+            'tv-indoor.html': 'televisao loja tv',
+            'marketing.html': 'campanha promocao anuncio',
+            'plano-acao.html': 'urgente prioridade tarefa',
+            'configuracoes.html': 'config setting ajuste',
+            'configurar-impressao-automatica.html': 'impressora termica nao fiscal recibo kiosk printing chrome flag',
+            'whatsapp-conectar.html': 'whatsapp zap qr code conectar',
+            'whatsapp-conversas.html': 'whatsapp zap conversa mensagem',
+            'copilot-belinha.html': 'belinha ia bot ajuda copilot',
+            'belinha-learnings.html': 'belinha treinar ensinar resposta'
+        };
+        out.forEach(function (it) {
+            if (EXTRA[it.href]) it.keywords += ' ' + EXTRA[it.href];
+        });
+        return out;
+    }
+
+    function fuzzyMatch(haystack, needle) {
+        if (!needle) return true;
+        needle = needle.toLowerCase().trim();
+        if (!needle) return true;
+        // Substring direta
+        if (haystack.indexOf(needle) !== -1) return true;
+        // Substring com cada palavra do needle (todas precisam dar match)
+        var words = needle.split(/\s+/);
+        return words.every(function (w) { return haystack.indexOf(w) !== -1; });
+    }
+
+    function searchItems(query) {
+        if (!query || !query.trim()) return [];
+        var all = getAllItems();
+        return all.filter(function (it) { return fuzzyMatch(it.keywords, query); }).slice(0, 12);
+    }
+
+    function renderSearchResults(results, query) {
+        if (!results.length) {
+            return '<div class="mp-menu-search-empty">Nenhuma página encontrada para "' +
+                escapeHtml(query) + '"</div>';
+        }
+        return results.map(function (r, idx) {
+            var style = '';
+            if (r.highlight && r.highlightColor) {
+                style = 'border-left:3px solid ' + r.highlightColor + ';';
+            }
+            return '<a href="' + r.href + '" class="mp-menu-search-result" data-search-idx="' + idx + '" ' +
+                'style="' + style + '">' +
+                '<span class="mp-menu-search-result-icon">' + r.icon + '</span>' +
+                '<div class="mp-menu-search-result-text">' +
+                    '<div class="mp-menu-search-result-label">' + escapeHtml(r.label) + '</div>' +
+                    '<div class="mp-menu-search-result-cat">' + r.catIcon + ' ' + escapeHtml(r.catLabel) + '</div>' +
+                '</div>' +
+                '</a>';
+        }).join('');
+    }
+
+    function escapeHtml(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function bindSearchEvents(nav) {
+        var input = nav.querySelector('#mpMenuSearchInput');
+        var results = nav.querySelector('#mpMenuSearchResults');
+        var menuList = nav.querySelector('.mp-menu-list');
+        if (!input || !results || !menuList) return;
+
+        var selectedIdx = 0;
+        var currentResults = [];
+
+        function update() {
+            var q = input.value;
+            if (!q || !q.trim()) {
+                results.style.display = 'none';
+                menuList.style.display = '';
+                results.innerHTML = '';
+                currentResults = [];
+                return;
+            }
+            currentResults = searchItems(q);
+            selectedIdx = 0;
+            results.innerHTML = renderSearchResults(currentResults, q);
+            results.style.display = 'block';
+            menuList.style.display = 'none';
+            highlightSelected();
+        }
+
+        function highlightSelected() {
+            results.querySelectorAll('.mp-menu-search-result').forEach(function (el, idx) {
+                el.classList.toggle('selected', idx === selectedIdx);
+            });
+        }
+
+        input.addEventListener('input', update);
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                input.value = '';
+                update();
+                input.blur();
+            } else if (e.key === 'ArrowDown' && currentResults.length) {
+                e.preventDefault();
+                selectedIdx = Math.min(selectedIdx + 1, currentResults.length - 1);
+                highlightSelected();
+            } else if (e.key === 'ArrowUp' && currentResults.length) {
+                e.preventDefault();
+                selectedIdx = Math.max(selectedIdx - 1, 0);
+                highlightSelected();
+            } else if (e.key === 'Enter' && currentResults.length) {
+                e.preventDefault();
+                var target = currentResults[selectedIdx];
+                if (target) {
+                    location.href = target.href;
+                }
+            }
+        });
+    }
+
+    // COMMAND PALETTE — overlay global ativado por Ctrl+K
+    function openCommandPalette() {
+        if (document.getElementById('mpCommandPalette')) return;
+
+        var overlay = document.createElement('div');
+        overlay.id = 'mpCommandPalette';
+        overlay.className = 'mp-cmd-palette';
+        overlay.innerHTML =
+            '<div class="mp-cmd-backdrop"></div>' +
+            '<div class="mp-cmd-box">' +
+                '<div class="mp-cmd-search">' +
+                    '<span class="mp-cmd-icon">🔍</span>' +
+                    '<input type="text" id="mpCmdInput" placeholder="Para onde você quer ir? Digite o nome da página..." autocomplete="off">' +
+                    '<span class="mp-cmd-esc">ESC</span>' +
+                '</div>' +
+                '<div class="mp-cmd-results" id="mpCmdResults"></div>' +
+                '<div class="mp-cmd-footer">' +
+                    '<span>↑↓ navegar</span>' +
+                    '<span>↵ abrir</span>' +
+                    '<span>esc fechar</span>' +
+                '</div>' +
+            '</div>';
+        document.body.appendChild(overlay);
+
+        var input = overlay.querySelector('#mpCmdInput');
+        var resultsEl = overlay.querySelector('#mpCmdResults');
+        var selectedIdx = 0;
+        var currentResults = [];
+
+        function close() {
+            overlay.remove();
+        }
+
+        function update() {
+            var q = input.value;
+            currentResults = q && q.trim() ? searchItems(q) : getAllItems().slice(0, 12);
+            selectedIdx = 0;
+            resultsEl.innerHTML = currentResults.length
+                ? currentResults.map(function (r, idx) {
+                    return '<a href="' + r.href + '" class="mp-cmd-result" data-idx="' + idx + '">' +
+                        '<span class="mp-cmd-result-icon">' + r.icon + '</span>' +
+                        '<div class="mp-cmd-result-text">' +
+                            '<div class="mp-cmd-result-label">' + escapeHtml(r.label) + '</div>' +
+                            '<div class="mp-cmd-result-cat">' + r.catIcon + ' ' + escapeHtml(r.catLabel) + '</div>' +
+                        '</div>' +
+                    '</a>';
+                }).join('')
+                : '<div class="mp-cmd-empty">🤷 Nenhuma página encontrada</div>';
+            highlight();
+        }
+
+        function highlight() {
+            resultsEl.querySelectorAll('.mp-cmd-result').forEach(function (el, idx) {
+                el.classList.toggle('selected', idx === selectedIdx);
+                if (idx === selectedIdx) {
+                    el.scrollIntoView({ block: 'nearest' });
+                }
+            });
+        }
+
+        input.addEventListener('input', update);
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { e.preventDefault(); close(); }
+            else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIdx = Math.min(selectedIdx + 1, currentResults.length - 1);
+                highlight();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIdx = Math.max(selectedIdx - 1, 0);
+                highlight();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                var t = currentResults[selectedIdx];
+                if (t) location.href = t.href;
+            }
+        });
+
+        // Clica no backdrop fecha
+        overlay.querySelector('.mp-cmd-backdrop').addEventListener('click', close);
+
+        update();
+        setTimeout(function () { input.focus(); }, 50);
+    }
+
+    function bindCommandPalette() {
+        if (window.__mpCmdPaletteBound) return;
+        window.__mpCmdPaletteBound = true;
+        document.addEventListener('keydown', function (e) {
+            // Ctrl+K ou Cmd+K
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                // Nao captura se foco ja ta num input/textarea (deixa o atalho do navegador)
+                var t = e.target;
+                var inField = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+                if (inField && t.id !== 'mpCmdInput') return;
+                e.preventDefault();
+                openCommandPalette();
+            }
+        });
+        // Expor pra outros componentes abrirem
+        window.openCommandPalette = openCommandPalette;
     }
 
     function bindToggleEvents(nav) {
@@ -350,10 +620,51 @@
             '.mp-menu-cat-items .sidebar-link{margin-left:6px;padding-left:18px;font-size:13.5px}',
             '.mp-menu-cat-items .sidebar-link .icon{font-size:15px;width:22px;text-align:center}',
             '.mp-menu-cat-items .sidebar-link.active{background:linear-gradient(135deg,rgba(255,213,79,.20),rgba(255,152,0,.15));border-left:3px solid #FFD54F;font-weight:700}',
+            // BUSCA RAPIDA no topo do menu
+            '.mp-menu-search{position:relative;margin:0 0 12px;background:rgba(255,255,255,.08);border-radius:10px;display:flex;align-items:center;padding:8px 10px;border:1px solid rgba(255,255,255,.12);transition:border-color .15s,background .15s}',
+            '.mp-menu-search:focus-within{background:rgba(255,255,255,.15);border-color:rgba(255,213,79,.55)}',
+            '.mp-menu-search-icon{font-size:14px;opacity:.7;margin-right:8px}',
+            '.mp-menu-search-input{flex:1;background:transparent;border:0;outline:0;color:#fff;font-family:inherit;font-size:13px;font-weight:600;min-width:0}',
+            '.mp-menu-search-input::placeholder{color:rgba(255,255,255,.5);font-weight:500}',
+            '.mp-menu-search-shortcut{background:rgba(255,255,255,.15);color:rgba(255,255,255,.85);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.5px;font-family:monospace;flex-shrink:0;margin-left:6px}',
+            // Resultados busca local (substitui menu)
+            '.mp-menu-search-results{display:flex;flex-direction:column;gap:4px;animation:mpFadeIn .15s ease}',
+            '@keyframes mpFadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}',
+            '.mp-menu-search-result{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;text-decoration:none;color:#fff;transition:background .15s;border-left:3px solid transparent}',
+            '.mp-menu-search-result:hover,.mp-menu-search-result.selected{background:rgba(255,213,79,.18);border-left-color:#FFD54F}',
+            '.mp-menu-search-result-icon{font-size:18px;flex-shrink:0;width:24px;text-align:center}',
+            '.mp-menu-search-result-text{flex:1;min-width:0}',
+            '.mp-menu-search-result-label{font-weight:700;font-size:13px;line-height:1.2;color:#fff}',
+            '.mp-menu-search-result-cat{font-size:10px;opacity:.65;margin-top:2px;text-transform:uppercase;letter-spacing:.4px}',
+            '.mp-menu-search-empty{padding:18px 12px;text-align:center;color:rgba(255,255,255,.6);font-size:12px;font-style:italic}',
+            // COMMAND PALETTE — overlay global Ctrl+K
+            '.mp-cmd-palette{position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-start;justify-content:center;padding:80px 20px 20px;font-family:"Nunito",sans-serif;animation:mpCmdFade .15s ease}',
+            '@keyframes mpCmdFade{from{opacity:0}to{opacity:1}}',
+            '.mp-cmd-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px)}',
+            '.mp-cmd-box{position:relative;width:100%;max-width:560px;background:#fff;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.4);overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 120px);animation:mpCmdSlide .25s cubic-bezier(.34,1.56,.64,1)}',
+            '@keyframes mpCmdSlide{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}',
+            '.mp-cmd-search{display:flex;align-items:center;padding:18px 20px;border-bottom:1px solid #EEE5FF;gap:12px}',
+            '.mp-cmd-icon{font-size:20px;opacity:.6}',
+            '.mp-cmd-search input{flex:1;border:0;outline:0;font-family:inherit;font-size:16px;font-weight:600;color:#3D2A55;background:transparent}',
+            '.mp-cmd-search input::placeholder{color:#B0A0CC;font-weight:500}',
+            '.mp-cmd-esc{background:#F0E0FF;color:#5A4570;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:800;font-family:monospace}',
+            '.mp-cmd-results{flex:1;overflow-y:auto;padding:8px;max-height:60vh}',
+            '.mp-cmd-result{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:10px;text-decoration:none;color:#3D2A55;transition:background .12s}',
+            '.mp-cmd-result:hover,.mp-cmd-result.selected{background:linear-gradient(135deg,#FFF3CC,#FFE0EC)}',
+            '.mp-cmd-result-icon{font-size:24px;width:32px;text-align:center;flex-shrink:0}',
+            '.mp-cmd-result-text{flex:1;min-width:0}',
+            '.mp-cmd-result-label{font-weight:800;font-size:15px;line-height:1.2;color:#3D2A55}',
+            '.mp-cmd-result-cat{font-size:11px;color:#9484A8;margin-top:2px;text-transform:uppercase;letter-spacing:.4px;font-weight:700}',
+            '.mp-cmd-empty{padding:36px 20px;text-align:center;color:#9484A8;font-size:14px;font-style:italic}',
+            '.mp-cmd-footer{display:flex;gap:18px;padding:12px 20px;border-top:1px solid #EEE5FF;font-size:11px;color:#9484A8;font-weight:700;letter-spacing:.4px;text-transform:uppercase}',
+            '.mp-cmd-footer span{display:flex;align-items:center;gap:4px}',
             // Mobile: header maior pra clicar facil
             '@media (max-width: 768px){',
             '  .mp-menu-cat-header{padding:12px 14px;font-size:14px}',
             '  .mp-menu-cat-items .sidebar-link{padding:11px 14px 11px 22px}',
+            '  .mp-menu-search-shortcut{display:none}',
+            '  .mp-cmd-palette{padding:20px 12px}',
+            '  .mp-cmd-box{max-height:calc(100vh - 40px)}',
             '}'
         ].join('');
         var style = document.createElement('style');
@@ -367,7 +678,10 @@
     // ============================================================
     function boot() {
         injectCss();
-        renderMenu();
+        var rendered = renderMenu();
+        // Command palette funciona em TODAS as paginas (mesmo sem sidebar)
+        // — Ctrl+K em qualquer lugar abre o navegador rapido
+        if (!rendered) bindCommandPalette();
     }
 
     if (document.readyState === 'loading') {
