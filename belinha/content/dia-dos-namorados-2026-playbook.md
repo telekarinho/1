@@ -368,6 +368,36 @@ Dois potinhos = dois sorrisos 💕
 
 ---
 
+### Gap confirmado (Ciclo #273 — 20/05/2026): MilkyMoo chega ao 12/06 sem produto para casais em Londrina
+
+> **Insight de inteligência competitiva — use nas briefings de equipe, NÃO publique externamente.**
+
+**MooBai Chocolate** (produto especial Namorados 2026 da MilkyMoo): **AUSENTE em Londrina.** Confirmado em 20/05. Restrito a 5 lojas em SP e Goiânia — não chega ao Paraná. Preço nas cidades disponíveis: R$30–R$34.
+
+**Collab O Boticário × MilkyMoo "Carameluda"** (abr–mai/2026): disponível nacional incluindo Londrina, mas **encerra ~31/05** — antes do Dia dos Namorados. Sem reposição confirmada.
+
+**Resultado:** MilkyMoo Londrina chega ao 12/06 com apenas a campanha "Tempestade de dragão + ingresso via app" — posicionamento de aventura/cinema, incongruente para romance. **MilkyPot tem o produto mais adequado ao casal em Londrina nessa data.**
+
+**Copies internos de briefing** (para treinamento de equipe, não para publicar):
+
+| Uso | Copy |
+|-----|------|
+| Briefing interno — equipe | *"MilkyMoo tem dragão. MilkyPot tem o nome dele e o dela no potinho."* |
+| Stories / WA — reposicionamento | *"A gente não faz sorvete de personagem. A gente faz do jeito que vocês são."* |
+
+**Preços MilkyMoo Londrina atualizados (maio/2026):**
+
+| Produto | 300ml | 500ml |
+|---------|-------|-------|
+| Clássicos | R$18 | R$22 |
+| Nutty Bavarian | R$27 | R$32 |
+| Alcoólicos | R$25 | R$35 |
+| Day part 180ml (sem delivery) | R$12,90–R$14,90 | — |
+
+> Preços confirmados em 20/05/2026 via análise `belinha/competitors/milkymoo.md` ciclo #273. Comparativo: Duo MilkyPot (2×300ml) = R$39,80 vs. MilkyMoo 2×300ml clássico = R$36 — gap de R$3,80 amplamente justificado pela personalização individual + delivery + sem app.
+
+---
+
 ### Story de counter-posicionamento (opcional)
 
 **Publicar Qui 11/06 — somente se** a campanha cinema MilkyMoo estiver visível nas redes nessa semana. Se não estiver rodando localmente, use o roteiro padrão de `story-11jun-anti-prato-compartilhado.md`.
