@@ -2,6 +2,58 @@
 
 ---
 
+## Ciclo #278 — 2026-05-20
+
+**Área:** SEO — Landing page dedicada para Dia dos Namorados (12/06)
+
+**Contexto:** D-23 da data. Ciclo #277 indicava verificar meta tags de Namorados em `index.html`. Ao verificar: meta tags do `index.html` já tinham Namorados (ciclos anteriores); Schema.org Event também existia. Gap identificado: nenhuma landing page dedicada para "presente dia dos namorados Londrina" — keyword umbrella de alta intenção. A `potinho-junino-londrina.html` existe como página dedicada para a Festa Junina, mas não havia equivalente para Namorados. Com D-23, o Google tem tempo de indexar antes do pico de busca (D-7 = 05/06).
+
+**O que pesquisou/analisou:**
+- Verificou `index.html` — meta tags e schema.org Event já refletiam Namorados (ciclos anteriores OK)
+- Verificou sitemap.xml — nenhuma entrada para landing Namorados
+- Verificou `potinho-junino-londrina.html` — template de landing page (512 linhas) a seguir
+- Confirmou ausência de `duo-milkypot-namorados-londrina.html` no filesystem
+- Identificou que Event schema em `index.html` tinha `validFrom: "2026-06-12"` para a Offer — Google não apresentaria em resultados de busca antes de 12/06. Nova page tem `validFrom: "2026-05-20"` → elegível para rich results agora
+- Verificou copy do `dia-dos-namorados-2026-playbook.md` para garantir alinhamento de posicionamento
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `duo-milkypot-namorados-londrina.html` | Criado (598 linhas). Landing page completa para Namorados |
+| `sitemap.xml` | Nova entrada priority 0.95 + lastmod index.html corrigida para 2026-05-20 |
+
+**Detalhes da landing page criada:**
+- Meta tags: title, description, keywords, canonical (7 keywords de Namorados em Londrina)
+- Open Graph + Twitter Card com copy de Namorados
+- Schema.org: BreadcrumbList + Product + FoodEstablishment + FAQPage (6 Q&A) + Event separado
+- Event schema com `validFrom: "2026-05-20"` → rich result elegível agora (vs. `2026-06-12` na homepage)
+- FAQ cobre: o que é Duo, quanto custa, delivery 12/06, Fit, NAMORADOS26, diferencial vs. bombom
+- Countdown regressivo até 12/06 14h BRT (17h UTC)
+- CTA switch: antes de 12/06 = "Entrar na lista VIP NAMORADOS26"; após = "Quero o Duo agora 💕"
+- Duo visual: dois cards de potinho (Camila🍓 / Lucas🍫) — âncora visual do conceito de nome no potinho
+- Paleta rose/pink temática
+- WA pré-preenchido com código NAMORADOS26
+
+**Commit:** `86e5170`
+
+**Por que gera valor:**
+- Captura search intent "presente dia dos namorados Londrina" / "o que fazer dia dos namorados Londrina 2026" que não era capturado pela homepage (muito genérica)
+- `validFrom: "2026-05-20"` faz o Event schema ser elegível para Google Event rich results agora, 23 dias antes — vs. homepage que só mostraria a partir de 12/06
+- FAQ schema = acordeão no SERP (mais espaço visual, mais cliques)
+- Alinhado com Reel 09/06 (ciclo #277): Reel âncora o conceito "nome no potinho" → link para este site captura quem busca na semana seguinte
+
+**Próximo passo sugerido:**
+- **Ciclo #279 — UX:** Verificar se o botão WhatsApp flutuante do `index.html` (e/ou `cardapio.html`) tem a mensagem pré-preenchida com "NAMORADOS26" ou mensagem genérica na semana 09-12/06
+- **Ciclo #280 — Conteúdo:** Story 09/06 17h teaser Namorados (3 stories de antecipação antes do Reel das 19h) — playbook menciona slot mas sem script
+- **Ciclo #281 — SEO:** Adicionar link interno: `index.html` e `cardapio.html` → `duo-milkypot-namorados-londrina.html` (seção Namorados/eventos) para acelerar indexação da nova página
+- **Operador (URGENTE — 14 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** — guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 10 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+
+_Belinha — Ciclo #278 | 2026-05-20_
+
+---
+
 ## Ciclo #276 — 2026-05-20
 
 **Área:** Concorrentes — JohnnyJoy intel final pré-Namorados + fix de bug de dias da semana
