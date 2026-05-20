@@ -1212,6 +1212,40 @@ function fnShowApp(session, staff) {
     fnApplyAppConfig(session.franchiseId);  // aplica feature flags do admin
     fnSetupApkDownload();                   // mostra/esconde card APK conforme contexto
 
+    // 🤖 AUTO-COMPLETE: se funcionária esqueceu de bater saída e passou 30 min
+    // do horário combinado, sistema completa SOZINHO usando jornada contratual
+    // (Súmula 338 TST). Roda só pra essa staff (escopo), throttle 30min.
+    (async function autoCompleteOnLoad() {
+        if (typeof TimeClock === 'undefined' || !TimeClock.autoCompleteMissingPunches) return;
+        var throttleKey = 'fn_auto_complete_last_' + session.staffId;
+        var last = localStorage.getItem(throttleKey);
+        var minSince = last ? (Date.now() - parseInt(last, 10)) / 1000 / 60 : 999;
+        if (minSince < 30) return;  // já rodou há < 30 min, skip
+        try {
+            var result = await TimeClock.autoCompleteMissingPunches(session.franchiseId, {
+                includeToday: true,
+                gracePeriodMin: 30,
+                scopeStaffId: session.staffId,  // só pra ela mesma
+                daysBack: 14
+            });
+            if (result && result.added && result.added.length > 0) {
+                console.log('🤖 Auto-completou ' + result.added.length + ' batidas (Súmula 338 TST)');
+                // Re-render pra mostrar registros novos
+                fnRenderHoje(session, staff);
+                fnRenderMes(session);
+                // Banner discreto avisando
+                var banner = document.createElement('div');
+                banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#DBEAFE;color:#1E40AF;padding:14px 18px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.15);font-size:.88rem;z-index:99999;max-width:340px;text-align:center;border:1px solid #93C5FD';
+                banner.innerHTML = '🤖 <b>Sistema registrou sua saída automaticamente</b><br>' +
+                    '<small style="opacity:.85">Você não bateu até 30 min depois do horário combinado. Veja em Avisos. Se hora real foi diferente, fala com o gerente.</small>' +
+                    '<button onclick="this.parentNode.remove()" style="background:transparent;border:0;color:#1E40AF;position:absolute;top:6px;right:8px;font-size:1.1rem;cursor:pointer">×</button>';
+                document.body.appendChild(banner);
+                setTimeout(function() { if (banner.parentNode) banner.remove(); }, 15000);
+            }
+            localStorage.setItem(throttleKey, String(Date.now()));
+        } catch (e) { console.warn('autoComplete colaborador falhou:', e.message); }
+    })();
+
     // Welcome modal no primeiro login
     var welcomed = localStorage.getItem(FN_WELCOME_KEY + session.staffId);
     if (!welcomed) {

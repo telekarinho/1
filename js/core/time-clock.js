@@ -413,7 +413,8 @@
     // params:
     //   staffId, dateStr (YYYY-MM-DD), type (entrada|almoco_saida|almoco_volta|saida),
     //   hhmm (HH:MM), reason (string min 5 chars)
-    async function addRetroactivePunch(franchiseId, staffId, dateStr, type, hhmm, reason) {
+    async function addRetroactivePunch(franchiseId, staffId, dateStr, type, hhmm, reason, options) {
+        options = options || {};
         if (!franchiseId || !staffId || !dateStr || !type || !hhmm) {
             return { success: false, error: 'Dados obrigatórios faltando' };
         }
@@ -472,7 +473,7 @@
         var hash = await sha256(hashPayload);
 
         var sess = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
-        var adminEmail = sess ? sess.email : 'admin';
+        var adminEmail = options.addedBy || (sess ? sess.email : 'admin');
 
         var record = {
             id: recordId,
@@ -483,12 +484,13 @@
             pis: staff.pis || '',
             type: type,
             timestamp: newTimestampIso,
-            channel: 'admin_retroativo',
-            source: 'admin_retroativo',
+            channel: options.channel || 'admin_retroativo',
+            source: options.source || 'admin_retroativo',
             retroativo: true,                 // 🚨 flag visível pra fiscalização
             retroativoMotivo: reason.trim().slice(0, 500),
             retroativoDate: dateStr,          // dia SP que se refere
             retroativoHora: hhmm,             // hora SP escolhida pelo admin
+            autoCompleted: !!options.autoCompleted,  // 🤖 true se foi auto-completado pelo sistema
             addedBy: adminEmail,
             addedAt: nowIso(),
             device: getDeviceInfo(),
@@ -497,6 +499,7 @@
             adjusted: false,
             cancelled: false
         };
+        if (options.autoCompleteSource) record.autoCompleteSource = options.autoCompleteSource;
 
         if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
             DataStore.addToCollection(COLLECTION_RECORDS, franchiseId, record);
@@ -514,21 +517,24 @@
         });
 
         // Notifica funcionária no app dela (via solicitacoes_ collection que ela já lê)
-        try {
-            if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
-                DataStore.addToCollection('solicitacoes', franchiseId, {
-                    id: 'notif_retro_' + nsr,
-                    staffId: staffId,
-                    type: 'notificacao_ponto_retroativo',
-                    title: 'Gerente adicionou um ponto pra você',
-                    body: 'Foi adicionado: ' + (TIPO_LABELS[type] || type) + ' às ' + hhmm + ' em ' + dateStr.split('-').reverse().join('/') + '. Motivo: ' + record.retroativoMotivo + '. Se a hora não está correta, fale com o gerente.',
-                    refRecordId: recordId,
-                    status: 'info',
-                    createdAt: nowIso(),
-                    createdBy: adminEmail
-                });
-            }
-        } catch (e) { /* não bloqueia */ }
+        // skipNotification: usado por autoCompleteMissingPunches que envia notificação consolidada
+        if (!options.skipNotification) {
+            try {
+                if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
+                    DataStore.addToCollection('solicitacoes', franchiseId, {
+                        id: 'notif_retro_' + nsr,
+                        staffId: staffId,
+                        type: 'notificacao_ponto_retroativo',
+                        title: 'Gerente adicionou um ponto pra você',
+                        body: 'Foi adicionado: ' + (TIPO_LABELS[type] || type) + ' às ' + hhmm + ' em ' + dateStr.split('-').reverse().join('/') + '. Motivo: ' + record.retroativoMotivo + '. Se a hora não está correta, fale com o gerente.',
+                        refRecordId: recordId,
+                        status: 'info',
+                        createdAt: nowIso(),
+                        createdBy: adminEmail
+                    });
+                }
+            } catch (e) { /* não bloqueia */ }
+        }
 
         return { success: true, record: record };
     }
@@ -556,6 +562,10 @@
     async function autoCompleteMissingPunches(franchiseId, options) {
         options = options || {};
         var daysBack = options.daysBack || 14;
+        var includeToday = options.includeToday !== false;       // default true
+        var gracePeriodMin = options.gracePeriodMin != null ? options.gracePeriodMin : 30;
+        var scopeStaffId = options.scopeStaffId || null;          // se setado, só esse staff
+        var verbose = options.verbose || false;
 
         // Verifica config (opt-out)
         var cfg = (typeof OvertimeBank !== 'undefined' && OvertimeBank.getConfig)
@@ -563,9 +573,15 @@
         if (cfg.autoCompleteEnabled === false) {
             return { success: true, added: [], disabled: true };
         }
+        // Permite override do grace period via config
+        if (cfg.autoCompleteGracePeriodMin != null) gracePeriodMin = cfg.autoCompleteGracePeriodMin;
 
         var staff = (typeof DataStore !== 'undefined')
-            ? (DataStore.getCollection('staff', franchiseId) || []).filter(function (s) { return s.active; })
+            ? (DataStore.getCollection('staff', franchiseId) || []).filter(function (s) {
+                if (!s.active) return false;
+                if (scopeStaffId && s.id !== scopeStaffId) return false;
+                return true;
+            })
             : [];
         if (!staff.length) return { success: true, added: [] };
 
@@ -623,30 +639,17 @@
                     var almocoVoltaHHMM = pad(Math.floor(almocoVoltaMin / 60) % 24, 2) + ':' + pad(almocoVoltaMin % 60, 2);
 
                     var r1 = await addRetroactivePunch(franchiseId, s.id, dateStr, TIPOS.ALMOCO_SAIDA, almocoSaidaHHMM,
-                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater. Se hora real foi diferente, contestar com o gerente.');
+                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater. Se hora real foi diferente, contestar com o gerente.',
+                        { autoCompleted: true, addedBy: 'system_auto', source: 'system_auto', channel: 'system_auto', skipNotification: true, autoCompleteSource: 'past_day' });
                     if (r1.success) {
-                        r1.record.autoCompleted = true;
-                        r1.record.addedBy = 'system_auto';
-                        // Atualiza no DataStore (re-save manual)
-                        try {
-                            var col = DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [];
-                            var idx = col.findIndex(function (x) { return x.id === r1.record.id; });
-                            if (idx >= 0) { col[idx] = r1.record; DataStore.setCollection(COLLECTION_RECORDS, franchiseId, col); }
-                        } catch (e) {}
                         added.push(r1.record);
                         dayCompletions.push('Saída almoço ' + almocoSaidaHHMM);
                     }
 
                     var r2 = await addRetroactivePunch(franchiseId, s.id, dateStr, TIPOS.ALMOCO_VOLTA, almocoVoltaHHMM,
-                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater. Se hora real foi diferente, contestar com o gerente.');
+                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater. Se hora real foi diferente, contestar com o gerente.',
+                        { autoCompleted: true, addedBy: 'system_auto', source: 'system_auto', channel: 'system_auto', skipNotification: true, autoCompleteSource: 'past_day' });
                     if (r2.success) {
-                        r2.record.autoCompleted = true;
-                        r2.record.addedBy = 'system_auto';
-                        try {
-                            var col2 = DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [];
-                            var idx2 = col2.findIndex(function (x) { return x.id === r2.record.id; });
-                            if (idx2 >= 0) { col2[idx2] = r2.record; DataStore.setCollection(COLLECTION_RECORDS, franchiseId, col2); }
-                        } catch (e) {}
                         added.push(r2.record);
                         dayCompletions.push('Volta almoço ' + almocoVoltaHHMM);
                     }
@@ -655,15 +658,9 @@
                 // 2. Completar saída final (caso mais comum)
                 if (!hasSaida) {
                     var r3 = await addRetroactivePunch(franchiseId, s.id, dateStr, TIPOS.SAIDA, eff.hora_saida,
-                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater saída. Se hora real foi diferente, contestar com o gerente.');
+                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater saída. Se hora real foi diferente, contestar com o gerente.',
+                        { autoCompleted: true, addedBy: 'system_auto', source: 'system_auto', channel: 'system_auto', skipNotification: true, autoCompleteSource: 'past_day' });
                     if (r3.success) {
-                        r3.record.autoCompleted = true;
-                        r3.record.addedBy = 'system_auto';
-                        try {
-                            var col3 = DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [];
-                            var idx3 = col3.findIndex(function (x) { return x.id === r3.record.id; });
-                            if (idx3 >= 0) { col3[idx3] = r3.record; DataStore.setCollection(COLLECTION_RECORDS, franchiseId, col3); }
-                        } catch (e) {}
                         added.push(r3.record);
                         dayCompletions.push('Saída final ' + eff.hora_saida);
                     }
@@ -673,6 +670,104 @@
                     if (!notifByStaff[s.id]) notifByStaff[s.id] = [];
                     notifByStaff[s.id].push({ date: dateStr, completions: dayCompletions });
                 }
+            }
+        }
+
+        // ============================================
+        // 🕘 HOJE — com tolerância de 30 min pós saída
+        // ============================================
+        // Diferente dos dias passados, HOJE só auto-completa SAÍDA (caso mais comum
+        // de esquecimento). Espera funcionária ter 30 min pra bater depois da hora
+        // combinada. Se passou, sistema registra automaticamente.
+        // Notificação tem texto específico: "Você não bateu até 30 min após..."
+        if (includeToday) {
+            var todayAddedByStaff = {};
+            // Hora atual em SP "HH:MM"
+            var nowSpHHMM = (typeof Utils !== 'undefined' && Utils.formatTime)
+                ? Utils.formatTime(new Date().toISOString())
+                : (function () {
+                    try {
+                        return new Intl.DateTimeFormat('en-GB', {
+                            timeZone: 'America/Sao_Paulo',
+                            hour: '2-digit', minute: '2-digit', hour12: false
+                        }).format(new Date());
+                    } catch (e) { return null; }
+                })();
+            if (nowSpHHMM) {
+                var nowMin = timeToMinutes(nowSpHHMM);
+                var dTodayObj = new Date(today + 'T12:00:00');
+                var dowToday = dTodayObj.getDay();
+
+                for (var sj = 0; sj < staff.length; sj++) {
+                    var sToday = staff[sj];
+
+                    if (isFolga(sToday, dowToday)) continue;
+                    var holidayToday = isHoliday(franchiseId, today);
+                    if (holidayToday && (!sToday.jornada || !sToday.jornada.hora_saida_dom_feriado)) continue;
+
+                    // Pega jornada efetiva de hoje
+                    var effToday = getEffectiveJornada(franchiseId, sToday.id, today);
+                    if (!effToday || !effToday.hora_saida) continue;
+
+                    // Calcula limite (hora_saida + grace_period em minutos)
+                    var limitMin = timeToMinutes(effToday.hora_saida) + gracePeriodMin;
+                    // Permite saída cruzando virada de dia (ex: 23:50 + 30 = 24:20 = 00:20 dia seguinte)
+                    // Se limitMin > 24*60, ja virou o dia — current time deve estar > limitMin sempre
+                    var crossedDay = limitMin >= 24 * 60;
+                    var effectiveNowMin = nowMin;
+                    if (crossedDay && nowMin < 12 * 60) {
+                        // current time é manhã do dia seguinte — soma 24h
+                        effectiveNowMin = nowMin + 24 * 60;
+                    }
+                    if (effectiveNowMin < limitMin) {
+                        // Ainda dentro do grace period — funcionária pode bater
+                        continue;
+                    }
+
+                    // Past grace. Vê se tem entrada mas não tem saída
+                    var recsToday = getStaffRecordsByDate(franchiseId, sToday.id, today);
+                    if (!recsToday.length) continue;  // sem nada hoje = falta legítima
+
+                    var byTypeToday = {};
+                    recsToday.forEach(function (r) { byTypeToday[r.type] = r; });
+                    if (!byTypeToday[TIPOS.ENTRADA]) continue;        // não entrou
+                    if (byTypeToday[TIPOS.SAIDA]) continue;            // já bateu saída
+
+                    // Auto-completa saída hoje
+                    var rToday = await addRetroactivePunch(franchiseId, sToday.id, today, TIPOS.SAIDA, effToday.hora_saida,
+                        'Auto-completado pelo sistema. Funcionária não bateu saída até ' + gracePeriodMin + ' min após o horário combinado (' + effToday.hora_saida + '). Conforme jornada contratual e Súmula 338 TST. Se hora real foi diferente, falar com o gerente.',
+                        { autoCompleted: true, addedBy: 'system_auto', source: 'system_auto', channel: 'system_auto', skipNotification: true, autoCompleteSource: 'today_grace_period' });
+                    if (rToday.success) {
+                        added.push(rToday.record);
+                        todayAddedByStaff[sToday.id] = {
+                            staff: sToday,
+                            horaSaida: effToday.hora_saida,
+                            graceMin: gracePeriodMin
+                        };
+                    }
+                }
+
+                // Notificação IMEDIATA específica pra hoje (texto diferente do batch passado)
+                // Sobrescreve notificações criadas por addRetroactivePunch (que são genéricas)
+                Object.keys(todayAddedByStaff).forEach(function (staffId) {
+                    var info = todayAddedByStaff[staffId];
+                    try {
+                        DataStore.addToCollection('solicitacoes', franchiseId, {
+                            id: 'auto_today_' + Date.now() + '_' + staffId,
+                            staffId: staffId,
+                            type: 'notificacao_ponto_auto_hoje',
+                            title: '🤖 Saída registrada automaticamente',
+                            body: 'Você não bateu sua saída até ' + info.graceMin + ' minutos após o horário combinado (' + info.horaSaida + ').\n\n' +
+                                'O sistema registrou automaticamente sua saída às ' + info.horaSaida + ' conforme sua jornada contratual.\n\n' +
+                                'Se você saiu em outro horário, fale com o gerente que ele ajusta. ' +
+                                'Isso é permitido por lei (Súmula 338 TST) pra não te prejudicar.',
+                            status: 'info',
+                            urgente: true,
+                            createdAt: nowIso(),
+                            createdBy: 'system_auto'
+                        });
+                    } catch (e) {}
+                });
             }
         }
 

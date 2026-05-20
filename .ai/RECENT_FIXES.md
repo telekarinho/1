@@ -10,7 +10,17 @@ Formato: `[data] BUG → FIX → LIÇÃO`
 
 ### 2026-05-19
 
-#### 🟣 Feature: Auto-complete automático de batidas esquecidas
+#### 🟣 Feature: Auto-complete com grace period 30min + colaborador app
+- **PR:** #716
+- **What:** Refinamento do auto-complete: agora HOJE também é coberto, com tolerância de 30 min após hora_saida. Se Amanda esquece de bater 21:20, às 21:50 sistema completa sozinho usando horário 21:20. Notificação específica: "Você não bateu até 30 min após horário combinado..."
+- **Onde roda:**
+  1. Admin ponto.html → throttle 1h (catch-up dos últimos 14 dias)
+  2. Colaborador index.html → throttle 30min (catch-up + tempo-real quando Amanda abre app)
+- **Refactor:** `addRetroactivePunch` ganha 7º param `options` = { autoCompleted, addedBy, source, channel, skipNotification, autoCompleteSource }. Auto-complete passa skipNotification:true e envia notificação consolidada/específica depois.
+- **Lição:** ⚠ Quando função é chamada de múltiplos contextos com semânticas diferentes (manual vs auto), passe options object pra evitar pós-mutação do record (frágil sob race conditions com setCollection).
+- **Arquivos:** `js/core/time-clock.js`, `colaborador/index.html`
+
+#### 🟣 Feature: Auto-complete automático de batidas esquecidas (v1)
 - **PR:** #715
 - **What:** Admin pediu pra não ter que "policiar". Sistema agora completa SOZINHO. `TimeClock.autoCompleteMissingPunches(fid)` roda na load do `ptLoadHoje`, scaneia últimos 14 dias, e pra cada dia passado com registros incompletos (entrada sem saída, etc), adiciona batidas usando horário da jornada contratual. Considera override pontual + dom/feriado. Idempotente (não duplica). Funcionária recebe UMA notificação resumida.
 - **Como saber se é auto:** badge `🤖 auto` azul na celula (diferente do `⚠ retro` manual amarelo).
