@@ -10919,3 +10919,50 @@ _Belinha — Ciclo #274 | 2026-05-20_
 - **Operador (URGENTE — 10 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
 
 _Belinha — Ciclo #275 | 2026-05-20_
+
+---
+
+## Ciclo #277 — 2026-05-20
+
+**Área:** Conteúdo — Reel 15s "o nome deles no potinho" (D-3 Namorados, counter-posicionamento implícito)
+
+**Contexto:** Ciclos #275 e #276 indicavam criar um Reel de counter-posicionamento MilkyMoo/MooBai para semana 09-11/06. A campanha de concorrente usa personagem licenciado de animação como âncora ("dragão"). O contraste estratégico é: produto de personagem vs. potinho com o nome da pessoa. Nenhum arquivo de Reel cobria 09/06 (Terça, D-3 Namorados) — o slot estava vazio no calendário semanal de semana8.
+
+**O que pesquisou/analisou:**
+- Verificou `belinha/content/` — 9 Reels existentes, nenhum para 09/06. Reel de 10/06 (montagem ao vivo) já existia
+- Verificou `pos-inauguracao-semana8.md` — slot 09/06 tinha carrossel Indica & Ganha às 18h, sem Reel
+- Verificou `pdv-contra-posicionamento-milkymoo.md` — linha-chave confirmada: *"Aqui você monta o potinho com o seu nome. Não tem igual em nenhuma outra loja da cidade."*
+- Verificou `stories-comparacao-implicita-duo-10-11jun.md` — stories de comparação implícita já existem para 10-11/06, mas nenhum Reel ancora o conceito visualmente antes
+- Verificou `dia-dos-namorados-2026-playbook.md` — briefing de equipe mencionava "MilkyMoo tem dragão. MilkyPot tem o nome dele e o dela" mas sem roteiro de Reel correspondente
+- Confirmou que 100% do conceito é implícito — nenhuma palavra do Reel ou caption cita concorrente, produto ou personagem
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/reel-09jun-nome-no-potinho.md` | Criado (279 linhas). Roteiro completo Reel 15s + caption longa/curta + stories complementares + checklist produção + respostas de comentários + integração calendário 09-12/06 + briefing de equipe |
+
+**Conceito do Reel:**
+- Cena 1 (0-6s): ASMR da caneta escrevendo "CAMILA" na tampa do potinho — som real capturado, câmera em close
+- Cena 2 (6-12s): reveal dos dois potinhos tampados lado a lado ("CAMILA 🍓" e "LUCAS 🍫") com toppings diferentes — ovelhinha com coração saindo do olho
+- Cena 3 (12-15s): CTA "Duo MilkyPot · 12/06 💕" + "manda NAMORADOS26 no WhatsApp"
+- Caption ancora: *"tem sobremesa que você compra pelo personagem. tem sobremesa que você monta com o nome deles."*
+
+**Commit:** `088dcfe`
+
+**Por que gera valor:**
+- Preenche o único slot de Reel vazio na semana 09-12/06 (terça às 19h)
+- O hook ASMR da caneta é de alto potencial de retenção (primeiros 3s sem música — só o som do traço)
+- O counter-posicionamento é invisível para o algoritmo do Instagram (sem palavras negativas) mas legível para o público local (D-3, janela de busca ativa para Namorados Londrina)
+- Ancora o conceito de "nome no potinho" 24h antes do Reel de montagem ao vivo (10/06) — sequência narrativa fechada: conceito → processo → produto pronto
+- Inclui briefing de equipe pronto para treinamento semana 09-11/06
+
+**Próximo passo sugerido:**
+- **Ciclo #278 — SEO:** Verificar se meta description e Open Graph de `index.html` refletem Namorados (12/06) — search intent local "sobremesa dia dos namorados Londrina" começa a crescer em D-7 a D-3 (ou seja, agora)
+- **Ciclo #279 — UX:** Verificar se o botão WhatsApp flutuante do site puxa a mensagem pré-preenchida "NAMORADOS26" na semana de 09-12/06 (ou se continua com mensagem genérica)
+- **Ciclo #280 — Conteúdo:** Criar story 09/06 17h "teaser Namorados" (previsto no playbook mas sem script específico) — 3 stories de antecipação que saem antes do Reel das 19h
+- **Operador (URGENTE — 14 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** — guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 10 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador:** Praticar escrita cursiva na tampa do potinho com caneta Posca antes de 09/06 — o ASMR da Cena 1 só funciona se a caligrafia for cuidadosa
+
+_Belinha — Ciclo #277 | 2026-05-20_
