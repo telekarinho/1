@@ -2,6 +2,46 @@
 
 ---
 
+## Ciclo #276 — 2026-05-20
+
+**Área:** Concorrentes — JohnnyJoy intel final pré-Namorados + fix de bug de dias da semana
+
+**O que pesquisou/analisou:**
+- WebSearch "JohnnyJoy dia dos namorados 2026 campanha milkshake junho" → zero conteúdo novo além do artigo GKPB original já mapeado
+- WebSearch "JohnnyJoy Londrina 2026 nova unidade inauguração" → nenhuma expansão detectada, única unidade Catuaí Shopping confirma
+- WebSearch "JohnnyJoy dois amores junho 2026 instagram reel" → resultados são de outras marcas, não JohnnyJoy — confirma ausência total de produção de conteúdo novo para 2026
+- `story-signo-potinho-10jun.md`: bug detectado — todos os dias da semana errados (escrito como Seg/Ter/Qua mas 10/06=Quarta, 11/06=Quinta, 12/06=Sexta)
+- Playbook principal (`dia-dos-namorados-2026-playbook.md`): dias corretos. O bug era localizado no arquivo de story.
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/story-signo-potinho-10jun.md` | 8 correções: Seg→Qua, Ter→Qui, Qua→Sex, "segunda"→"quarta" em todas as ocorrências |
+| `belinha/competitors/johnnyjoy.md` | +60 linhas: Relatório Final Pré-Namorados ciclo #276 + radar de risco encerrado |
+
+**Principais conclusões da pesquisa JohnnyJoy:**
+- "Dois Amores" 2026: CONFIRMADO PASSIVO — produto disponível todo junho, zero push de mídia nova para semana 10-12/06. Campo livre para MilkyPot dominar o feed local
+- Instagram search mostra que os resultados de "JohnnyJoy dois amores 2026" retornam reels de outras marcas (pizzaria, bolo) — JohnnyJoy sequer aparece em busca orgânica para o tema
+- Joy Fidelidade Gêmeos (09-20/06): ainda ativo, spike Catuaí confirmado — mitigado pelo story-signo agendado para Qua 10/06 18h
+- Nenhuma expansão nova em Londrina detectada em 12+ ciclos de monitoramento → encerrado
+
+**Por que o bug de dias importa:**
+- Operador que lê `story-signo-potinho-10jun.md` isoladamente veria "Seg 10/06" e esperaria segunda-feira. Mas 10/06/2026 é quarta-feira. Risco real: publicação atrasada 2 dias ou confusão no cronograma de semana 8
+- O playbook principal tinha os dias corretos — inconsistência entre arquivos = risco operacional
+
+**Commit:** `d4bce2d`
+
+**Próximo passo sugerido:**
+- **Ciclo #277 — Conteúdo:** Criar roteiro Reel 15s "dragão vs. potinho com nome" — counter-posicionamento MilkyMoo/MooBai em vídeo para publicar 09-11/06. (MilkyMoo tem campanha ativa com live-action "Como Treinar Seu Dragão" — janela de posicionamento direto sem citar nome)
+- **Ciclo #278 — UX:** Verificar meta description e Open Graph de `index.html` refletem o evento de Namorados (12/06) — search intent local "presente dia dos namorados Londrina"
+- **Operador (URGENTE — 14 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** — guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 10 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+
+_Belinha — Ciclo #276 | 2026-05-20_
+
+---
+
 ## Ciclo #272 — 2026-05-19
 
 **Área:** Conteúdo — Post feed IG interativo "qual a sua combinação?" (UGC seed Namorados)
