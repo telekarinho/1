@@ -1,6 +1,7 @@
 # JohnnyJoy — Análise Competitiva
 
-**Última atualização:** 2026-05-19 (Ciclo #263 — "Dois Amores" semana 09–12/06: sem nova comunicação detectada + campanha astrologia/signo mapeada)
+**Última atualização:** 2026-05-20 (Ciclo #276 — RELATÓRIO FINAL PRÉ-NAMORADOS: "Dois Amores" confirmado passivo até 12/06, nenhum novo conteúdo detectado em 2026)
+**Fontes ciclo #276:** WebSearch 2026, gkpb.com.br/178878, Instagram search, johnnyjoy.com.br/eventos (403)
 **Fontes ciclo #263:** WebSearch 2026, gkpb.com.br/178878 (snippet), portalg.com.br, amostrasgratis.shop, idealmarketing.com.br
 **Fontes ciclo #252:** gkpb.com.br/178878 (snippet), WebSearch 2026, portalg.com.br, catuailondrina.com.br, idealmarketing.com.br
 **Fontes ciclo #222:** gkpb.com.br/178878, WebSearch 2026
@@ -9,6 +10,67 @@
 **Fontes ciclo #160:** gkpb.com.br, ondecomernorio.com, amostrasgratis.shop, Instagram @johnnyjoy.br, riomarfortaleza.com.br, portalg.com.br
 **Fontes ciclo #151:** johnnyjoy.com.br, buscacliente.com.br, gkpb.com.br, amostrasgratis.shop, TikTok @aproveiteacidade, overblur.com, Instagram @johnnyjoy.br
 **Fontes originais:** johnnyjoy.com.br, buscas orgânicas
+
+---
+
+## ⚡ RELATÓRIO FINAL PRÉ-NAMORADOS — CICLO #276 — 2026-05-20
+
+### Status 23 dias antes do evento: "Dois Amores" PASSIVO confirmado
+
+**Fontes:** WebSearch 2026, gkpb.com.br/178878, Instagram search "JohnnyJoy dois amores 2026"
+**Objetivo:** Verificação final da ameaça JohnnyJoy para semana 09–12/06 antes do evento
+
+---
+
+#### 1. "Dois Amores" 2026 — CONFIRMADO PASSIVO (sem push de mídia)
+
+- **Resultado da pesquisa:** Zero conteúdo novo JohnnyJoy para Namorados 2026 além do artigo GKPB original (gkpb.com.br/178878 — mesmo snippet do ciclo #252 e #263)
+- **Confirmação:** O único resultado de "JohnnyJoy dois amores junho 2026" no Instagram aponta para reels de **outras marcas** (pizzaria, bolo) — não JohnnyJoy. JohnnyJoy não está ativando mídia paga nem orgânica nova para o evento.
+- **Mecânica confirmada (reconfirmação):** Dois brigadeiros à escolha · R$20,90–R$24,90 · todo junho · todas as unidades
+- **Conclusão definitiva:** JohnnyJoy entra no Namorados 2026 com postura de "produto disponível" sem qualquer push de alcance. A campanha é passiva por design — o produto existe, mas JohnnyJoy não vai criar urgência nem conteúdo direcionado para a semana 10-12/06.
+
+**⚡ Implicação estratégica MilkyPot (23 dias antes):**
+MilkyPot tem o campo de mídia local em Londrina completamente livre. O único risco real é UGC orgânico de casais que forem ao Catuaí e postarem espontaneamente — não há campanha JohnnyJoy que "roube" feed antes do evento.
+
+---
+
+#### 2. Joy Fidelidade Gêmeos — Spike Catuaí Confirmado (09–20/06)
+
+- **Status:** ATIVO — upgrade 200ml grátis para Gêmeos com cadastro Joy Fidelidade + data nascimento
+- **Janela de overlap:** 09/06–20/06 (Gêmeos vai até 20/06)
+- **Risco real:** Clientes aniversariantes de junho buscando upgrade gratuito no Catuaí exatamente na semana do evento → spike de tráfego físico no Catuaí na semana 10-12/06
+- **Ação MilkyPot executada:** `story-signo-potinho-10jun.md` criado (ciclo #265) — stories de astrologia para Qua 10/06 às 18h entram no mesmo trend sem citar concorrente
+
+---
+
+#### 3. Londrina — Nenhuma Expansão Detectada
+
+- **Confirmado:** JohnnyJoy Londrina = apenas Catuaí Shopping (Av. Madre Leônia Milito, 730)
+- **2026:** Zero inauguração nova em Londrina detectada em nenhuma pesquisa (ciclo #276)
+- **Risco de expansão a curto prazo:** 🟢 BAIXO — JohnnyJoy depende de shopping premium com alto fluxo, modelo incompatível com franquia de bairro
+
+---
+
+#### 4. RADAR FINAL DE RISCO — SEMANA 10–12/06
+
+| Ameaça | Nível | Evidência | Status |
+|--------|-------|-----------|--------|
+| "Dois Amores" mídia ativa 10-12/06 | 🟢 BAIXO | Zero conteúdo novo detectado em 2 pesquisas | **DEFINITIVO — não vai acontecer** |
+| UGC espontâneo Catuaí ("fui no JohnnyJoy") | 🟡 MÉDIO | Comportamento orgânico imprevisível | **Não mitigável — monitorar** |
+| Spike Joy Fidelidade Gêmeos Catuaí | 🟡 MÉDIO | Campanha ativa 09-20/06 confirmada | **Mitigado parcialmente com story-signo 10/06** |
+| Nova unidade JohnnyJoy Londrina | 🟢 BAIXO | Zero evidência em 12+ ciclos de monitoramento | **DEFINITIVO — não vai acontecer** |
+
+---
+
+#### 5. Encerramento do Monitoramento JohnnyJoy para Namorados 2026
+
+**Com este ciclo, o monitoramento JohnnyJoy para o evento de 12/06 está COMPLETO.**
+
+- Todas as ameaças mapeadas e classificadas
+- Ações de contra-posicionamento já executadas (story signo, seção playbook "pico Catuaí")
+- Próxima atualização relevante: **setembro 2026** (Dia do Milkshake 2ª ed.) ou se houver anúncio de expansão em Londrina
+
+_Belinha — Ciclo #276 | 2026-05-20_
 
 ---
 

@@ -1,5 +1,5 @@
 # Story — "Qual é o potinho do seu signo?" · 10–11/06 🐑✨
-**Sequência: 3 stories · Publicar Seg 10/06 às 18h**
+**Sequência: 3 stories · Publicar Qua 10/06 às 18h**
 _Belinha — Ciclo #265 | 2026-05-19_
 
 > **Contexto competitivo (Ciclo #263):**
@@ -17,7 +17,7 @@ _Belinha — Ciclo #265 | 2026-05-19_
 
 ## STORY 1/3 — GANCHO (poll/engajamento)
 
-**Quando:** Seg 10/06 · 18h00
+**Quando:** Qua 10/06 · 18h00
 
 **Fundo/visual:**
 - Fundo azul noite pastel (azul lavanda escuro, não preto) com estrelinhas espalhadas
@@ -49,7 +49,7 @@ Qual é o seu signo?
 
 ## STORY 2/3 — REVELAÇÃO GÊMEOS (signo ativo + gancho casal)
 
-**Quando:** Seg 10/06 · 18h05 (logo após a story 1)
+**Quando:** Qua 10/06 · 18h05 (logo após a story 1)
 
 **Fundo/visual:**
 - Fundo lilás médio / roxo pastel suave (transição do azul noite → cor quente)
@@ -85,7 +85,7 @@ Outro do jeito que ela/ele ama.
 
 ## STORY 3/3 — CTA NAMORADOS (fechamento + urgência)
 
-**Quando:** Seg 10/06 · 18h10 (imediatamente após a story 2)
+**Quando:** Qua 10/06 · 18h10 (imediatamente após a story 2)
 
 **Fundo/visual:**
 - Fundo branco creme ou rosa claro (contraste limpo após o lilás)
@@ -119,7 +119,7 @@ NAMORADOS26
 - "Coincidência?" cria curiosidade sem fazer afirmações exageradas
 - Não menciona JohnnyJoy, não menciona desconto, não menciona cashback — só narrativa
 - A keyword `NAMORADOS26` aparece em destaque — reforça o WA Business setup do guia `wa-business-setup-namorados.md`
-- Publicar às 18h da segunda = 2 dias antes do evento. Urgência real, sem exagero
+- Publicar às 18h de quarta = 2 dias antes do evento. Urgência real, sem exagero
 
 ---
 
@@ -143,7 +143,7 @@ NAMORADOS26 no WhatsApp
 **Arte versão 1 story:**
 - Fundo lilás + símbolo ♊ grande + ovelhinha + coração
 - Link sticker no rodapé
-- Publicar Seg 10/06 às 18h ou Ter 11/06 às 12h (complementa o countdown)
+- Publicar Qua 10/06 às 18h ou Qui 11/06 às 12h (complementa o countdown)
 
 ---
 
@@ -151,14 +151,14 @@ NAMORADOS26 no WhatsApp
 
 | Data/Hora | Conteúdo |
 |-----------|----------|
-| **Seg 10/06 · 18h** | **Este roteiro: 3 stories "signo + potinho"** |
-| Ter 11/06 · 15h | Post feed véspera (ver `dia-dos-namorados-2026-playbook.md`) |
-| Ter 11/06 · 18h | TP3 countdown: 3 stories urgência (`stories-countdown-namorados-2026.md`) |
-| Ter 11/06 · 19h | Disparo WA N2 lista `NAMORADOS26` (véspera) |
-| Ter 11/06 · 20h30 | Story "anti-prato-compartilhado" (`story-11jun-anti-prato-compartilhado.md`) |
-| Qua 12/06 · 14h | ABERTURA — Dia dos Namorados ao vivo |
+| **Qua 10/06 · 18h** | **Este roteiro: 3 stories "signo + potinho"** |
+| Qui 11/06 · 15h | Post feed véspera (ver `dia-dos-namorados-2026-playbook.md`) |
+| Qui 11/06 · 18h | TP3 countdown: 3 stories urgência (`stories-countdown-namorados-2026.md`) |
+| Qui 11/06 · 19h | Disparo WA N2 lista `NAMORADOS26` (véspera) |
+| Qui 11/06 · 20h30 | Story "anti-prato-compartilhado" (`story-11jun-anti-prato-compartilhado.md`) |
+| Sex 12/06 · 14h | ABERTURA — Dia dos Namorados ao vivo |
 
-**Por que 18h de segunda?** Engajamento de stories alimentício tem pico entre 17h–20h em dias de semana. Publicar na segunda cria a primeira onda de conscientização para quem ainda não sabia do evento, e gera respostas de DM que o operador responde com o guia `wa-business-setup-namorados.md`.
+**Por que 18h de quarta?** Engajamento de stories alimentício tem pico entre 17h–20h em dias de semana. Publicar na quarta cria a primeira onda de conscientização para quem ainda não sabia do evento — 2 dias de antecipação — e gera respostas de DM que o operador responde com o guia `wa-business-setup-namorados.md`.
 
 ---
 
