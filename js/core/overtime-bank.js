@@ -46,7 +46,18 @@
         // Trocar isso por banco de horas exige acordo coletivo OU individual ESCRITO
         // (CCT do sindicato OU aditivo contratual assinado). Sem isso, fiscalizacao MTE pode multar.
         // Opcoes: 'hora_extra' (default - paga em folha como hora extra) | 'banco_horas' (com aviso de risco) | 'desativado' (admin assume risco)
-        tratamento_intervalo_suprimido: 'hora_extra'
+        tratamento_intervalo_suprimido: 'hora_extra',
+
+        // ===== AUTO-COMPLETE BATIDAS ESQUECIDAS (Sumula 338 TST) =====
+        // Quando true, sistema completa automaticamente batidas que funcionária
+        // esqueceu de bater nos últimos 14 dias. Usa horário da jornada contratual.
+        // Conforme a Súmula 338 TST: ônus do empregador é registrar a jornada;
+        // se registro está incompleto, presume-se jornada contratual a favor do
+        // funcionário. Auto-complete materializa essa presunção.
+        // Registros ganham flag autoCompleted:true + retroativo:true. Funcionária
+        // recebe notificação no app dela e pode contestar. Admin pode ajustar
+        // depois manualmente se necessário.
+        autoCompleteEnabled: true
     };
 
     function nowIso() { return new Date().toISOString(); }

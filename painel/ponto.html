@@ -787,7 +787,12 @@
                     var hh = (typeof Utils !== 'undefined' && Utils.formatTime) ? Utils.formatTime(rec.timestamp) : rec.timestamp.slice(11,16);
                     var selfieIcon = rec.selfie ? ' <span onclick="event.stopPropagation();ptAuditarSelfie(\'' + rec.id + '\')" style="cursor:pointer;color:#7E57C2;margin-left:4px" title="Ver selfie do registro">📸</span>' : '';
                     var flaggedBadge = rec.flagged ? ' <span title="Marcado como suspeito" style="background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:800">🚩</span>' : '';
-                    var retroBadge = rec.retroativo ? ' <span title="Adicionado retroativamente — Motivo: ' + escapeHtml(rec.retroativoMotivo || '') + '" style="background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:800">⚠ retro</span>' : '';
+                    var retroBadge = '';
+                    if (rec.autoCompleted) {
+                        retroBadge = ' <span title="Auto-completado pelo sistema (jornada contratual — Súmula 338 TST). Motivo: ' + escapeHtml(rec.retroativoMotivo || '') + '" style="background:#DBEAFE;color:#1E40AF;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:800">🤖 auto</span>';
+                    } else if (rec.retroativo) {
+                        retroBadge = ' <span title="Adicionado pelo admin retroativamente — Motivo: ' + escapeHtml(rec.retroativoMotivo || '') + '" style="background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:800">⚠ retro</span>';
+                    }
                     return '<td style="cursor:pointer;color:#3B82F6;font-weight:600" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh + '\')">' + hh + ' ✎' + selfieIcon + flaggedBadge + retroBadge + '</td>';
                 }
                 // Jornada efetiva do dia (considera overrides + dom/feriado)
@@ -1234,6 +1239,45 @@
         ptCarregarPendencias();
         ptLoadHoje();
         document.getElementById('ptCurrentNSR').textContent = TimeClock.getCurrentNSR(franchiseId) || '0';
+
+        // 🤖 AUTO-COMPLETE batidas esquecidas (Súmula 338 TST)
+        // Roda 1x quando admin abre o painel. Scaneia últimos 14 dias e completa
+        // automaticamente saídas/almoços que funcionária esqueceu de bater.
+        // Usa horário da jornada contratual. Dispara apenas pra dias passados
+        // (hoje funcionária ainda pode bater). Idempotente — não duplica.
+        // Pode desabilitar em ⚙️ Config CLT → autoCompleteEnabled: false.
+        (async function autoCompleteOnLoad() {
+            // Só roda uma vez por sessão (evita re-executar a cada hot-reload)
+            var key = 'mp_auto_complete_last_' + franchiseId;
+            var last = localStorage.getItem(key);
+            var hoursSince = last ? (Date.now() - parseInt(last, 10)) / 1000 / 3600 : 999;
+            if (hoursSince < 1) return;  // já rodou na última hora, skip
+            try {
+                var result = await TimeClock.autoCompleteMissingPunches(franchiseId);
+                if (result && result.added && result.added.length > 0) {
+                    console.log('🤖 Auto-completou ' + result.added.length + ' batidas esquecidas:', result.byStaff);
+                    // Notifica admin discreto no canto
+                    var staffNomes = [];
+                    Object.keys(result.byStaff).forEach(function(sid) {
+                        var s = (DataStore.getCollection('staff', franchiseId) || []).find(function(x) { return x.id === sid; });
+                        if (s) staffNomes.push(s.name.split(' ')[0]);
+                    });
+                    var toast = document.createElement('div');
+                    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#FEF3C7;color:#92400E;padding:14px 18px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);font-size:.85rem;z-index:99999;max-width:340px;border-left:4px solid #F59E0B';
+                    toast.innerHTML = '<b>🤖 ' + result.added.length + ' batida(s) auto-completada(s)</b><br>' +
+                        'Sistema completou batidas esquecidas conforme jornada contratual de: <b>' + staffNomes.join(', ') + '</b>.<br>' +
+                        '<small>Funcionária(s) recebeu(ram) notificação no app. Súmula 338 TST.</small>' +
+                        '<button onclick="this.parentNode.remove()" style="background:transparent;border:0;color:#92400E;font-size:1.2rem;position:absolute;top:6px;right:8px;cursor:pointer">×</button>';
+                    document.body.appendChild(toast);
+                    setTimeout(function() { if (toast.parentNode) toast.remove(); }, 12000);
+                    // Re-render porque novos registros chegaram
+                    ptLoadHoje();
+                }
+                localStorage.setItem(key, String(Date.now()));
+            } catch (e) {
+                console.warn('autoComplete falhou:', e.message);
+            }
+        })();
 
         // 🔄 AUTO-RERENDER quando time_clock_records_ chega do Firestore (cross-device)
         // Permite que admin no PC veja a batida do funcionario no celular EM TEMPO REAL

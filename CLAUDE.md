@@ -112,10 +112,11 @@ Belinha é treinada pra agir como humana (vendedora real). Nunca diga "sou IA" o
 
 `time-clock.js` jamais edita registros — qualquer "ajuste" cria NOVO registro com link ao original (`r.adjustedFrom`). O original ganha flag `r.adjusted = true` e é escondido da UI mas mantido em audit. NSR sequencial sem lacuna. Hash SHA-256 imutável. Não burle.
 
-**3 operações distintas — não confunda:**
+**4 operações distintas — não confunda:**
 - `recordPunch()` — funcionária bate ponto normal (timestamp = agora SP)
 - `adjustRecord()` — admin ajusta hora de batida EXISTENTE (cria NOVO record + marca original `adjusted:true`)
-- `addRetroactivePunch()` — admin adiciona batida que NUNCA existiu (ex: esqueceu de bater saída). Súmula 338 TST. Flag `retroativo:true`, motivo obrigatório, notifica funcionária.
+- `addRetroactivePunch()` — admin adiciona batida que NUNCA existiu (ex: esqueceu). Flag `retroativo:true`, motivo obrigatório, notifica funcionária.
+- `autoCompleteMissingPunches()` — sistema completa SOZINHO últimos 14 dias quando admin abre painel. Usa jornada contratual (Súmula 338 TST). Flag `autoCompleted:true` + `retroativo:true`, `addedBy:'system_auto'`. Pode desativar em `OvertimeBank.config.autoCompleteEnabled=false`.
 
 ### 7. 📱 CSS: `.fn-btn` tem `width:100%` default
 

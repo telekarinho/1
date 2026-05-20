@@ -10,6 +10,16 @@ Formato: `[data] BUG → FIX → LIÇÃO`
 
 ### 2026-05-19
 
+#### 🟣 Feature: Auto-complete automático de batidas esquecidas
+- **PR:** #715
+- **What:** Admin pediu pra não ter que "policiar". Sistema agora completa SOZINHO. `TimeClock.autoCompleteMissingPunches(fid)` roda na load do `ptLoadHoje`, scaneia últimos 14 dias, e pra cada dia passado com registros incompletos (entrada sem saída, etc), adiciona batidas usando horário da jornada contratual. Considera override pontual + dom/feriado. Idempotente (não duplica). Funcionária recebe UMA notificação resumida.
+- **Como saber se é auto:** badge `🤖 auto` azul na celula (diferente do `⚠ retro` manual amarelo).
+- **Como desabilitar:** `OvertimeBank.config.autoCompleteEnabled = false`.
+- **Base legal:** Súmula 338 TST + CLT art. 74. Presume-se jornada contratual a favor da funcionária quando registro está incompleto.
+- **Throttle:** roda só 1x por hora (localStorage `mp_auto_complete_last_<fid>`). Toast amarelo notifica admin discreto quando algo é completado.
+- **Lição:** ⚠ Auto-complete NÃO completa entrada (se não bateu nem entrou, é falta legítima). Só completa saídas/almoços quando há entrada. Se for feriado e staff não tem `hora_saida_dom_feriado`, pula (sem horário pra usar).
+- **Arquivos:** `js/core/time-clock.js`, `js/core/overtime-bank.js`, `painel/ponto.html`
+
 #### 🟣 Feature: Ponto retroativo (funcionária esqueceu de bater)
 - **PR:** #690
 - **What:** Súmula 338 TST diz que se registro está incompleto, presume-se a favor do funcionário. Empresa precisa documentar quando funcionária esqueceu. Implementado:

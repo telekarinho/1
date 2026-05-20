@@ -534,6 +534,180 @@
     }
 
     // ----------------------------------------
+    // 🤖 AUTO-COMPLETE batidas esquecidas (Súmula 338 TST)
+    // ----------------------------------------
+    // Roda automaticamente quando admin abre o painel. Scaneia ultimos N dias
+    // (default 14) e pra cada dia já passado onde funcionária tem registros
+    // INCOMPLETOS, completa automaticamente baseado na jornada contratual.
+    //
+    // Cobertura:
+    //   - Tem entrada mas SEM saída → adiciona saída usando jornada.hora_saida
+    //     (considera override pontual + dom/feriado)
+    //   - Tem entrada + almoço_saída mas sem almoço_volta → adiciona com intervalo padrão
+    //   - Sem nenhum registro = falta (NÃO auto-completa, é falta legítima)
+    //
+    // Idempotente: addRetroactivePunch bloqueia duplicatas. Chamar várias vezes
+    // não cria registros duplicados.
+    //
+    // Flags no registro: retroativo:true, autoCompleted:true, addedBy:'system_auto'
+    // Funcionária recebe UMA notificação resumindo todos os dias.
+    //
+    // Pode ser desabilitado em OvertimeBank.config.autoCompleteEnabled=false
+    async function autoCompleteMissingPunches(franchiseId, options) {
+        options = options || {};
+        var daysBack = options.daysBack || 14;
+
+        // Verifica config (opt-out)
+        var cfg = (typeof OvertimeBank !== 'undefined' && OvertimeBank.getConfig)
+            ? OvertimeBank.getConfig(franchiseId) : {};
+        if (cfg.autoCompleteEnabled === false) {
+            return { success: true, added: [], disabled: true };
+        }
+
+        var staff = (typeof DataStore !== 'undefined')
+            ? (DataStore.getCollection('staff', franchiseId) || []).filter(function (s) { return s.active; })
+            : [];
+        if (!staff.length) return { success: true, added: [] };
+
+        var today = (typeof Utils !== 'undefined' && Utils.todayKey) ? Utils.todayKey() : new Date().toISOString().slice(0, 10);
+        var added = [];
+        var notifByStaff = {};  // staffId -> lista de dias completados
+
+        // Itera dias passados (não inclui hoje — funcionária ainda pode bater)
+        for (var i = 1; i <= daysBack; i++) {
+            var d = new Date(today + 'T12:00:00');
+            d.setDate(d.getDate() - i);
+            var dateStr = d.toISOString().slice(0, 10);
+
+            for (var si = 0; si < staff.length; si++) {
+                var s = staff[si];
+
+                // Pula se é folga do staff nesse dia
+                var dow = d.getDay();
+                if (isFolga(s, dow)) continue;
+
+                // Pula se é feriado E hora_saida_dom_feriado não está configurado
+                // (sem horário pra usar, melhor não tentar)
+                var holiday = isHoliday(franchiseId, dateStr);
+                if (holiday && (!s.jornada || !s.jornada.hora_saida_dom_feriado)) continue;
+
+                // Pega registros do dia (vigentes — exclui adjusted/cancelled)
+                var recs = getStaffRecordsByDate(franchiseId, s.id, dateStr);
+                if (!recs.length) continue;  // sem nenhum registro = falta legítima
+
+                var byType = {};
+                recs.forEach(function (r) { byType[r.type] = r; });
+
+                var hasEntrada = !!byType[TIPOS.ENTRADA];
+                var hasAlmocoSaida = !!byType[TIPOS.ALMOCO_SAIDA];
+                var hasAlmocoVolta = !!byType[TIPOS.ALMOCO_VOLTA];
+                var hasSaida = !!byType[TIPOS.SAIDA];
+
+                if (!hasEntrada) continue;  // sem entrada, nada pra completar
+
+                // Pega jornada efetiva do dia (considera override + dom/feriado)
+                var eff = getEffectiveJornada(franchiseId, s.id, dateStr);
+                if (!eff || !eff.hora_saida) continue;
+
+                var dayCompletions = [];
+
+                // 1. Completar almoço_saída + volta se jornada tem intervalo E não bateram
+                if (eff.intervalo_almoco_min > 0 && !hasAlmocoSaida && !hasAlmocoVolta) {
+                    // Hora padrão almoço: 4h após entrada (ou meio da jornada)
+                    var entradaMin = timeToMinutes(eff.hora_entrada);
+                    var saidaMin = timeToMinutes(eff.hora_saida);
+                    if (saidaMin < entradaMin) saidaMin += 24 * 60;
+                    var meioJornada = entradaMin + Math.floor((saidaMin - entradaMin) / 2);
+                    var almocoSaidaHHMM = pad(Math.floor(meioJornada / 60) % 24, 2) + ':' + pad(meioJornada % 60, 2);
+                    var almocoVoltaMin = meioJornada + eff.intervalo_almoco_min;
+                    var almocoVoltaHHMM = pad(Math.floor(almocoVoltaMin / 60) % 24, 2) + ':' + pad(almocoVoltaMin % 60, 2);
+
+                    var r1 = await addRetroactivePunch(franchiseId, s.id, dateStr, TIPOS.ALMOCO_SAIDA, almocoSaidaHHMM,
+                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater. Se hora real foi diferente, contestar com o gerente.');
+                    if (r1.success) {
+                        r1.record.autoCompleted = true;
+                        r1.record.addedBy = 'system_auto';
+                        // Atualiza no DataStore (re-save manual)
+                        try {
+                            var col = DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [];
+                            var idx = col.findIndex(function (x) { return x.id === r1.record.id; });
+                            if (idx >= 0) { col[idx] = r1.record; DataStore.setCollection(COLLECTION_RECORDS, franchiseId, col); }
+                        } catch (e) {}
+                        added.push(r1.record);
+                        dayCompletions.push('Saída almoço ' + almocoSaidaHHMM);
+                    }
+
+                    var r2 = await addRetroactivePunch(franchiseId, s.id, dateStr, TIPOS.ALMOCO_VOLTA, almocoVoltaHHMM,
+                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater. Se hora real foi diferente, contestar com o gerente.');
+                    if (r2.success) {
+                        r2.record.autoCompleted = true;
+                        r2.record.addedBy = 'system_auto';
+                        try {
+                            var col2 = DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [];
+                            var idx2 = col2.findIndex(function (x) { return x.id === r2.record.id; });
+                            if (idx2 >= 0) { col2[idx2] = r2.record; DataStore.setCollection(COLLECTION_RECORDS, franchiseId, col2); }
+                        } catch (e) {}
+                        added.push(r2.record);
+                        dayCompletions.push('Volta almoço ' + almocoVoltaHHMM);
+                    }
+                }
+
+                // 2. Completar saída final (caso mais comum)
+                if (!hasSaida) {
+                    var r3 = await addRetroactivePunch(franchiseId, s.id, dateStr, TIPOS.SAIDA, eff.hora_saida,
+                        'Auto-completado pelo sistema conforme jornada contratual (Súmula 338 TST). Funcionária esqueceu de bater saída. Se hora real foi diferente, contestar com o gerente.');
+                    if (r3.success) {
+                        r3.record.autoCompleted = true;
+                        r3.record.addedBy = 'system_auto';
+                        try {
+                            var col3 = DataStore.getCollection(COLLECTION_RECORDS, franchiseId) || [];
+                            var idx3 = col3.findIndex(function (x) { return x.id === r3.record.id; });
+                            if (idx3 >= 0) { col3[idx3] = r3.record; DataStore.setCollection(COLLECTION_RECORDS, franchiseId, col3); }
+                        } catch (e) {}
+                        added.push(r3.record);
+                        dayCompletions.push('Saída final ' + eff.hora_saida);
+                    }
+                }
+
+                if (dayCompletions.length) {
+                    if (!notifByStaff[s.id]) notifByStaff[s.id] = [];
+                    notifByStaff[s.id].push({ date: dateStr, completions: dayCompletions });
+                }
+            }
+        }
+
+        // Substitui as N notificações individuais que addRetroactivePunch criou
+        // por UMA notificação resumida por funcionária (UX melhor)
+        if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
+            Object.keys(notifByStaff).forEach(function (staffId) {
+                var dias = notifByStaff[staffId];
+                if (!dias.length) return;
+                var bodyLines = dias.map(function (d) {
+                    var dateBr = d.date.split('-').reverse().join('/');
+                    return '• ' + dateBr + ': ' + d.completions.join(', ');
+                });
+                try {
+                    DataStore.addToCollection('solicitacoes', franchiseId, {
+                        id: 'auto_complete_' + Date.now() + '_' + staffId,
+                        staffId: staffId,
+                        type: 'notificacao_ponto_auto_completado',
+                        title: '🤖 Sistema completou batidas que você esqueceu',
+                        body: 'O sistema completou automaticamente algumas batidas seguindo sua jornada contratual:\n\n' +
+                            bodyLines.join('\n') + '\n\n' +
+                            'Se alguma hora não corresponde ao que aconteceu, fale com o gerente que ele ajusta. ' +
+                            'Isso é permitido por lei (Súmula 338 TST) pra não te prejudicar quando você esquece de bater.',
+                        status: 'info',
+                        createdAt: nowIso(),
+                        createdBy: 'system_auto'
+                    });
+                } catch (e) {}
+            });
+        }
+
+        return { success: true, added: added, byStaff: notifByStaff };
+    }
+
+    // ----------------------------------------
     // 🗑 CANCELAR batida (admin) — soft delete com motivo, mantém auditoria
     // ----------------------------------------
     function cancelRecord(franchiseId, recordId, reason) {
@@ -1196,6 +1370,7 @@
         addJustification: addJustification,
         adjustRecord: adjustRecord,           // 🛠 admin ajusta hora (mantem auditoria)
         addRetroactivePunch: addRetroactivePunch, // ➕ admin adiciona batida esquecida (Sumula 338 TST)
+        autoCompleteMissingPunches: autoCompleteMissingPunches, // 🤖 sistema completa sozinho dias passados
         cancelRecord: cancelRecord,           // 🗑 admin cancela registro (soft delete)
 
         // 📅 Jornada flexível (override pontual por dia)
