@@ -33,6 +33,36 @@ const { pickSystem } = require('./_brain-local.js');
 const Memory = require('./_belinha-memory.js');
 const Backends = require('./_backends.js');
 
+// ====================================================================
+// LOG BUFFER (intercepta console.log/warn/error pra /logs/viewer)
+// ====================================================================
+// Buffer circular em memória das últimas LOG_MAX entradas. Cada entrada:
+// { id, ts, level, msg }. O painel /logs/viewer faz long-poll via
+// /logs/stream?since=<lastId> e renderiza ao vivo. Útil pra debugar
+// Belinha sem ter que olhar a janela do .bat.
+const LOG_MAX = 1500;
+const __logBuffer = [];
+let __logSeq = 0;
+function __pushLog(level, args) {
+    try {
+        const msg = Array.prototype.map.call(args, function (a) {
+            if (a == null) return String(a);
+            if (typeof a === 'string') return a;
+            if (a instanceof Error) return a.stack || a.message;
+            try { return JSON.stringify(a); } catch (e) { return String(a); }
+        }).join(' ');
+        __logBuffer.push({ id: ++__logSeq, ts: new Date().toISOString(), level: level, msg: msg });
+        if (__logBuffer.length > LOG_MAX) __logBuffer.splice(0, __logBuffer.length - LOG_MAX);
+    } catch (e) { /* nunca quebra o servidor */ }
+}
+['log', 'info', 'warn', 'error'].forEach(function (lvl) {
+    const orig = console[lvl];
+    console[lvl] = function () {
+        __pushLog(lvl, arguments);
+        return orig.apply(console, arguments);
+    };
+});
+
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 
@@ -67,6 +97,109 @@ app.use((req, res, next) => {
     res.header('Access-Control-Max-Age', '86400');
     if (req.method === 'OPTIONS') return res.sendStatus(200);
     next();
+});
+
+// ========== LOGS VIEWER ==========
+// Abre num popup do painel Belinha. Mostra logs ao vivo do servidor
+// local (codex/claude/ollama). Long-poll via /logs/stream a cada 1.5s.
+app.get('/logs/viewer', (req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.end(`<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>📜 Belinha Logs ao vivo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'SF Mono', Consolas, monospace; background: #0F172A; color: #E2E8F0; padding: 0; }
+.hdr { background: #1E293B; padding: 10px 14px; display: flex; gap: 10px; align-items: center; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 10; }
+.hdr h1 { font-size: 14px; flex: 1; color: #F8FAFC; }
+.hdr .stat { font-size: 11px; color: #94A3B8; }
+.hdr button { background: #334155; border: 0; color: #fff; padding: 5px 10px; border-radius: 6px; font: inherit; font-size: 11px; cursor: pointer; }
+.hdr button:hover { background: #475569; }
+.hdr button.act { background: #10B981; }
+.hdr select { background: #334155; border: 0; color: #fff; padding: 5px 8px; border-radius: 6px; font: inherit; font-size: 11px; }
+.hdr input[type=text] { background: #0F172A; border: 1px solid #334155; color: #fff; padding: 5px 8px; border-radius: 6px; font: inherit; font-size: 11px; min-width: 150px; }
+#log { padding: 8px 14px; font-size: 12px; line-height: 1.5; }
+.row { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.03); white-space: pre-wrap; word-break: break-word; }
+.row .t { color: #64748B; margin-right: 8px; }
+.row .l { font-weight: 800; margin-right: 6px; padding: 0 4px; border-radius: 3px; font-size: 10px; vertical-align: middle; }
+.row.log .l { background: #475569; color: #CBD5E1; }
+.row.info .l { background: #3B82F6; color: #fff; }
+.row.warn .l { background: #F59E0B; color: #fff; }
+.row.error .l { background: #EF4444; color: #fff; }
+.row.warn { background: rgba(245,158,11,.05); }
+.row.error { background: rgba(239,68,68,.08); color: #FCA5A5; }
+.empty { padding: 40px; text-align: center; color: #64748B; }
+</style></head><body>
+<div class="hdr">
+    <h1>📜 Belinha Logs (servidor local)</h1>
+    <select id="filter"><option value="">Todos níveis</option><option value="error">Só errors</option><option value="warn">warn + error</option></select>
+    <input type="text" id="search" placeholder="Filtrar texto…">
+    <span class="stat" id="stat">—</span>
+    <button id="btnPause">⏸ Pausar</button>
+    <button id="btnClear">🗑️ Limpar tela</button>
+    <button class="act" onclick="location.reload()">🔄</button>
+</div>
+<div id="log"><div class="empty">Aguardando logs…</div></div>
+<script>
+var lastId = 0;
+var paused = false;
+var rows = [];
+var filterLvl = '';
+var search = '';
+var logEl = document.getElementById('log');
+var statEl = document.getElementById('stat');
+
+function render() {
+    var filtered = rows.filter(function (r) {
+        if (filterLvl === 'error' && r.level !== 'error') return false;
+        if (filterLvl === 'warn' && !(r.level === 'warn' || r.level === 'error')) return false;
+        if (search && r.msg.toLowerCase().indexOf(search.toLowerCase()) === -1) return false;
+        return true;
+    });
+    if (!filtered.length) { logEl.innerHTML = '<div class="empty">Sem entries com esse filtro</div>'; statEl.textContent = '0 / ' + rows.length; return; }
+    logEl.innerHTML = filtered.slice(-500).map(function (r) {
+        var t = new Date(r.ts).toLocaleTimeString('pt-BR');
+        var msg = r.msg.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<div class="row ' + r.level + '"><span class="t">' + t + '</span><span class="l">' + r.level.toUpperCase() + '</span>' + msg + '</div>';
+    }).join('');
+    statEl.textContent = filtered.length + ' / ' + rows.length;
+    window.scrollTo(0, document.body.scrollHeight);
+}
+
+function poll() {
+    if (paused) { setTimeout(poll, 800); return; }
+    fetch('/logs/stream?since=' + lastId, { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (j) {
+            if (j.entries && j.entries.length) {
+                rows = rows.concat(j.entries);
+                if (rows.length > 2000) rows = rows.slice(-2000);
+                lastId = j.entries[j.entries.length - 1].id;
+                render();
+            }
+        })
+        .catch(function () { /* silent */ })
+        .finally(function () { setTimeout(poll, 1500); });
+}
+document.getElementById('btnPause').onclick = function () {
+    paused = !paused;
+    this.textContent = paused ? '▶ Continuar' : '⏸ Pausar';
+    this.style.background = paused ? '#F59E0B' : '#334155';
+};
+document.getElementById('btnClear').onclick = function () { rows = []; render(); };
+document.getElementById('filter').onchange = function () { filterLvl = this.value; render(); };
+document.getElementById('search').oninput = function () { search = this.value; render(); };
+poll();
+</script>
+</body></html>`);
+});
+
+// JSON streamer: retorna entries com id > since
+app.get('/logs/stream', (req, res) => {
+    const since = parseInt(req.query.since || '0', 10);
+    const entries = __logBuffer.filter(e => e.id > since);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ entries: entries, latest: __logSeq, bufferSize: __logBuffer.length });
 });
 
 // ========== HEALTH ==========

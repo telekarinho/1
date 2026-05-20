@@ -701,29 +701,128 @@ body {
         }
     }
 
+    // Cache do resultado de "qual URL base usar pra /api/*?"
+    // Em milkypot.com (GitHub Pages) /api/* dá 404 — tem que ir pra milkypot.vercel.app.
+    // Em localhost ou *.vercel.app, /api/* funciona relativo.
+    var _apiBase = null;
+    var _apiBaseDetected = false;
+    async function detectApiBase() {
+        if (_apiBaseDetected) return _apiBase;
+        _apiBaseDetected = true;
+        try {
+            var r = await withTimeout(fetch('/api/health', { cache: 'no-store' }), 5000, 'api-detect');
+            if (r.ok) {
+                var ct = r.headers.get('content-type') || '';
+                if (ct.indexOf('json') !== -1) {
+                    _apiBase = ''; // relativo funciona
+                    return _apiBase;
+                }
+            }
+        } catch (e) {}
+        // Fallback: Vercel direto
+        _apiBase = 'https://milkypot.vercel.app';
+        return _apiBase;
+    }
+    async function apiUrl(path) {
+        var base = await detectApiBase();
+        return base + path;
+    }
+
+    async function checkApiRouting() {
+        // Detecta o problema crítico: milkypot.com não roteia /api/* pra Vercel.
+        var host = location.hostname;
+        if (host.indexOf('vercel.app') !== -1 || host === 'localhost' || host === '127.0.0.1') {
+            return makeCheck('API Routing (/api/*)', 'ok', 'Domínio é Vercel/local — /api/* funciona relativo', '', '🔀');
+        }
+        try {
+            var r = await withTimeout(fetch('/api/health', { cache: 'no-store' }), 5000, 'api-routing');
+            var ct = r.headers.get('content-type') || '';
+            if (r.ok && ct.indexOf('json') !== -1) {
+                return makeCheck('API Routing (/api/*)', 'ok', 'Custom domain → Vercel OK', '', '🔀');
+            }
+            // GitHub Pages serve 404 com Server: GitHub.com
+            return makeCheck('API Routing (/api/*)', 'err',
+                '⚠️ milkypot.com NÃO roteia /api/* pra Vercel — caindo em GitHub Pages (HTTP ' + r.status + ', ' + (ct || 'sem CT') + '). Painel admin que usa /api/copilot e /api/* não funciona. Saude.html está fazendo fallback automático pra milkypot.vercel.app. <strong>Fix definitivo:</strong> adicionar milkypot.com como custom domain no projeto Vercel.',
+                '', '🚨');
+        } catch (e) {
+            return makeCheck('API Routing (/api/*)', 'err', 'Falha probing /api/health', e.message, '🔀');
+        }
+    }
+
     async function checkBelinhaAPI() {
         var t0 = performance.now();
         try {
-            var r = await withTimeout(
-                fetch('/api/health', { cache: 'no-store' }),
-                6000,
-                'belinha-api'
-            );
+            var url = await apiUrl('/api/health');
+            var r = await withTimeout(fetch(url, { cache: 'no-store' }), 6000, 'belinha-api');
             var ms = Math.round(performance.now() - t0);
-            if (!r.ok) return makeCheck('Belinha API (/api/health)', 'err', 'HTTP ' + r.status + ' · ' + ms + 'ms', '', '🤖');
+            if (!r.ok) return makeCheck('Belinha API (Vercel)', 'err', 'HTTP ' + r.status + ' · ' + ms + 'ms', '', '🤖');
             var j = await r.json();
-            var envOk = j && j.env && j.env.ANTHROPIC_API_KEY && j.env.WHATSAPP_TOKEN;
+            var e = (j && j.env) || {};
+            var crit = e.GROQ_API_KEY && e.MP_WEBHOOK_SECRET && e.FIREBASE_SERVICE_ACCOUNT;
             return makeCheck(
                 'Belinha API (Vercel)',
-                envOk ? 'ok' : 'warn',
-                ms + 'ms · Anthropic ' + (j.env.ANTHROPIC_API_KEY ? '✅' : '❌') +
-                ' · Groq ' + (j.env.GROQ_API_KEY ? '✅' : '❌') +
-                ' · WhatsApp ' + (j.env.WHATSAPP_TOKEN ? '✅' : '❌') +
-                ' · Firebase ' + (j.env.FIREBASE_SERVICE_ACCOUNT ? '✅' : '❌'),
+                crit ? 'ok' : 'warn',
+                ms + 'ms · Groq ' + (e.GROQ_API_KEY ? '✅' : '❌') +
+                ' · WebhookSecret ' + (e.MP_WEBHOOK_SECRET ? '✅' : '❌') +
+                ' · TunnelSecret ' + (e.BELINHA_TUNNEL_SECRET ? '✅' : '❌') +
+                ' · Firebase ' + (e.FIREBASE_SERVICE_ACCOUNT ? '✅' : '❌') +
+                (e.ANTHROPIC_API_KEY ? ' · Anthropic ✅(fallback)' : '') +
+                (_apiBase ? ' · via ' + (_apiBase || 'relativo') : ''),
                 '', '🤖'
             );
         } catch (e) {
             return makeCheck('Belinha API', 'err', 'Endpoint /api/health não responde', e.message, '🤖');
+        }
+    }
+
+    async function checkBaileysGateway() {
+        var t0 = performance.now();
+        try {
+            var r = await withTimeout(
+                fetch('https://zap.milkypot.com/', { cache: 'no-store', mode: 'no-cors' }),
+                6000, 'baileys-gw'
+            );
+            var ms = Math.round(performance.now() - t0);
+            // mode no-cors → não conseguimos ler status, mas se completar sem throw, está up
+            return makeCheck('Gateway WhatsApp (Baileys)', 'ok',
+                'zap.milkypot.com respondeu em ' + ms + 'ms', '', '📞');
+        } catch (e) {
+            return makeCheck('Gateway WhatsApp (Baileys)', 'err',
+                'zap.milkypot.com não responde — clientes não recebem resposta no WhatsApp',
+                e.message, '📞');
+        }
+    }
+
+    async function checkBelinhaTunnel() {
+        // Lê belinha_tunnel_global do Firestore e testa se URL está viva
+        try {
+            var snap = await withTimeout(
+                firebase.firestore().collection('datastore').doc('belinha_tunnel_global').get(),
+                5000, 'tunnel-doc'
+            );
+            if (!snap.exists) return makeCheck('Tunnel Belinha local', 'warn', 'Sem URL registrada — Belinha local não está disponível pro painel', '', '🌐');
+            var d = snap.data();
+            var p = d.value; try { p = JSON.parse(p); } catch (e) {}
+            var url = p && p.url;
+            if (!url) return makeCheck('Tunnel Belinha local', 'warn', 'Doc vazio', '', '🌐');
+            var ageH = (Date.now() - new Date(p.updatedAt || 0).getTime()) / 3600000;
+            // Testa DNS / liveness
+            try {
+                var r = await withTimeout(fetch(url + '/health', { cache: 'no-store' }), 4000, 'tunnel-ping');
+                if (r.ok) {
+                    var j = await r.json();
+                    return makeCheck('Tunnel Belinha local', 'ok',
+                        'Vivo · uptime ' + (j.uptime || '?') + ' · ' + ageH.toFixed(1) + 'h desde registro · ' + url.slice(8, 30) + '…',
+                        '', '🌐');
+                }
+                return makeCheck('Tunnel Belinha local', 'err', 'Tunnel HTTP ' + r.status, '', '🌐');
+            } catch (e) {
+                return makeCheck('Tunnel Belinha local', 'err',
+                    'Tunnel registrado mas MORTO (DNS NXDOMAIN?). Reinicie Belinha-Iniciar.bat. URL registrada: ' + url + ' (' + ageH.toFixed(1) + 'h)',
+                    e.message, '🌐');
+            }
+        } catch (e) {
+            return makeCheck('Tunnel Belinha local', 'warn', 'Sem acesso ao Firestore pra ler tunnel', e.message, '🌐');
         }
     }
 
@@ -1451,7 +1550,10 @@ body {
             var ext = await Promise.all([
                 checkFirebaseAuth(),
                 checkFirestoreLatency(),
+                checkApiRouting(),
                 checkBelinhaAPI(),
+                checkBaileysGateway(),
+                checkBelinhaTunnel(),
                 checkWhatsAppActivity(),
                 checkPagamentoPix()
             ]);

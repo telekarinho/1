@@ -28,19 +28,27 @@ module.exports = async function handler(req, res) {
 
     var startedAt = Date.now();
 
+    // Stack real (descoberta via auditoria): Belinha usa Groq (não Anthropic),
+    // WhatsApp via gateway Baileys próprio em zap.milkypot.com (não WhatsApp
+    // Business API oficial). Por isso checamos GROQ_API_KEY + MP_WEBHOOK_SECRET
+    // (HMAC Baileys↔Vercel) + BELINHA_TUNNEL_SECRET (admin local↔Vercel registry),
+    // e NÃO ANTHROPIC/WHATSAPP_TOKEN.
     var env = {
-        ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
-        GROQ_API_KEY: !!process.env.GROQ_API_KEY,
-        WHATSAPP_TOKEN: !!process.env.WHATSAPP_TOKEN,
-        WHATSAPP_PHONE_ID: !!process.env.WHATSAPP_PHONE_ID,
-        WHATSAPP_VERIFY_TOKEN: !!process.env.WHATSAPP_VERIFY_TOKEN,
-        FIREBASE_SERVICE_ACCOUNT: !!process.env.FIREBASE_SERVICE_ACCOUNT,
-        FIREBASE_PROJECT_ID: !!process.env.FIREBASE_PROJECT_ID
+        GROQ_API_KEY:               !!process.env.GROQ_API_KEY,
+        MP_WEBHOOK_SECRET:          !!process.env.MP_WEBHOOK_SECRET,
+        BELINHA_TUNNEL_SECRET:      !!process.env.BELINHA_TUNNEL_SECRET,
+        FIREBASE_SERVICE_ACCOUNT:   !!(process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_ADMIN_SA_JSON),
+        FIREBASE_PROJECT_ID:        !!process.env.FIREBASE_PROJECT_ID,
+        FIREBASE_API_KEY:           !!process.env.FIREBASE_API_KEY,
+        // Opcional (fallback pago se Belinha local cair):
+        ANTHROPIC_API_KEY:          !!process.env.ANTHROPIC_API_KEY,
+        OPENAI_API_KEY:             !!process.env.OPENAI_API_KEY
     };
 
     var configuredCount = Object.values(env).filter(Boolean).length;
     var totalCount = Object.keys(env).length;
-    var allCritical = env.ANTHROPIC_API_KEY && env.WHATSAPP_TOKEN && env.FIREBASE_SERVICE_ACCOUNT;
+    // Críticos pra Belinha WhatsApp funcionar com clientes finais:
+    var allCritical = env.GROQ_API_KEY && env.MP_WEBHOOK_SECRET && env.FIREBASE_SERVICE_ACCOUNT;
 
     var payload = {
         ok: true,
