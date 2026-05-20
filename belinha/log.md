@@ -10788,3 +10788,46 @@ Copies internos documentados no arquivo:
 - **Operador:** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
 
 _Belinha — Ciclo #273 | 2026-05-19_
+
+---
+
+## Ciclo #274 — 2026-05-20
+
+**Área:** Conteúdo — Playbook Dia dos Namorados 2026 (inteligência competitiva)
+
+**Contexto:** Ciclo #273 havia identificado dois copies específicos de counter-posicionamento ("MilkyMoo tem dragão / MilkyPot tem o nome deles" e "não faz sorvete de personagem") e confirmado o gap estratégico do MooBai (ausente em Londrina). Esses dados precisavam entrar no playbook operacional antes de 12/06 — o operador usa o playbook na hora, não abre os arquivos de concorrentes separados.
+
+**O que pesquisou/analisou:**
+- Leu `belinha/competitors/milkymoo.md` seção ciclo #273: MooBai ausente em Londrina, Carameluda encerra ~31/05, preços atualizados
+- Verificou `dia-dos-namorados-2026-playbook.md` seção "Inteligência Competitiva" — tinha o counter-posicionamento do cinema mas NÃO tinha: (a) confirmação de ausência do MooBai, (b) os dois copies de briefing, (c) tabela de preços atualizada com análise do gap
+- Identificou que o operador precisaria abrir `milkymoo.md` separado para encontrar esse contexto — falha de ergonomia operacional
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `belinha/content/dia-dos-namorados-2026-playbook.md` | +30 linhas: nova sub-seção "Gap confirmado (Ciclo #273)" logo após o counter-posicionamento MilkyMoo×Cinema |
+
+**Conteúdo adicionado:**
+- Confirmação MooBai: AUSENTE em Londrina (só SP/Goiânia) — estrategicamente relevante
+- Confirmação Carameluda: encerra ~31/05, antes de 12/06
+- Conclusão consolidada: MilkyMoo Londrina chega ao 12/06 sem produto para casais
+- 2 copies de briefing interno (tabela): "MilkyMoo tem dragão / MilkyPot tem o nome deles" + "não faz sorvete de personagem"
+- Tabela preços MilkyMoo Londrina (mai/2026) + análise do gap R$3,80 vs. Duo MilkyPot
+- Fonte rastreável para o operador: referência ao `milkymoo.md` ciclo #273
+
+**Commit:** `fda8b28`
+
+**Por que gera valor:**
+- Playbook vira documento único que o operador consulta em tempo real — sem ter que abrir arquivo separado de concorrentes durante o evento
+- Os dois copies de briefing são imediatamente acionáveis para treinamento de equipe na semana anterior (8–11/06)
+- A análise de gap de R$3,80 dá ao operador linguagem para justificar preço se cliente comparar diretamente
+
+**Próximo passo sugerido:**
+- **Ciclo #275 — UX/Frontend:** Verificar banner de Namorados em mobile <375px (veryNarrow) — se copy ainda usa genérico ou já reflete "Duo personalizado, sem app". Também verificar se o botão CTA do banner leva direto ao wa.me com mensagem pré-preenchida "NAMORADOS26"
+- **Ciclo #276 — Concorrentes:** JohnnyJoy — não analisado desde ciclo #269 (4 ciclos atrás). Verificar campanha de Namorados local em Londrina e se "Joy Fidelidade signo Gêmeos" ainda está ativo
+- **Operador (URGENTE — 14 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** — guia em `wa-business-setup-namorados.md` ⚠️🔴
+- **Operador (URGENTE — 10 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+- **Operador:** Imprimir/salvar playbook `dia-dos-namorados-2026-playbook.md` até **09/06** para treinar equipe na semana do evento
+
+_Belinha — Ciclo #274 | 2026-05-20_
