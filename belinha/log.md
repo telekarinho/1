@@ -10831,3 +10831,51 @@ _Belinha — Ciclo #273 | 2026-05-19_
 - **Operador:** Imprimir/salvar playbook `dia-dos-namorados-2026-playbook.md` até **09/06** para treinar equipe na semana do evento
 
 _Belinha — Ciclo #274 | 2026-05-20_
+
+---
+
+## Ciclo #275 — 2026-05-20
+
+**Área:** UX/Frontend — Banner announcement mobile <375px (veryNarrow)
+
+**Contexto:** Ciclo #274 havia indicado verificar o banner de Namorados em mobile <375px. Ao auditar o banner, confirmou-se que os banners de Namorados **já tinham** variantes `veryNarrow`/`narrow` corretas (CTAs com NAMORADOS26 via wa.me). O problema estava nos **outros banners** sem essas variantes.
+
+**O que pesquisou/analisou:**
+- Leu `index.html` seção `configureBanner()` — mapa completo de todos os banners ativos/futuros
+- Banner de Namorados (03–12/06): ✅ variantes corretas, CTAs com NAMORADOS26
+- Banner "Quase 1 Mês" (17–25/05): ❌ **SEM variantes narrow** — texto `"Obrigada Londrina pelo carinho! Cartão fidelidade: 10 carimbos = 1 potinho grátis 🍓"` (~80 chars) vai quebrar linha em iPhone SE/5 (<375px), aumentando `banner.offsetHeight` e desalinhando navbar
+- Banner "1 Mês Aniversário" (25/05): ❌ **SEM variantes narrow** — `"1 MÊS DE MILKYPOT EM LONDRINA!"` idem
+- Banner Junina Teaser (13–16/06): ❌ **SEM variantes narrow** — `"Mande JUNINA26 no WhatsApp e seja o 1º a saber"` longo
+- Banner Junina Launch (17–29/06): ❌ **SEM variantes narrow** — `"Paçoca + cocada + mel · Só até 29/06!"` ok, mas sem o narrow para consistência
+
+**O que mudou:**
+
+| Arquivo | Mudança |
+|---------|---------|
+| `index.html` | +4 variantes `veryNarrow/narrow` nos banners "1 Mês" e Junina |
+| `sw.js` | `mp-v9` → `mp-v10` |
+
+**Variantes adicionadas:**
+- 17–24/05 veryNarrow: `"10 carimbos = potinho grátis"` (compacto, cabe em 320px)
+- 17–24/05 narrow: `"Cartão fidelidade: 10 carimbos = 1 potinho grátis"` (sem "Obrigada Londrina pelo carinho!")
+- 25/05 veryNarrow: `"1 MÊS! · Obrigada Londrina!"` (ultracompacto)
+- 25/05 narrow: `"1 MÊS DE MILKYPOT! · Obrigada Londrina pelo carinho!"` (sem "EM LONDRINA")
+- Junina teaser veryNarrow: `"NOVIDADE JUNINA! · Mande JUNINA26"` (só keyword)
+- Junina teaser narrow: `"EM BREVE: NOVIDADE JUNINA! · Mande JUNINA26 · Seja o 1º a saber"`
+- Junina launch veryNarrow: `"POTINHO JUNINO! · Paçoca + cocada · Só até 29/06"` (sem "+mel")
+- Junina launch narrow: versão intermediária com todos ingredientes
+
+**Commit:** `5829f08`
+
+**Por que gera valor:**
+- Banner ativo AGORA (hoje é 20/05) em iPhone SE/5 (<375px) deixa de quebrar linha e deslocar o navbar
+- `applyBannerOffset()` calcula `banner.offsetHeight` corretamente → navbar permanece alinhado
+- Usuários de dispositivos antigos/pequenos (ainda ~8% do tráfego mobile) recebem banner legível numa linha
+
+**Próximo passo sugerido:**
+- **Ciclo #276 — Concorrentes:** JohnnyJoy — não analisado desde ciclo #269 (5 ciclos). Verificar campanha de Namorados local em Londrina e se "Joy Fidelidade signo Gêmeos" ainda está ativo — risco latente antes de 12/06
+- **Ciclo #277 — Conteúdo:** Criar roteiro Reel 15s "dragão vs. potinho com nome" — counter-posicionamento MilkyMoo/MooBai em formato vídeo para semana de 09–11/06
+- **Operador (URGENTE — 14 dias):** Configurar keyword `NAMORADOS26` no WA Business até **03/06** ⚠️🔴
+- **Operador (URGENTE — 10 dias):** Confirmar naming + ingredientes Potinho Junino até **30/05/2026** ⚠️
+
+_Belinha — Ciclo #275 | 2026-05-20_
