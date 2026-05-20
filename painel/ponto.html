@@ -787,7 +787,8 @@
                     var hh = (typeof Utils !== 'undefined' && Utils.formatTime) ? Utils.formatTime(rec.timestamp) : rec.timestamp.slice(11,16);
                     var selfieIcon = rec.selfie ? ' <span onclick="event.stopPropagation();ptAuditarSelfie(\'' + rec.id + '\')" style="cursor:pointer;color:#7E57C2;margin-left:4px" title="Ver selfie do registro">📸</span>' : '';
                     var flaggedBadge = rec.flagged ? ' <span title="Marcado como suspeito" style="background:#FEE2E2;color:#991B1B;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:800">🚩</span>' : '';
-                    return '<td style="cursor:pointer;color:#3B82F6;font-weight:600" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh + '\')">' + hh + ' ✎' + selfieIcon + flaggedBadge + '</td>';
+                    var retroBadge = rec.retroativo ? ' <span title="Adicionado retroativamente — Motivo: ' + escapeHtml(rec.retroativoMotivo || '') + '" style="background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:5px;font-size:10px;font-weight:800">⚠ retro</span>' : '';
+                    return '<td style="cursor:pointer;color:#3B82F6;font-weight:600" title="Clique pra ajustar (admin)" onclick="ptAbrirEditarPonto(\'' + rec.id + '\',\'' + hh + '\')">' + hh + ' ✎' + selfieIcon + flaggedBadge + retroBadge + '</td>';
                 }
                 // Jornada efetiva do dia (considera overrides + dom/feriado)
                 var jorn = dia.jornadaEfetiva || { hora_entrada: '?', hora_saida: '?', source: 'padrao', sourceLabel: '' };
@@ -815,7 +816,16 @@
                 html += '<td><span class="pt-tag ' + statusClass + '">' + status + '</span></td>';
                 html += '<td>' + jornCell + '</td>';
                 html += '<td>' + (dia.completo ? dia.horasFormatado : '-') + saldoStr + '</td>';
+                // Botão ➕ aparece quando funcionária tem registros incompletos hoje
+                // (ex: entrada mas sem saída — esqueceu de bater). Admin pode adicionar
+                // o ponto faltante com motivo obrigatório (Sumula 338 TST).
+                var faltaSaida = dia.entrada && !dia.saida && !dia.isFolga;
+                var faltaQualquer = dia.records.length > 0 && !dia.completo && !dia.isFolga;
+                var btnRetro = faltaQualquer
+                    ? '<button onclick="ptAddPontoRetroativo(\'' + s.id + '\',\'' + today + '\')" style="background:#FEF3C7;color:#92400E;border:1px solid #F59E0B;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer;margin-right:4px" title="Adicionar batida que ela esqueceu (com motivo)">➕</button>'
+                    : '';
                 html += '<td style="white-space:nowrap">'
+                    + btnRetro
                     + '<button onclick="ptAjustarJornadaDia(\'' + s.id + '\',\'' + today + '\')" style="background:#EFF6FF;color:#1E40AF;border:1px solid #3B82F6;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer;margin-right:4px" title="Ajuste pontual: só hoje (ex: precisei dela mais cedo)">📅</button>'
                     + '<button onclick="ptEditarJornadaPadrao(\'' + s.id + '\')" style="background:#F0FDF4;color:#065F46;border:1px solid #16A34A;border-radius:6px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer" title="Jornada padrão fixa (vale todo dia + horário diferente em dom/feriado)">📋</button>'
                     + '</td>';
@@ -1392,6 +1402,111 @@
                 '</div></div>';
             document.body.appendChild(modal);
             document.getElementById('jpAlmoco').value = String(j.intervalo_almoco_min != null ? j.intervalo_almoco_min : 60);
+        };
+
+        // ============================================
+        // ➕ ADICIONAR PONTO RETROATIVO (funcionária esqueceu)
+        // ============================================
+        // Súmula 338 TST: ônus do empregador comprovar saída se registro incompleto.
+        // Admin adiciona com hora + motivo obrigatório. Funcionária recebe notificação
+        // no app dela e pode contestar se hora estiver errada.
+        // Sistema cria registro NOVO com flag retroativo:true, NSR sequencial, audit log.
+        window.ptAddPontoRetroativo = function(staffId, dateStr) {
+            var staff = (DataStore.getCollection('staff', franchiseId) || []).find(function(s) { return s.id === staffId; });
+            if (!staff) { alert('Funcionária não encontrada'); return; }
+            // Quais tipos JÁ existem nesse dia (pra não permitir duplicar)
+            var existentes = TimeClock.getStaffRecordsByDate(franchiseId, staffId, dateStr) || [];
+            var existentesByType = {};
+            existentes.forEach(function(r) { if (!r.cancelled && !r.adjusted) existentesByType[r.type] = r; });
+            var tipos = [
+                { v: 'entrada', l: '🟢 Entrada', existing: existentesByType.entrada },
+                { v: 'almoco_saida', l: '🍽 Saída almoço/janta', existing: existentesByType.almoco_saida },
+                { v: 'almoco_volta', l: '🔄 Volta almoço/janta', existing: existentesByType.almoco_volta },
+                { v: 'saida', l: '🔴 Saída final', existing: existentesByType.saida }
+            ];
+            // Sugere o próximo tipo faltante e jornada efetiva pra autocomplete hora
+            var eff = TimeClock.getEffectiveJornada ? TimeClock.getEffectiveJornada(franchiseId, staffId, dateStr) : null;
+            var horaSugerida = '';
+            var tipoSugerido = '';
+            if (!existentesByType.entrada) { tipoSugerido = 'entrada'; horaSugerida = eff ? eff.hora_entrada : '08:00'; }
+            else if (!existentesByType.saida) { tipoSugerido = 'saida'; horaSugerida = eff ? eff.hora_saida : '18:00'; }
+            else if (!existentesByType.almoco_saida) { tipoSugerido = 'almoco_saida'; horaSugerida = '12:00'; }
+            else if (!existentesByType.almoco_volta) { tipoSugerido = 'almoco_volta'; horaSugerida = '13:00'; }
+            var modal = document.getElementById('ptRetroModal');
+            if (modal) modal.remove();
+            modal = document.createElement('div');
+            modal.id = 'ptRetroModal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
+            var tiposOptions = tipos.map(function(t) {
+                var hh = t.existing ? Utils.formatTime(t.existing.timestamp) : null;
+                var disabledFlag = t.existing ? ' disabled' : '';
+                var labelExtra = t.existing ? ' (já marcado ' + hh + ')' : '';
+                var selected = (t.v === tipoSugerido) ? ' selected' : '';
+                return '<option value="' + t.v + '"' + disabledFlag + selected + '>' + t.l + labelExtra + '</option>';
+            }).join('');
+            modal.innerHTML =
+                '<div style="background:#fff;border-radius:18px;max-width:520px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
+                '<div style="padding:18px 22px;background:linear-gradient(135deg,#F59E0B,#D97706);color:#fff">' +
+                '<h3 style="margin:0;font-family:\'Baloo 2\',cursive">➕ Adicionar ponto esquecido</h3>' +
+                '<small style="opacity:.9">' + escapeHtml(staff.name) + ' — ' + dateStr.split('-').reverse().join('/') + '</small></div>' +
+                '<div style="padding:20px 22px">' +
+
+                '<div style="background:#FEF3C7;border-left:4px solid #F59E0B;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:.8rem;color:#92400E;line-height:1.5">' +
+                '<b>⚖️ Súmula 338 TST + CLT art. 74:</b><br>' +
+                'Se funcionária esqueceu de bater, admin pode adicionar registro retroativo COM MOTIVO. Registro fica marcado como "retroativo" no espelho. Funcionária recebe notificação no app dela pra conferir.' +
+                '</div>' +
+
+                '<div style="margin-bottom:10px"><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">⏱ Tipo de batida</label>' +
+                '<select id="ptRetroTipo" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit">' +
+                tiposOptions + '</select></div>' +
+
+                '<div style="margin-bottom:10px"><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">🕘 Hora (HH:MM)</label>' +
+                '<input type="time" id="ptRetroHora" value="' + horaSugerida + '" style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit">' +
+                (eff ? '<small style="color:#6B7280;font-size:.72rem">💡 Jornada padrão dela: ' + eff.hora_entrada + ' → ' + eff.hora_saida + '</small>' : '') +
+                '</div>' +
+
+                '<div style="margin-bottom:10px"><label style="display:block;font-size:.78rem;font-weight:800;color:#374151;margin-bottom:4px">📝 Motivo (obrigatório, fica no audit log)</label>' +
+                '<textarea id="ptRetroMotivo" rows="3" placeholder="Ex: Funcionária esqueceu de bater. Presenciada saindo às 21:20 pelo gerente. OU: Conforme jornada contratual." style="width:100%;padding:9px 12px;border:1.5px solid #D1D5DB;border-radius:8px;font-family:inherit;font-size:.9rem"></textarea>' +
+                '<small style="color:#6B7280;font-size:.72rem">Mínimo 5 caracteres. Aparece no relatório do contador e fiscalização.</small></div>' +
+
+                '<div style="background:#EFF6FF;border-radius:8px;padding:10px 12px;font-size:.78rem;color:#1E40AF;line-height:1.5">' +
+                '✓ Registro marcado como <b>retroativo</b> (transparente)<br>' +
+                '✓ Funcionária recebe notificação no app + pode contestar<br>' +
+                '✓ NSR sequencial, hash SHA-256, audit log automático<br>' +
+                '✓ Aparece no espelho com badge ⚠️ retroativo' +
+                '</div>' +
+
+                '</div>' +
+                '<div style="padding:14px 22px;border-top:1px solid #E5E7EB;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">' +
+                '<button onclick="document.getElementById(\'ptRetroModal\').remove()" class="btn-outline">Cancelar</button>' +
+                '<button onclick="ptSalvarPontoRetroativo(\'' + staffId + '\',\'' + dateStr + '\')" class="btn-primary">💾 Adicionar ponto</button>' +
+                '</div></div>';
+            document.body.appendChild(modal);
+        };
+
+        window.ptSalvarPontoRetroativo = async function(staffId, dateStr) {
+            var tipo = document.getElementById('ptRetroTipo').value;
+            var hora = document.getElementById('ptRetroHora').value;
+            var motivo = document.getElementById('ptRetroMotivo').value.trim();
+            if (!tipo || !hora) { alert('Tipo e hora obrigatórios'); return; }
+            if (motivo.length < 5) { alert('Motivo mínimo 5 caracteres (exigência CLT)'); return; }
+            var btn = event.target;
+            if (btn) { btn.disabled = true; btn.textContent = '⏳ Adicionando...'; }
+            try {
+                var result = await TimeClock.addRetroactivePunch(franchiseId, staffId, dateStr, tipo, hora, motivo);
+                if (!result.success) {
+                    alert('❌ Erro: ' + result.error);
+                    if (btn) { btn.disabled = false; btn.textContent = '💾 Adicionar ponto'; }
+                    return;
+                }
+                document.getElementById('ptRetroModal').remove();
+                alert('✓ Ponto retroativo adicionado com sucesso. NSR: ' + result.record.nsr + '. Funcionária recebe notificação no app dela.');
+                ptLoadHoje();
+                if (typeof ptLoadEspelho === 'function') ptLoadEspelho();
+            } catch (e) {
+                alert('❌ Erro inesperado: ' + e.message);
+                if (btn) { btn.disabled = false; btn.textContent = '💾 Adicionar ponto'; }
+            }
         };
 
         window.ptSalvarJornadaPadrao = function(staffId) {

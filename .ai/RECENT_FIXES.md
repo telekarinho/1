@@ -8,6 +8,19 @@ Formato: `[data] BUG → FIX → LIÇÃO`
 
 ## 2026
 
+### 2026-05-19
+
+#### 🟣 Feature: Ponto retroativo (funcionária esqueceu de bater)
+- **PR:** #690
+- **What:** Súmula 338 TST diz que se registro está incompleto, presume-se a favor do funcionário. Empresa precisa documentar quando funcionária esqueceu. Implementado:
+  - `TimeClock.addRetroactivePunch(fid, sid, dateStr, type, hhmm, reason)` — cria registro NOVO (não ajuste) com flag `retroativo:true`, NSR sequencial, hash SHA-256, audit log
+  - Botão ➕ amarelo aparece automaticamente em `ponto.html` quando funcionária tem registro incompleto hoje (ex: entrada sem saída)
+  - Modal pede tipo + hora (com sugestão baseada na jornada padrão) + motivo (min 5 chars, exigência CLT)
+  - Funcionária recebe notificação em `solicitacoes_<fid>` que aparece no app dela
+  - Badge `⚠ retro` no espelho mensal + tooltip com motivo (transparência fiscalização)
+- **Lição:** ⚠ NÃO usa `adjustRecord` pra adicionar batida nova — é uma operação SEMANTICAMENTE diferente. `adjust` modifica existente (mantém auditoria do original), `retroativo` cria sem original. Cada um tem fluxo distinto.
+- **Arquivos:** `js/core/time-clock.js`, `painel/ponto.html`
+
 ### 2026-05-18
 
 #### 🐛 Botão "Ver" do holerite no app colaborador estourava pra fora da tela

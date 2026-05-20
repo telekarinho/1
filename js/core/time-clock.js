@@ -396,6 +396,144 @@
     }
 
     // ----------------------------------------
+    // ➕ ADICIONAR BATIDA RETROATIVA (admin) — quando funcionário esqueceu
+    // ----------------------------------------
+    // Diferente de adjustRecord (que ajusta UM existente), aqui CRIA um novo
+    // registro pra um dia/hora onde NAO existia batida. Caso comum: funcionária
+    // esqueceu de bater saída — admin adiciona com motivo.
+    //
+    // Conformidade legal (Sumula 338 TST + Portaria 671/2021):
+    // - Motivo obrigatório (min 5 chars) registrado
+    // - Audit log: quem adicionou, quando, IP, motivo
+    // - Flag retroativo:true visível no espelho e pro funcionário
+    // - NSR sequencial preservado
+    // - Hash SHA-256 calculado
+    // - Funcionária deve poder ver/contestar no app dela
+    //
+    // params:
+    //   staffId, dateStr (YYYY-MM-DD), type (entrada|almoco_saida|almoco_volta|saida),
+    //   hhmm (HH:MM), reason (string min 5 chars)
+    async function addRetroactivePunch(franchiseId, staffId, dateStr, type, hhmm, reason) {
+        if (!franchiseId || !staffId || !dateStr || !type || !hhmm) {
+            return { success: false, error: 'Dados obrigatórios faltando' };
+        }
+        if (!reason || reason.trim().length < 5) {
+            return { success: false, error: 'Motivo obrigatório (mínimo 5 caracteres) — exigência CLT pra auditoria' };
+        }
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            return { success: false, error: 'Data inválida (YYYY-MM-DD)' };
+        }
+        if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hhmm)) {
+            return { success: false, error: 'Hora inválida (HH:MM)' };
+        }
+        if (Object.values(TIPOS).indexOf(type) === -1) {
+            return { success: false, error: 'Tipo inválido' };
+        }
+
+        // Valida funcionário
+        var staff = (typeof DataStore !== 'undefined')
+            ? (DataStore.getCollection('staff', franchiseId) || []).find(function (s) { return s.id === staffId; })
+            : null;
+        if (!staff) return { success: false, error: 'Funcionário não encontrado' };
+        if (!staff.active) return { success: false, error: 'Funcionário inativo' };
+
+        // Não pode adicionar pra data futura
+        var today = (typeof Utils !== 'undefined' && Utils.todayKey) ? Utils.todayKey() : new Date().toISOString().slice(0, 10);
+        if (dateStr > today) return { success: false, error: 'Não pode adicionar ponto pra data futura' };
+
+        // Verifica se já existe registro vigente desse tipo nesse dia
+        var existentes = getStaffRecordsByDate(franchiseId, staffId, dateStr);
+        var jaTem = existentes.find(function (r) { return r.type === type && !r.cancelled && !r.adjusted; });
+        if (jaTem) {
+            return {
+                success: false,
+                error: 'Já existe registro de "' + (TIPO_LABELS[type] || type) + '" nesse dia (' + (typeof Utils !== 'undefined' ? Utils.formatTime(jaTem.timestamp) : jaTem.timestamp.slice(11,16)) + '). Use "Ajustar" pra mudar a hora desse registro.'
+            };
+        }
+
+        // Constrói timestamp ISO em UTC equivalente da hora SP informada
+        // dateStr+hhmm é SP. Converter pra UTC: SP = UTC-3, então UTC = SP+3.
+        // Usamos new Date com componentes SP. Cuidado: new Date(dateStr+'T'+hhmm) interpreta como LOCAL do browser, não SP.
+        // Solução: monta como UTC explícito com offset.
+        var newTimestampIso;
+        try {
+            // SP é UTC-3 (sem DST). Hora SP HH:MM = UTC (HH+3):MM mesmo dia se < 21h, ou dia+1 se >= 21h.
+            // Aproximação: usar ISO com timezone "-03:00" e depois converter pra Z (UTC).
+            newTimestampIso = new Date(dateStr + 'T' + hhmm + ':00-03:00').toISOString();
+        } catch (e) {
+            return { success: false, error: 'Erro ao calcular timestamp: ' + e.message };
+        }
+
+        var nsr = nextNSR(franchiseId);
+        var recordId = 'tc_' + franchiseId.replace(/[^a-z0-9]/gi, '_') + '_' + nsr;
+
+        // Hash SHA-256 pra integridade
+        var hashPayload = nsr + '|' + recordId + '|' + staffId + '|' + type + '|' + newTimestampIso + '|retroativo';
+        var hash = await sha256(hashPayload);
+
+        var sess = (typeof Auth !== 'undefined' && Auth.getSession) ? Auth.getSession() : null;
+        var adminEmail = sess ? sess.email : 'admin';
+
+        var record = {
+            id: recordId,
+            nsr: nsr,
+            franchiseId: franchiseId,
+            staffId: staffId,
+            staffName: staff.name,
+            pis: staff.pis || '',
+            type: type,
+            timestamp: newTimestampIso,
+            channel: 'admin_retroativo',
+            source: 'admin_retroativo',
+            retroativo: true,                 // 🚨 flag visível pra fiscalização
+            retroativoMotivo: reason.trim().slice(0, 500),
+            retroativoDate: dateStr,          // dia SP que se refere
+            retroativoHora: hhmm,             // hora SP escolhida pelo admin
+            addedBy: adminEmail,
+            addedAt: nowIso(),
+            device: getDeviceInfo(),
+            ip: '',                            // sem acesso a IP real em client-side; admin painel já loga sessão
+            hash: hash,
+            adjusted: false,
+            cancelled: false
+        };
+
+        if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
+            DataStore.addToCollection(COLLECTION_RECORDS, franchiseId, record);
+        }
+
+        logAudit(franchiseId, 'record_retroativo', {
+            staffId: staffId,
+            staffName: staff.name,
+            nsr: nsr,
+            date: dateStr,
+            type: type,
+            hora: hhmm,
+            reason: record.retroativoMotivo,
+            by: adminEmail
+        });
+
+        // Notifica funcionária no app dela (via solicitacoes_ collection que ela já lê)
+        try {
+            if (typeof DataStore !== 'undefined' && DataStore.addToCollection) {
+                DataStore.addToCollection('solicitacoes', franchiseId, {
+                    id: 'notif_retro_' + nsr,
+                    staffId: staffId,
+                    type: 'notificacao_ponto_retroativo',
+                    title: 'Gerente adicionou um ponto pra você',
+                    body: 'Foi adicionado: ' + (TIPO_LABELS[type] || type) + ' às ' + hhmm + ' em ' + dateStr.split('-').reverse().join('/') + '. Motivo: ' + record.retroativoMotivo + '. Se a hora não está correta, fale com o gerente.',
+                    refRecordId: recordId,
+                    status: 'info',
+                    createdAt: nowIso(),
+                    createdBy: adminEmail
+                });
+            }
+        } catch (e) { /* não bloqueia */ }
+
+        return { success: true, record: record };
+    }
+
+    // ----------------------------------------
     // 🗑 CANCELAR batida (admin) — soft delete com motivo, mantém auditoria
     // ----------------------------------------
     function cancelRecord(franchiseId, recordId, reason) {
@@ -1056,8 +1194,9 @@
         // Operacoes
         recordPunch: recordPunch,
         addJustification: addJustification,
-        adjustRecord: adjustRecord,        // 🛠 admin ajusta hora (mantem auditoria)
-        cancelRecord: cancelRecord,        // 🗑 admin cancela registro (soft delete)
+        adjustRecord: adjustRecord,           // 🛠 admin ajusta hora (mantem auditoria)
+        addRetroactivePunch: addRetroactivePunch, // ➕ admin adiciona batida esquecida (Sumula 338 TST)
+        cancelRecord: cancelRecord,           // 🗑 admin cancela registro (soft delete)
 
         // 📅 Jornada flexível (override pontual por dia)
         getEffectiveJornada: getEffectiveJornada,
