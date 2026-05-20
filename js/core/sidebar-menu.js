@@ -41,6 +41,24 @@
     //   highlight: bool — destaca visualmente
     //   highlightColor: cor da borda (ex: '#25D366')
     const MENU_STRUCTURE = [
+        // ========== Saúde / Diagnóstico (no topo pra acesso rápido em emergência) ==========
+        {
+            id: 'saude',
+            label: 'Saúde / Diagnóstico',
+            icon: '🫀',
+            defaultOpen: false,
+            highlight: true,
+            items: [
+                { href: 'saude.html', label: 'Coração do Sistema', icon: '🫀', highlight: true, highlightColor: '#10B981' },
+                { href: 'diagnostico.html', label: 'Diagnóstico Sync', icon: '🔧' },
+                { href: 'smoke-test.html', label: 'Smoke Test', icon: '🧪' },
+                { href: 'diag-perf.html', label: 'Performance', icon: '⚡' },
+                { href: 'fixtudo.html', label: 'Fix Pedidos Travados', icon: '🔥', highlight: true, highlightColor: '#EF4444' },
+                { href: 'fixlog.html', label: 'Fix com Log Remoto', icon: '📝' },
+                { href: 'sync-rescue.html', label: 'Resgate de Sync', icon: '☁️' }
+            ]
+        },
+
         // ========== Operação Diária (sempre aberta - tudo que o caixa usa todo dia) ==========
         {
             id: 'operacao',
@@ -357,7 +375,14 @@
             'whatsapp-conectar.html': 'whatsapp zap qr code conectar',
             'whatsapp-conversas.html': 'whatsapp zap conversa mensagem',
             'copilot-belinha.html': 'belinha ia bot ajuda copilot',
-            'belinha-learnings.html': 'belinha treinar ensinar resposta'
+            'belinha-learnings.html': 'belinha treinar ensinar resposta',
+            'saude.html': 'saude health status diagnostico sistema coracao tudo ok funcionando socorro ia ajuda dev',
+            'diagnostico.html': 'diagnostico sync firebase sincronizar',
+            'smoke-test.html': 'smoke test producao teste modulos validar',
+            'diag-perf.html': 'performance lento erro memoria',
+            'fixtudo.html': 'fix corrigir travado pedido stuck reparar',
+            'fixlog.html': 'log nuvem remoto debug dev',
+            'sync-rescue.html': 'resgate publicar restaurar pedido perdido'
         };
         out.forEach(function (it) {
             if (EXTRA[it.href]) it.keywords += ' ' + EXTRA[it.href];

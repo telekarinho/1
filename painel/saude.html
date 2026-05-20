@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>🫀 Coração do Sistema — MilkyPot</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Nunito', sans-serif;
+    background: #0F172A;
+    color: #E2E8F0;
+    padding: 12px;
+    min-height: 100vh;
+    line-height: 1.4;
+}
+.container { max-width: 1280px; margin: 0 auto; }
+
+/* HEADER STATUS GERAL */
+.health-hero {
+    background: linear-gradient(135deg, #1E293B, #0F172A);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 2px solid #334155;
+    position: relative;
+    overflow: hidden;
+}
+.health-hero.ok { border-color: #10B981; box-shadow: 0 0 40px rgba(16,185,129,.15); }
+.health-hero.warn { border-color: #F59E0B; box-shadow: 0 0 40px rgba(245,158,11,.15); }
+.health-hero.err { border-color: #EF4444; box-shadow: 0 0 40px rgba(239,68,68,.2); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 40px rgba(239,68,68,.2); } 50% { box-shadow: 0 0 60px rgba(239,68,68,.4); } }
+
+.hero-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.hero-icon { font-size: 64px; line-height: 1; }
+.hero-text { flex: 1; min-width: 200px; }
+.hero-title { font-family: 'Baloo 2', cursive; font-size: 28px; font-weight: 800; color: #F8FAFC; margin-bottom: 4px; }
+.hero-subtitle { font-size: 14px; color: #94A3B8; }
+.hero-score {
+    font-family: 'Baloo 2', cursive;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1;
+    padding: 8px 18px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.05);
+    text-align: center;
+    min-width: 130px;
+}
+.hero-score.ok { color: #10B981; background: rgba(16,185,129,.1); }
+.hero-score.warn { color: #F59E0B; background: rgba(245,158,11,.1); }
+.hero-score.err { color: #EF4444; background: rgba(239,68,68,.1); }
+.hero-score-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #94A3B8; margin-top: 4px; font-family: 'Nunito',sans-serif; font-weight: 800; }
+
+.refresh-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #94A3B8;
+}
+.refresh-bar .last-update { flex: 1; }
+.btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: #5A52E0;
+    color: #fff;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform .08s;
+}
+.btn:active { transform: scale(.96); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-light { background: rgba(255,255,255,.08); color: #E2E8F0; }
+.btn-ok { background: #10B981; }
+.btn-warn { background: #F59E0B; }
+.btn-danger { background: #EF4444; }
+.btn-pink { background: #EC4899; }
+.btn-big { padding: 14px 20px; font-size: 14px; }
+
+/* TOKEN BAR */
+.token-bar {
+    background: linear-gradient(135deg, #312E81, #1E1B4B);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    border: 1px solid #4F46E5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 13px;
+}
+.token-bar.public-mode { background: linear-gradient(135deg, #064E3B, #022C22); border-color: #10B981; }
+.token-bar code {
+    background: rgba(0,0,0,.4);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #FCD34D;
+    word-break: break-all;
+    flex: 1;
+    min-width: 200px;
+}
+.token-input { background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.1); padding: 6px 10px; border-radius: 6px; color: #fff; font-family: monospace; font-size: 12px; flex: 1; min-width: 180px; }
+
+/* KPI CARDS TOP */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.kpi {
+    background: #1E293B;
+    border-radius: 12px;
+    padding: 14px;
+    border-left: 4px solid #475569;
+    position: relative;
+}
+.kpi.ok { border-left-color: #10B981; }
+.kpi.warn { border-left-color: #F59E0B; }
+.kpi.err { border-left-color: #EF4444; }
+.kpi.info { border-left-color: #5A52E0; }
+.kpi-label { font-size: 11px; text-transform: uppercase; color: #94A3B8; font-weight: 800; letter-spacing: .5px; }
+.kpi-value { font-family: 'Baloo 2', cursive; font-size: 28px; font-weight: 800; color: #F8FAFC; margin-top: 4px; line-height: 1.1; word-break: break-word; }
+.kpi-sub { font-size: 11px; color: #94A3B8; margin-top: 4px; }
+.kpi-dot {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #475569;
+}
+.kpi.ok .kpi-dot { background: #10B981; box-shadow: 0 0 8px #10B981; }
+.kpi.warn .kpi-dot { background: #F59E0B; box-shadow: 0 0 8px #F59E0B; }
+.kpi.err .kpi-dot { background: #EF4444; box-shadow: 0 0 8px #EF4444; animation: blink 1s infinite; }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+/* SEÇÕES */
+.section {
+    background: #1E293B;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid #334155;
+}
+.section h2 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 18px;
+    color: #F8FAFC;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.section h2 .count {
+    margin-left: auto;
+    font-family: 'Nunito',sans-serif;
+    font-size: 12px;
+    color: #94A3B8;
+    font-weight: 700;
+}
+
+/* CHECK GRID */
+.check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 10px;
+}
+.check {
+    background: #0F172A;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border-left: 4px solid #475569;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+.check.ok { border-left-color: #10B981; }
+.check.warn { border-left-color: #F59E0B; background: rgba(245,158,11,.06); }
+.check.err { border-left-color: #EF4444; background: rgba(239,68,68,.08); }
+.check.run { border-left-color: #5A52E0; background: rgba(90,82,224,.06); }
+.check-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.check-body { flex: 1; min-width: 0; }
+.check-title { font-weight: 800; font-size: 13px; color: #F8FAFC; }
+.check-detail { font-size: 12px; color: #94A3B8; margin-top: 3px; word-break: break-word; }
+.check-detail code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 11px; color: #FCD34D; }
+.check-err-msg { font-size: 11px; color: #FCA5A5; margin-top: 6px; font-family: monospace; word-break: break-word; max-height: 60px; overflow: auto; }
+
+/* ATIVIDADES (3 colunas) */
+.activity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+}
+.activity-col h3 { font-size: 13px; color: #94A3B8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; font-weight: 800; }
+.activity-item {
+    background: #0F172A;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #E2E8F0;
+}
+.activity-item .time { color: #64748B; font-family: monospace; font-size: 11px; }
+.activity-item .title { font-weight: 700; margin-top: 2px; }
+.activity-item .meta { color: #94A3B8; margin-top: 2px; font-size: 11px; }
+.activity-empty { color: #64748B; font-style: italic; font-size: 12px; padding: 8px; text-align: center; }
+
+/* SMOKE TEST RESULT */
+.smoke-summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: #0F172A;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.smoke-pct { font-family: 'Baloo 2', cursive; font-size: 42px; font-weight: 800; }
+.smoke-summary.ok .smoke-pct { color: #10B981; }
+.smoke-summary.warn .smoke-pct { color: #F59E0B; }
+.smoke-summary.err .smoke-pct { color: #EF4444; }
+.smoke-stats { flex: 1; min-width: 200px; }
+.smoke-stat { display: inline-block; margin-right: 14px; font-size: 12px; color: #94A3B8; }
+.smoke-stat b { color: #F8FAFC; font-size: 14px; }
+.smoke-detail { max-height: 200px; overflow-y: auto; font-size: 11px; font-family: monospace; }
+.smoke-detail .pass { color: #10B981; }
+.smoke-detail .fail { color: #EF4444; }
+.smoke-detail .row { padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+
+/* FERRAMENTAS */
+.tool-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.tool-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.tool-links a {
+    background: rgba(255,255,255,.06);
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: #E2E8F0;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,.08);
+}
+.tool-links a:hover { background: rgba(255,255,255,.12); }
+
+/* FOOTER */
+.footer-bar {
+    padding: 12px;
+    text-align: center;
+    color: #64748B;
+    font-size: 11px;
+    margin-top: 16px;
+}
+
+/* MOBILE TWEAKS */
+@media (max-width: 600px) {
+    body { padding: 8px; }
+    .hero-row { flex-direction: column; align-items: stretch; text-align: center; }
+    .hero-icon { font-size: 48px; }
+    .hero-title { font-size: 22px; }
+    .hero-score { width: 100%; font-size: 44px; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi { padding: 10px; }
+    .kpi-value { font-size: 22px; }
+    .section { padding: 12px; }
+    .section h2 { font-size: 16px; }
+    .check { padding: 10px; }
+    .btn { font-size: 11px; padding: 8px 10px; }
+    .btn-big { padding: 12px 14px; font-size: 13px; }
+}
+
+/* Modal dump */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.8); z-index: 999; display: none; align-items: center; justify-content: center; padding: 16px; }
+.modal-backdrop.show { display: flex; }
+.modal {
+    background: #1E293B;
+    border-radius: 14px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 88vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #334155;
+}
+.modal-head { padding: 14px 16px; border-bottom: 1px solid #334155; display: flex; align-items: center; gap: 10px; }
+.modal-head h3 { font-family: 'Baloo 2',cursive; font-size: 18px; color: #F8FAFC; flex: 1; }
+.modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+.modal-body pre { background: #0F172A; padding: 12px; border-radius: 8px; font-size: 11px; color: #94E0B7; max-height: 60vh; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+.modal-foot { padding: 12px 16px; border-top: 1px solid #334155; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+.spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(255,255,255,.2);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* SIDEBAR FALLBACK — esconde a nav até o script carregar */
+.sidebar-nav { display: none; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar-nav"></nav>
+
+<div class="container">
+
+    <!-- HERO -->
+    <div class="health-hero" id="healthHero">
+        <div class="hero-row">
+            <div class="hero-icon" id="heroIcon">🫀</div>
+            <div class="hero-text">
+                <div class="hero-title" id="heroTitle">Coração do Sistema</div>
+                <div class="hero-subtitle" id="heroSubtitle">Carregando diagnóstico…</div>
+            </div>
+            <div>
+                <div class="hero-score" id="heroScore"><span class="spinner"></span></div>
+                <div class="hero-score-label">Saúde geral</div>
+            </div>
+        </div>
+        <div class="refresh-bar">
+            <span class="last-update" id="lastUpdate">—</span>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:#94A3B8">
+                <input type="checkbox" id="autoRefresh" checked> Auto-refresh 30s
+            </label>
+            <button class="btn btn-light" onclick="runAllChecks()" id="btnRefresh">🔄 Atualizar</button>
+        </div>
+    </div>
+
+    <!-- TOKEN BAR -->
+    <div class="token-bar" id="tokenBar" style="display:none">
+        <span id="tokenBarMsg"></span>
+        <code id="tokenBarUrl" style="display:none"></code>
+        <button class="btn btn-light" id="btnCopyTokenUrl" style="display:none" onclick="copyTokenUrl()">📋 Copiar URL</button>
+        <button class="btn btn-warn" id="btnGenerateToken" style="display:none" onclick="generateToken()">🔑 Gerar Token Público</button>
+        <button class="btn btn-danger" id="btnRevokeToken" style="display:none" onclick="revokeToken()">🗑️ Revogar</button>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid" id="kpiGrid">
+        <!-- preenchido por renderKPIs() -->
+    </div>
+
+    <!-- SERVIÇOS EXTERNOS -->
+    <div class="section">
+        <h2>🔌 Serviços Externos <span class="count" id="extCount"></span></h2>
+        <div class="check-grid" id="externalChecks"></div>
+    </div>
+
+    <!-- BROWSER / CLIENTE -->
+    <div class="section">
+        <h2>💻 Browser / Cliente <span class="count" id="cliCount"></span></h2>
+        <div class="check-grid" id="clientChecks"></div>
+    </div>
+
+    <!-- FLUXO DE VENDA -->
+    <div class="section">
+        <h2>🛒 Fluxo de Venda <span class="count" id="flowCount"></span></h2>
+        <div class="check-grid" id="flowChecks"></div>
+        <div style="margin-top:10px">
+            <button class="btn btn-pink btn-big" onclick="runE2ETest()" id="btnE2E">🧪 Testar pedido teste end-to-end</button>
+        </div>
+    </div>
+
+    <!-- SMOKE TEST -->
+    <div class="section">
+        <h2>🧪 Smoke Test (módulos) <span class="count" id="smokeCount"></span></h2>
+        <div class="smoke-summary" id="smokeSummary" style="display:none">
+            <div class="smoke-pct" id="smokePct">—</div>
+            <div class="smoke-stats" id="smokeStats">Aguardando…</div>
+        </div>
+        <div class="smoke-detail" id="smokeDetail" style="display:none"></div>
+        <button class="btn" onclick="runSmokeTests()" id="btnSmoke">▶ Rodar 15+ testes de módulo</button>
+    </div>
+
+    <!-- ATIVIDADES -->
+    <div class="section">
+        <h2>📊 Últimas Atividades</h2>
+        <div class="activity-grid">
+            <div class="activity-col">
+                <h3>🛒 5 últimos pedidos</h3>
+                <div id="actOrders"><div class="activity-empty">Carregando…</div></div>
+            </div>
+            <div class="activity-col">
+                <h3>💬 5 últimas conversas Belinha</h3>
+                <div id="actBelinha"><div class="activity-empty">Carregando…</div></div>
+            </div>
+            <div class="activity-col">
+                <h3>🚨 5 últimos erros JS</h3>
+                <div id="actErrors"><div class="activity-empty">Nenhum erro 🎉</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FERRAMENTAS -->
+    <div class="section">
+        <h2>⚙️ Ferramentas / Pedir Socorro IA</h2>
+        <div class="tool-row">
+            <button class="btn btn-pink btn-big" onclick="openDumpModal()">🤖 Copiar dump pra IA</button>
+            <button class="btn btn-warn btn-big" onclick="saveCloudSnapshot()" id="btnSnap">☁️ Salvar snapshot na nuvem</button>
+        </div>
+        <div class="tool-links">
+            <a href="diagnostico.html">🔧 Diagnóstico Sync</a>
+            <a href="fixtudo.html">🔥 Fix Pedidos Travados</a>
+            <a href="diag-perf.html">⚡ Performance</a>
+            <a href="smoke-test.html">🧪 Smoke Test Full</a>
+            <a href="sync-rescue.html">☁️ Resgate Sync</a>
+            <a href="fixlog.html">📝 Fix com Log na Nuvem</a>
+        </div>
+    </div>
+
+    <div class="footer-bar" id="footerBar">
+        MilkyPot · Coração do Sistema · SW <code id="swVer">?</code> · Build <code id="buildDate">?</code>
+    </div>
+
+</div>
+
+<!-- MODAL DUMP -->
+<div class="modal-backdrop" id="dumpModal">
+    <div class="modal">
+        <div class="modal-head">
+            <span style="font-size:24px">🤖</span>
+            <h3>Dump pra IA / Desenvolvedor</h3>
+            <button class="btn btn-light" onclick="closeDumpModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:12px;color:#94A3B8;margin-bottom:8px">Cole esse JSON na sua conversa com Claude ou qualquer IA dev. Já vem com sessão, status de cada serviço, últimos erros e estado do banco.</p>
+            <pre id="dumpJson">…</pre>
+        </div>
+        <div class="modal-foot">
+            <button class="btn btn-ok btn-big" onclick="copyDump()">📋 Copiar tudo</button>
+            <button class="btn btn-light" onclick="closeDumpModal()">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- DEPS -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="../js/core/firebase-config.js"></script>
+<script src="../js/core/constants.js"></script>
+<script src="../js/core/utils.js"></script>
+<script src="../js/core/datastore.js"></script>
+<script src="../js/core/auth.js"></script>
+
+<script>
+/* ============================================================
+   🫀 CORAÇÃO DO SISTEMA — saude.html
+   ============================================================
+   - Página única que agrega status de TUDO:
+     Firebase, Belinha API, WhatsApp, SW, Pagamento, Cardápio,
+     Browser/Storage, Fluxo de Venda, Últimas atividades.
+   - Auto-refresh 30s.
+   - Modo público via ?token=XXX (readonly, sem botões destrutivos).
+   - Botão "Copiar dump pra IA" + "Salvar snapshot na nuvem" gera
+     link que dev/IA pode abrir pra ver estado completo.
+   ============================================================ */
+(function () {
+    'use strict';
+
+    // ====== STATE ======
+    var state = {
+        publicMode: false,
+        publicToken: null,
+        checks: {
+            external: [],
+            client: [],
+            flow: []
+        },
+        kpis: {},
+        smoke: null,
+        errors: [],
+        startTime: Date.now(),
+        intervalId: null
+    };
+
+    // ====== ERROR CAPTURE (instala cedo) ======
+    window.addEventListener('error', function (e) {
+        var msg = (e.error && e.error.stack) || (e.message + ' @ ' + (e.filename || '?') + ':' + e.lineno);
+        state.errors.push({ ts: new Date().toISOString(), msg: msg, type: 'error' });
+        if (state.errors.length > 50) state.errors.shift();
+        renderActErrors();
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+        var msg = (e.reason && (e.reason.stack || e.reason.message)) || String(e.reason);
+        state.errors.push({ ts: new Date().toISOString(), msg: 'Unhandled: ' + msg, type: 'reject' });
+        if (state.errors.length > 50) state.errors.shift();
+        renderActErrors();
+    });
+
+    // ====== UTILS ======
+    function $(id) { return document.getElementById(id); }
+    function el(tag, cls, html) {
+        var x = document.createElement(tag);
+        if (cls) x.className = cls;
+        if (html != null) x.innerHTML = html;
+        return x;
+    }
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function withTimeout(promise, ms, label) {
+        return Promise.race([
+            promise,
+            new Promise(function (_, rej) {
+                setTimeout(function () { rej(new Error('timeout ' + ms + 'ms ' + (label || ''))); }, ms);
+            })
+        ]);
+    }
+    function getFid() {
+        try {
+            var s = Auth.getSession();
+            if (s && s.franchiseId) return s.franchiseId;
+        } catch (e) {}
+        // fallback: scan LS
+        for (var i = 0; i < localStorage.length; i++) {
+            var k = localStorage.key(i);
+            if (k && k.indexOf('mp_orders_') === 0 && !k.endsWith('global')) return k.replace('mp_orders_', '');
+        }
+        return 'muffato-quintino'; // produção single-tenant default
+    }
+    function fmtAgo(iso) {
+        if (!iso) return '—';
+        var diff = Date.now() - new Date(iso).getTime();
+        if (diff < 60000) return Math.round(diff / 1000) + 's atrás';
+        if (diff < 3600000) return Math.round(diff / 60000) + 'min atrás';
+        if (diff < 86400000) return Math.round(diff / 3600000) + 'h atrás';
+        return Math.round(diff / 86400000) + 'd atrás';
+    }
+    function todayKey() {
+        if (typeof Utils !== 'undefined' && Utils.todayKey) return Utils.todayKey();
+        var d = new Date(Date.now() - 3 * 3600000); // SP é UTC-3
+        return d.toISOString().slice(0, 10);
+    }
+
+    // ====== TOKEN PÚBLICO (modo readonly) ======
+    var TOKEN_DOC = 'saude_token';
+
+    function detectPublicMode() {
+        var url = new URL(location.href);
+        state.publicToken = url.searchParams.get('token');
+        state.publicMode = !!state.publicToken;
+    }
+
+    async function validatePublicToken() {
+        if (!state.publicToken) return false;
+        try {
+            var snap = await withTimeout(
+                firebase.firestore().collection('datastore').doc(TOKEN_DOC).get(),
+                5000,
+                'token-validate'
+            );
+            if (!snap.exists) return false;
+            var d = snap.data();
+            var stored = d && d.value;
+            try { stored = JSON.parse(stored); } catch (e) {}
+            return stored && stored.token === state.publicToken && stored.revoked !== true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    async function renderTokenBar() {
+        var bar = $('tokenBar');
+        bar.style.display = 'flex';
+        bar.classList.remove('public-mode');
+
+        if (state.publicMode) {
+            var valid = await validatePublicToken();
+            if (valid) {
+                bar.classList.add('public-mode');
+                bar.innerHTML = '<span>🌐 <strong>MODO PÚBLICO via token</strong> — somente leitura. Ações destrutivas bloqueadas.</span>';
+            } else {
+                bar.innerHTML = '<span>❌ Token inválido ou revogado. <a href="?" style="color:#FCD34D">Entrar normal</a></span>';
+            }
+            return;
+        }
+
+        // Admin mode: mostrar opções de gerar/copiar token
+        var s = null; try { s = Auth.getSession(); } catch (e) {}
+        if (!s) {
+            bar.innerHTML = '<span>⚠️ Você não está logado. <a href="login.html" style="color:#FCD34D">Fazer login</a> pra gerar token público.</span>';
+            return;
+        }
+
+        try {
+            var snap = await firebase.firestore().collection('datastore').doc(TOKEN_DOC).get();
+            var stored = null;
+            if (snap.exists) {
+                try { stored = JSON.parse(snap.data().value); } catch (e) {}
+            }
+            if (stored && stored.token && !stored.revoked) {
+                var url = location.origin + location.pathname + '?token=' + encodeURIComponent(stored.token);
+                bar.innerHTML =
+                    '<span>🔗 <strong>URL pública pra IA acessar:</strong></span>' +
+                    '<code id="tokenUrlCode">' + esc(url) + '</code>' +
+                    '<button class="btn btn-light" onclick="copyTokenUrl()">📋 Copiar</button>' +
+                    '<button class="btn btn-danger" onclick="revokeToken()">🗑️ Revogar</button>';
+            } else {
+                bar.innerHTML =
+                    '<span>🔒 <strong>Nenhum token público ativo.</strong> Gere um pra qualquer IA conseguir abrir essa página.</span>' +
+                    '<button class="btn btn-warn" onclick="generateToken()">🔑 Gerar Token Público</button>';
+            }
+        } catch (e) {
+            bar.innerHTML = '<span>⚠️ Erro lendo token: ' + esc(e.message) + '</span>';
+        }
+    }
+
+    window.generateToken = async function () {
+        if (!confirm('Vai gerar um TOKEN PÚBLICO.\n\nQualquer pessoa com a URL completa vai ver:\n• Status de cada serviço\n• Vendas/conversas/erros recentes\n• Estado da loja\n\nMODO READONLY — não dá pra fazer ação destrutiva.\n\nGerar?')) return;
+        var token = 'sk_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+        var s = null; try { s = Auth.getSession(); } catch (e) {}
+        try {
+            await firebase.firestore().collection('datastore').doc(TOKEN_DOC).set({
+                value: JSON.stringify({
+                    token: token,
+                    createdAt: new Date().toISOString(),
+                    createdBy: s ? s.email : 'unknown',
+                    revoked: false
+                }),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert('✅ Token criado.');
+            renderTokenBar();
+        } catch (e) {
+            alert('❌ Falha: ' + e.message);
+        }
+    };
+    window.revokeToken = async function () {
+        if (!confirm('Revogar token público? Quem tiver a URL não vai conseguir mais abrir.')) return;
+        try {
+            await firebase.firestore().collection('datastore').doc(TOKEN_DOC).set({
+                value: JSON.stringify({ revoked: true, revokedAt: new Date().toISOString() }),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert('✅ Revogado.');
+            renderTokenBar();
+        } catch (e) {
+            alert('❌ Falha: ' + e.message);
+        }
+    };
+    window.copyTokenUrl = function () {
+        var code = $('tokenUrlCode');
+        if (!code) return;
+        try {
+            navigator.clipboard.writeText(code.textContent).then(function () {
+                alert('✅ URL copiada. Cola na conversa com a IA.');
+            });
+        } catch (e) {
+            prompt('Cópia manual:', code.textContent);
+        }
+    };
+
+    // ====== CHECKS — cada checagem retorna {title, status:'ok'|'warn'|'err', detail, errMsg, icon} ======
+
+    function makeCheck(title, status, detail, errMsg, icon) {
+        return { title: title, status: status, detail: detail || '', errMsg: errMsg || '', icon: icon || (status === 'ok' ? '✅' : status === 'warn' ? '⚠️' : status === 'err' ? '❌' : '⏳') };
+    }
+
+    // --- EXTERNAL CHECKS ---
+
+    async function checkFirebaseAuth() {
+        if (typeof firebase === 'undefined') return makeCheck('Firebase SDK', 'err', 'SDK não carregou', '', '🔥');
+        if (!firebase.apps.length) return makeCheck('Firebase init', 'err', 'apps.length === 0', '', '🔥');
+        var fbUser = firebase.auth().currentUser;
+        if (!fbUser) return makeCheck('Firebase Auth', 'warn', 'currentUser=null (sessão órfã, leitura pública ainda funciona)', '', '🔑');
+        return makeCheck('Firebase Auth', 'ok', fbUser.email + ' · uid=' + fbUser.uid.slice(0, 8), '', '🔑');
+    }
+
+    async function checkFirestoreLatency() {
+        var t0 = performance.now();
+        try {
+            var doc = await withTimeout(
+                firebase.firestore().collection('datastore').doc('franchises').get(),
+                5000,
+                'firestore-ping'
+            );
+            var ms = Math.round(performance.now() - t0);
+            var status = ms < 500 ? 'ok' : ms < 1500 ? 'warn' : 'err';
+            return makeCheck('Firestore latência', status, 'Ping ' + ms + 'ms · franchises ' + (doc.exists ? 'OK' : 'doc vazio'), '', '☁️');
+        } catch (e) {
+            return makeCheck('Firestore latência', 'err', 'Falha ping', e.message, '☁️');
+        }
+    }
+
+    async function checkBelinhaAPI() {
+        var t0 = performance.now();
+        try {
+            var r = await withTimeout(
+                fetch('/api/health', { cache: 'no-store' }),
+                6000,
+                'belinha-api'
+            );
+            var ms = Math.round(performance.now() - t0);
+            if (!r.ok) return makeCheck('Belinha API (/api/health)', 'err', 'HTTP ' + r.status + ' · ' + ms + 'ms', '', '🤖');
+            var j = await r.json();
+            var envOk = j && j.env && j.env.ANTHROPIC_API_KEY && j.env.WHATSAPP_TOKEN;
+            return makeCheck(
+                'Belinha API (Vercel)',
+                envOk ? 'ok' : 'warn',
+                ms + 'ms · Anthropic ' + (j.env.ANTHROPIC_API_KEY ? '✅' : '❌') +
+                ' · Groq ' + (j.env.GROQ_API_KEY ? '✅' : '❌') +
+                ' · WhatsApp ' + (j.env.WHATSAPP_TOKEN ? '✅' : '❌') +
+                ' · Firebase ' + (j.env.FIREBASE_SERVICE_ACCOUNT ? '✅' : '❌'),
+                '', '🤖'
+            );
+        } catch (e) {
+            return makeCheck('Belinha API', 'err', 'Endpoint /api/health não responde', e.message, '🤖');
+        }
+    }
+
+    async function checkWhatsAppActivity() {
+        var fid = getFid();
+        try {
+            // Tenta ler ultima conversa Belinha
+            var snap = await withTimeout(
+                firebase.firestore().collection('belinha_conversations')
+                    .orderBy('lastMessageAt', 'desc').limit(1).get(),
+                5000, 'wa-last-msg'
+            );
+            if (snap.empty) return makeCheck('WhatsApp / Belinha', 'warn', 'Nenhuma conversa registrada ainda', '', '💬');
+            var d = snap.docs[0].data();
+            var ts = d.lastMessageAt && d.lastMessageAt.toDate ? d.lastMessageAt.toDate().toISOString() : d.lastMessageAt;
+            var diff = Date.now() - new Date(ts).getTime();
+            var status = diff < 24 * 3600000 ? 'ok' : diff < 7 * 86400000 ? 'warn' : 'err';
+            return makeCheck('WhatsApp / Belinha', status, 'Última msg: ' + fmtAgo(ts) + ' · de ' + (d.from || '?').slice(-4), '', '💬');
+        } catch (e) {
+            // Subcollection pode não estar pública. Tenta o doc agregado.
+            return makeCheck('WhatsApp / Belinha', 'warn', 'Sem permissão pra ler belinha_conversations (normal)', '', '💬');
+        }
+    }
+
+    async function checkPagamentoPix() {
+        // Verifica config pix
+        try {
+            var cfg = null;
+            if (typeof DataStore !== 'undefined') cfg = DataStore.get('payment_config') || DataStore.get('pix_config');
+            if (!cfg) {
+                // tenta ler de catalog_config
+                var cat = (typeof DataStore !== 'undefined') ? DataStore.get('catalog_config') : null;
+                cfg = cat && cat.payment;
+            }
+            if (!cfg) return makeCheck('Pagamento Pix', 'warn', 'Sem chave Pix configurada — clientes não conseguem pagar online', '', '💳');
+            var key = cfg.chavePix || cfg.chave || cfg.pixKey;
+            if (!key) return makeCheck('Pagamento Pix', 'warn', 'Config presente mas sem chave', '', '💳');
+            // Testa gerar payload
+            if (typeof Pix !== 'undefined' && Pix.generatePayload) {
+                try {
+                    var payload = Pix.generatePayload({
+                        chave: key,
+                        nome: cfg.nome || 'MILKYPOT',
+                        cidade: cfg.cidade || 'LONDRINA',
+                        valor: 1, txid: 'TEST'
+                    });
+                    if (!payload || payload.length < 80) throw new Error('payload curto');
+                    return makeCheck('Pagamento Pix', 'ok', 'Chave ' + key.slice(0, 6) + '… · EMV gera OK', '', '💳');
+                } catch (e) {
+                    return makeCheck('Pagamento Pix', 'err', 'EMV falhou', e.message, '💳');
+                }
+            }
+            return makeCheck('Pagamento Pix', 'warn', 'Chave OK mas Pix.js não carregado nesta página', '', '💳');
+        } catch (e) {
+            return makeCheck('Pagamento Pix', 'err', 'Erro', e.message, '💳');
+        }
+    }
+
+    // --- CLIENT CHECKS ---
+
+    function checkServiceWorker() {
+        if (!('serviceWorker' in navigator)) return makeCheck('Service Worker', 'err', 'Browser sem suporte', '', '⚙️');
+        if (!navigator.serviceWorker.controller) return makeCheck('Service Worker', 'warn', 'SW não controla esta página (refresh hard?)', '', '⚙️');
+        var url = navigator.serviceWorker.controller.scriptURL;
+        return makeCheck('Service Worker', 'ok', 'Controlando · ' + url.split('/').pop(), '', '⚙️');
+    }
+
+    async function checkSWCache() {
+        if (!('caches' in window)) return makeCheck('Cache (SW)', 'err', 'sem suporte', '', '📦');
+        try {
+            var keys = await caches.keys();
+            if (!keys.length) return makeCheck('Cache (SW)', 'warn', 'Nenhum cache armazenado', '', '📦');
+            var current = keys.find(function (k) { return k.indexOf('milkypot-') === 0; });
+            var details = keys.length + ' cache(s) · ativo: ' + (current || keys[0]);
+            return makeCheck('Cache (SW)', 'ok', details, '', '📦');
+        } catch (e) {
+            return makeCheck('Cache (SW)', 'err', '', e.message, '📦');
+        }
+    }
+
+    function checkLocalStorage() {
+        try {
+            var test = 'mp_saude_test_' + Date.now();
+            localStorage.setItem(test, '1');
+            var ok = localStorage.getItem(test) === '1';
+            localStorage.removeItem(test);
+            if (!ok) return makeCheck('localStorage', 'err', 'gravação falhou', '', '💾');
+            var keys = Object.keys(localStorage);
+            var size = 0;
+            keys.forEach(function (k) {
+                try { size += (k.length + (localStorage.getItem(k) || '').length); } catch (e) {}
+            });
+            var mb = (size * 2 / 1024 / 1024).toFixed(2);
+            var status = size * 2 < 4 * 1024 * 1024 ? 'ok' : 'warn';
+            return makeCheck('localStorage', status, keys.length + ' chaves · ' + mb + ' MB', '', '💾');
+        } catch (e) {
+            return makeCheck('localStorage', 'err', '', e.message, '💾');
+        }
+    }
+
+    function checkDataStore() {
+        if (typeof DataStore === 'undefined') return makeCheck('DataStore', 'err', 'módulo não carregado', '', '🗃️');
+        var rt = !!DataStore._realtimeListenerAttached;
+        var poll = !!DataStore._pollFallbackId;
+        var ready = !!DataStore._ready;
+        var status = ready && (rt || poll) ? 'ok' : ready ? 'warn' : 'err';
+        return makeCheck('DataStore Sync', status,
+            'ready=' + ready + ' · realtime=' + (rt ? 'ON' : 'OFF') + ' · poll=' + (poll ? 'ON' : 'OFF'),
+            '', '🗃️');
+    }
+
+    function checkAuth() {
+        var s = null;
+        try { s = Auth && Auth.getSession ? Auth.getSession() : null; } catch (e) {}
+        if (!s) return makeCheck('Sessão / Login', 'warn', 'mp_session ausente (modo público?)', '', '👤');
+        var fbU = typeof firebase !== 'undefined' && firebase.auth ? firebase.auth().currentUser : null;
+        var hint = fbU ? (fbU.isAnonymous ? '(anônimo - self-heal)' : '(firebase ok)') : '(sem firebase user)';
+        return makeCheck('Sessão / Login', 'ok',
+            s.email + ' · ' + s.role + ' · ' + s.franchiseId + ' ' + hint,
+            '', '👤');
+    }
+
+    function checkOnline() {
+        if (!navigator.onLine) return makeCheck('Internet', 'err', 'navigator.onLine = false (sem rede)', '', '🌐');
+        var c = navigator.connection;
+        var t = c ? c.effectiveType : '?';
+        return makeCheck('Internet', 'ok', 'online · ' + t + (c && c.rtt ? ' · rtt ' + c.rtt + 'ms' : ''), '', '🌐');
+    }
+
+    async function checkImpressora() {
+        if (!('serial' in navigator)) return makeCheck('Impressora (WebSerial)', 'warn', 'Browser sem WebSerial (use Chrome desktop)', '', '🖨️');
+        try {
+            var ports = await navigator.serial.getPorts();
+            if (!ports.length) return makeCheck('Impressora (WebSerial)', 'warn', 'Nenhuma impressora pareada ainda', '', '🖨️');
+            return makeCheck('Impressora (WebSerial)', 'ok', ports.length + ' porta(s) pareada(s)', '', '🖨️');
+        } catch (e) {
+            return makeCheck('Impressora (WebSerial)', 'err', '', e.message, '🖨️');
+        }
+    }
+
+    // --- FLOW CHECKS ---
+
+    async function checkCardapioPublico() {
+        var t0 = performance.now();
+        try {
+            var r = await withTimeout(fetch('/', { cache: 'no-store' }), 6000, 'cardapio-pub');
+            var ms = Math.round(performance.now() - t0);
+            if (!r.ok) return makeCheck('Cardápio público (/)', 'err', 'HTTP ' + r.status, '', '🍦');
+            var txt = await r.text();
+            if (txt.length < 1000) return makeCheck('Cardápio público (/)', 'warn', 'HTML muito curto (' + txt.length + ' chars)', '', '🍦');
+            return makeCheck('Cardápio público (/)', 'ok', ms + 'ms · ' + Math.round(txt.length / 1024) + ' KB', '', '🍦');
+        } catch (e) {
+            return makeCheck('Cardápio público', 'err', '', e.message, '🍦');
+        }
+    }
+
+    function checkCatalogoLoja() {
+        var fid = getFid();
+        var prods = [];
+        try {
+            if (typeof CatalogV2 !== 'undefined' && CatalogV2.listProdutos) {
+                prods = CatalogV2.listProdutos(fid) || [];
+            } else {
+                var cat = DataStore && DataStore.get ? DataStore.get('catalog_config') : null;
+                if (cat && cat.sabores) {
+                    Object.values(cat.sabores).forEach(function (g) {
+                        if (g.items) prods = prods.concat(g.items);
+                    });
+                }
+            }
+        } catch (e) {}
+        if (!prods.length) return makeCheck('Catálogo de produtos', 'err', 'Zero produtos carregados — cardápio não vai aparecer', '', '🍨');
+        var comPreco = prods.filter(function (p) {
+            if (p.precos && p.precos.loja && p.precos.loja.real > 0) return true;
+            if (p.preco > 0 || p.price > 0) return true;
+            return false;
+        });
+        var pct = Math.round(comPreco.length / prods.length * 100);
+        var status = pct >= 95 ? 'ok' : pct >= 70 ? 'warn' : 'err';
+        return makeCheck('Catálogo de produtos', status, prods.length + ' produtos · ' + comPreco.length + ' com preço (' + pct + '%)', '', '🍨');
+    }
+
+    function checkPedidosOnline() {
+        var fid = getFid();
+        var orders = [];
+        try {
+            orders = (DataStore && DataStore.getCollection ? DataStore.getCollection('orders', fid) : []) || [];
+        } catch (e) {}
+        var hoje = todayKey();
+        var hojeOrders = orders.filter(function (o) {
+            return !o.deleted && o.createdAt && o.createdAt.slice(0, 10) === hoje;
+        });
+        var openStatuses = ['novo', 'confirmado', 'preparando', 'pronto', 'em_entrega'];
+        var stuckOld = orders.filter(function (o) {
+            return o && !o.deleted && openStatuses.indexOf(o.status) !== -1 && o.createdAt && o.createdAt.slice(0, 10) < hoje;
+        });
+        var status = stuckOld.length === 0 ? 'ok' : stuckOld.length < 3 ? 'warn' : 'err';
+        var msg = hojeOrders.length + ' pedido(s) hoje · ' + orders.length + ' total · ' + stuckOld.length + ' travados (antigos)';
+        return makeCheck('Pedidos / Comandas', status, msg, '', '📋');
+    }
+
+    function checkPDV() {
+        // O fluxo de PDV depende do PDV.js (se existir). Aqui só sinalizamos se a página é acessível.
+        return makeCheck('PDV (interface)', 'ok',
+            '<a href="pdv.html" style="color:#FCD34D">Abrir PDV →</a> · responsivo (em melhoria mobile)',
+            '', '🛒');
+    }
+
+    // ====== KPIs ======
+    function computeKPIs() {
+        var fid = getFid();
+        var orders = [];
+        try { orders = (DataStore && DataStore.getCollection ? DataStore.getCollection('orders', fid) : []) || []; } catch (e) {}
+        var hoje = todayKey();
+        var hojeOrd = orders.filter(function (o) { return !o.deleted && o.createdAt && o.createdAt.slice(0, 10) === hoje; });
+        var rev = hojeOrd.reduce(function (s, o) { return s + (+o.total || 0); }, 0);
+
+        var openStatuses = ['novo', 'confirmado', 'preparando', 'pronto'];
+        var abertos = orders.filter(function (o) { return !o.deleted && openStatuses.indexOf(o.status) !== -1; });
+
+        var sync = (typeof DataStore !== 'undefined') && (DataStore._realtimeListenerAttached || DataStore._pollFallbackId);
+
+        return {
+            vendas: { count: hojeOrd.length, rev: rev },
+            abertos: abertos.length,
+            sync: !!sync,
+            sw: navigator.serviceWorker && navigator.serviceWorker.controller
+        };
+    }
+
+    function renderKPIs() {
+        var k = computeKPIs();
+        state.kpis = k;
+        var html = '';
+
+        var sV = k.vendas.count === 0 ? 'warn' : k.vendas.count < 5 ? 'info' : 'ok';
+        html += '<div class="kpi ' + sV + '"><div class="kpi-dot"></div>' +
+            '<div class="kpi-label">Vendas hoje</div>' +
+            '<div class="kpi-value">' + k.vendas.count + '</div>' +
+            '<div class="kpi-sub">R$ ' + k.vendas.rev.toFixed(2).replace('.', ',') + '</div></div>';
+
+        var sA = k.abertos > 5 ? 'warn' : 'ok';
+        html += '<div class="kpi ' + sA + '"><div class="kpi-dot"></div>' +
+            '<div class="kpi-label">Pedidos abertos</div>' +
+            '<div class="kpi-value">' + k.abertos + '</div>' +
+            '<div class="kpi-sub">aguardando preparo/entrega</div></div>';
+
+        var sS = k.sync ? 'ok' : 'err';
+        html += '<div class="kpi ' + sS + '"><div class="kpi-dot"></div>' +
+            '<div class="kpi-label">Sync Firebase</div>' +
+            '<div class="kpi-value">' + (k.sync ? 'ON' : 'OFF') + '</div>' +
+            '<div class="kpi-sub">' + (k.sync ? 'tempo real ativo' : 'sem sincronização!') + '</div></div>';
+
+        var sW = k.sw ? 'ok' : 'warn';
+        html += '<div class="kpi ' + sW + '"><div class="kpi-dot"></div>' +
+            '<div class="kpi-label">Service Worker</div>' +
+            '<div class="kpi-value">' + (k.sw ? 'ON' : '—') + '</div>' +
+            '<div class="kpi-sub">offline + auto-update</div></div>';
+
+        $('kpiGrid').innerHTML = html;
+    }
+
+    // ====== RENDER CHECKS ======
+    function renderChecks(containerId, checks, countId) {
+        var c = $(containerId);
+        c.innerHTML = '';
+        checks.forEach(function (ck) {
+            var d = el('div', 'check ' + ck.status);
+            d.innerHTML =
+                '<div class="check-icon">' + ck.icon + '</div>' +
+                '<div class="check-body">' +
+                    '<div class="check-title">' + esc(ck.title) + '</div>' +
+                    '<div class="check-detail">' + (ck.detail || '') + '</div>' +
+                    (ck.errMsg ? '<div class="check-err-msg">' + esc(ck.errMsg) + '</div>' : '') +
+                '</div>';
+            c.appendChild(d);
+        });
+        if (countId) {
+            var okN = checks.filter(function (c) { return c.status === 'ok'; }).length;
+            $(countId).textContent = okN + ' / ' + checks.length + ' OK';
+        }
+    }
+
+    // ====== ATIVIDADES ======
+    function renderActOrders() {
+        var fid = getFid();
+        var orders = [];
+        try { orders = (DataStore && DataStore.getCollection ? DataStore.getCollection('orders', fid) : []) || []; } catch (e) {}
+        var ult = orders.filter(function (o) { return !o.deleted; })
+            .sort(function (a, b) { return new Date(b.createdAt || 0) - new Date(a.createdAt || 0); })
+            .slice(0, 5);
+        var c = $('actOrders');
+        if (!ult.length) { c.innerHTML = '<div class="activity-empty">Nenhum pedido ainda</div>'; return; }
+        c.innerHTML = ult.map(function (o) {
+            return '<div class="activity-item">' +
+                '<div class="time">' + (o.createdAt ? new Date(o.createdAt).toLocaleString('pt-BR') : '?') + '</div>' +
+                '<div class="title">#' + esc(o.dailySeq || (o.id || '').slice(-6)) + ' · R$ ' + (+o.total || 0).toFixed(2).replace('.', ',') + '</div>' +
+                '<div class="meta">' + esc(o.status || '?') + ' · ' + ((o.items || []).length) + ' itens · ' + esc(o.paymentMethod || o.payment || 'sem pgto') + '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    async function renderActBelinha() {
+        var c = $('actBelinha');
+        try {
+            var snap = await withTimeout(
+                firebase.firestore().collection('belinha_conversations')
+                    .orderBy('lastMessageAt', 'desc').limit(5).get(),
+                5000, 'belinha-list'
+            );
+            if (snap.empty) { c.innerHTML = '<div class="activity-empty">Nenhuma conversa registrada</div>'; return; }
+            var html = '';
+            snap.forEach(function (doc) {
+                var d = doc.data();
+                var ts = d.lastMessageAt && d.lastMessageAt.toDate ? d.lastMessageAt.toDate().toISOString() : d.lastMessageAt;
+                html += '<div class="activity-item">' +
+                    '<div class="time">' + fmtAgo(ts) + '</div>' +
+                    '<div class="title">' + esc((d.from || '?').slice(-6)) + '</div>' +
+                    '<div class="meta">' + esc((d.lastMessage || '').slice(0, 80)) + '</div>' +
+                    '</div>';
+            });
+            c.innerHTML = html;
+        } catch (e) {
+            c.innerHTML = '<div class="activity-empty">Sem permissão pra ler conversas (config Firestore rules)</div>';
+        }
+    }
+
+    function renderActErrors() {
+        var c = $('actErrors');
+        if (!state.errors.length) { c.innerHTML = '<div class="activity-empty">Nenhum erro 🎉</div>'; return; }
+        var ult = state.errors.slice(-5).reverse();
+        c.innerHTML = ult.map(function (e) {
+            return '<div class="activity-item" style="border-left:3px solid #EF4444">' +
+                '<div class="time">' + new Date(e.ts).toLocaleTimeString('pt-BR') + '</div>' +
+                '<div class="meta" style="color:#FCA5A5;font-family:monospace;font-size:11px">' + esc((e.msg || '').slice(0, 200)) + '</div>' +
+                '</div>';
+        }).join('');
+    }
+
+    // ====== HEALTH SCORE ======
+    function computeOverallHealth() {
+        var all = [].concat(state.checks.external, state.checks.client, state.checks.flow);
+        if (!all.length) return { pct: null, status: 'run' };
+        var ok = all.filter(function (c) { return c.status === 'ok'; }).length;
+        var warn = all.filter(function (c) { return c.status === 'warn'; }).length;
+        var err = all.filter(function (c) { return c.status === 'err'; }).length;
+        var score = Math.round((ok + warn * 0.5) / all.length * 100);
+        var status = err > 0 ? 'err' : warn > 0 ? 'warn' : 'ok';
+        return { pct: score, status: status, ok: ok, warn: warn, err: err, total: all.length };
+    }
+
+    function renderHero() {
+        var h = computeOverallHealth();
+        var hero = $('healthHero');
+        var icon = $('heroIcon');
+        var title = $('heroTitle');
+        var sub = $('heroSubtitle');
+        var score = $('heroScore');
+
+        hero.classList.remove('ok', 'warn', 'err');
+        score.classList.remove('ok', 'warn', 'err');
+        if (h.pct == null) {
+            score.innerHTML = '<span class="spinner"></span>';
+            sub.textContent = 'Rodando checagens…';
+            return;
+        }
+        hero.classList.add(h.status);
+        score.classList.add(h.status);
+        score.textContent = h.pct + '%';
+
+        if (h.status === 'ok') {
+            icon.textContent = '💚';
+            title.textContent = 'Sistema saudável';
+            sub.textContent = h.ok + '/' + h.total + ' checagens OK — pode pisar fundo nas campanhas';
+        } else if (h.status === 'warn') {
+            icon.textContent = '⚠️';
+            title.textContent = 'Atenção';
+            sub.textContent = h.warn + ' alerta(s) · ' + h.ok + '/' + h.total + ' OK — investigar antes de campanha pesada';
+        } else {
+            icon.textContent = '🚨';
+            title.textContent = 'Problema crítico';
+            sub.textContent = h.err + ' falha(s) · NÃO inicie campanhas — corrija primeiro';
+        }
+    }
+
+    // ====== SMOKE TEST (in-place) ======
+    var smokeRunning = false;
+    window.runSmokeTests = async function () {
+        if (smokeRunning) return;
+        smokeRunning = true;
+        $('btnSmoke').disabled = true;
+        $('btnSmoke').innerHTML = '<span class="spinner"></span> Rodando…';
+
+        var results = [];
+        function rec(name, ok, detail, err) {
+            results.push({ name: name, ok: ok, detail: detail || '', err: err || '' });
+        }
+        function tst(name, fn) {
+            try {
+                var r = fn();
+                if (r && r.then) return r.then(function (d) { rec(name, true, d); }).catch(function (e) { rec(name, false, '', e.message); });
+                rec(name, true, r);
+            } catch (e) {
+                rec(name, false, '', e.message);
+            }
+        }
+
+        var FID = 'smoke_health_' + Date.now();
+
+        // Módulos carregados (testa o que tá disponível)
+        ['DataStore','Auth','Utils'].forEach(function (m) {
+            tst('Módulo ' + m + ' carregado', function () {
+                if (typeof window[m] === 'undefined') throw new Error(m + ' undefined');
+                return 'OK';
+            });
+        });
+
+        // Firestore
+        await tst('Firestore configurado', function () {
+            if (typeof firebase === 'undefined') throw new Error('firebase SDK não carregado');
+            if (!firebase.apps.length) throw new Error('firebase app não inicializado');
+            return 'OK';
+        });
+
+        // LocalStorage
+        tst('LocalStorage funcional', function () {
+            var k = 'smoke_' + Date.now();
+            localStorage.setItem(k, 'x');
+            var v = localStorage.getItem(k);
+            localStorage.removeItem(k);
+            if (v !== 'x') throw new Error('falha de R/W');
+            return 'OK';
+        });
+
+        // SW
+        tst('Service Worker ativo', function () {
+            if (!navigator.serviceWorker) throw new Error('sem suporte');
+            if (!navigator.serviceWorker.controller) throw new Error('não controla esta página');
+            return 'OK';
+        });
+
+        // Online
+        tst('Online detection', function () {
+            if (typeof navigator.onLine !== 'boolean') throw new Error('onLine não é boolean');
+            return 'online=' + navigator.onLine;
+        });
+
+        // Auth helper
+        tst('Auth.getSession funciona', function () {
+            if (!Auth || !Auth.getSession) throw new Error('Auth.getSession undefined');
+            var s = Auth.getSession();
+            return s ? 'logado: ' + s.email : 'sem sessão (ok)';
+        });
+
+        // Utils SP timezone
+        tst('Utils.todayKey retorna SP date', function () {
+            if (!Utils || !Utils.todayKey) throw new Error('Utils.todayKey undefined');
+            var t = Utils.todayKey();
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(t)) throw new Error('formato inválido: ' + t);
+            return t;
+        });
+
+        // DataStore get/set roundtrip
+        tst('DataStore set/get roundtrip', function () {
+            if (!DataStore) throw new Error('no DataStore');
+            DataStore.set('_smoke_test', { v: 1 });
+            var v = DataStore.get('_smoke_test');
+            DataStore.remove && DataStore.remove('_smoke_test');
+            if (!v || v.v !== 1) throw new Error('roundtrip falhou');
+            return 'OK';
+        });
+
+        // Endpoint /api/health
+        await tst('Endpoint /api/health responde', async function () {
+            var r = await fetch('/api/health', { cache: 'no-store' });
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return 'HTTP ' + r.status;
+        });
+
+        // Endpoint /api/copilot
+        await tst('Endpoint /api/copilot existe', async function () {
+            var r = await fetch('/api/copilot', { method: 'OPTIONS' });
+            return 'HTTP ' + r.status;
+        });
+
+        // CatalogV2 (se carregado)
+        if (typeof CatalogV2 !== 'undefined') {
+            tst('CatalogV2.listProdutos retorna array', function () {
+                var p = CatalogV2.listProdutos(getFid()) || [];
+                return p.length + ' produtos';
+            });
+        }
+
+        // Pix (se carregado)
+        if (typeof Pix !== 'undefined' && Pix.generatePayload) {
+            tst('Pix.generatePayload gera EMV', function () {
+                var p = Pix.generatePayload({
+                    chave: 'teste@milkypot.com', nome: 'TEST', cidade: 'LONDRINA',
+                    valor: 10, txid: 'T1'
+                });
+                if (!p.startsWith('000201')) throw new Error('prefix inválido');
+                if (!/6304[0-9A-F]{4}$/.test(p)) throw new Error('CRC faltando');
+                return p.length + ' chars';
+            });
+        }
+
+        // Pedidos collection
+        tst('Pedidos collection acessível', function () {
+            var o = DataStore.getCollection ? DataStore.getCollection('orders', getFid()) : [];
+            return (o || []).length + ' pedidos no local';
+        });
+
+        // Cookies
+        tst('Cookies habilitados', function () {
+            if (!navigator.cookieEnabled) throw new Error('cookies bloqueados');
+            return 'OK';
+        });
+
+        // IndexedDB
+        tst('IndexedDB disponível', function () {
+            if (typeof indexedDB === 'undefined') throw new Error('IDB undefined');
+            return 'OK';
+        });
+
+        var pass = results.filter(function (r) { return r.ok; }).length;
+        var fail = results.filter(function (r) { return !r.ok; }).length;
+        var pct = Math.round(pass / results.length * 100);
+
+        state.smoke = { pass: pass, fail: fail, total: results.length, pct: pct, results: results };
+
+        var sumEl = $('smokeSummary');
+        var detailEl = $('smokeDetail');
+        sumEl.style.display = 'flex';
+        detailEl.style.display = 'block';
+        sumEl.classList.remove('ok', 'warn', 'err');
+        sumEl.classList.add(fail === 0 ? 'ok' : pass / results.length > 0.7 ? 'warn' : 'err');
+        $('smokePct').textContent = pct + '%';
+        $('smokeStats').innerHTML =
+            '<span class="smoke-stat"><b>' + pass + '</b> passou</span>' +
+            '<span class="smoke-stat"><b>' + fail + '</b> falhou</span>' +
+            '<span class="smoke-stat">Total <b>' + results.length + '</b></span>';
+        detailEl.innerHTML = results.map(function (r) {
+            return '<div class="row ' + (r.ok ? 'pass' : 'fail') + '">' +
+                (r.ok ? '✅' : '❌') + ' <strong>' + esc(r.name) + '</strong> — ' + esc(r.detail || r.err) +
+                '</div>';
+        }).join('');
+
+        $('smokeCount').textContent = pass + ' / ' + results.length + ' OK';
+
+        $('btnSmoke').disabled = false;
+        $('btnSmoke').innerHTML = '▶ Rodar de novo';
+        smokeRunning = false;
+    };
+
+    // ====== E2E TEST (pedido teste) ======
+    window.runE2ETest = async function () {
+        if (state.publicMode) { alert('Modo público — ação destrutiva bloqueada.'); return; }
+        if (!confirm('Vai criar um pedido TESTE no sistema (R$ 0,01), gravar no Firestore e depois marcar como cancelado.\n\nIsso valida o fluxo completo de venda. Continuar?')) return;
+
+        var btn = $('btnE2E');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Testando…';
+        var fid = getFid();
+        var steps = [];
+        function s(msg, ok) { steps.push((ok ? '✅' : '❌') + ' ' + msg); }
+
+        try {
+            // 1. Criar pedido local
+            var order = {
+                id: 'e2e_' + Date.now(),
+                dailySeq: 'TEST-' + Date.now().toString().slice(-4),
+                total: 0.01,
+                status: 'cancelado',
+                paymentMethod: 'teste',
+                createdAt: new Date().toISOString(),
+                items: [{ name: 'TESTE saude.html', qty: 1, total: 0.01 }],
+                deleted: true,
+                deletedAt: new Date().toISOString(),
+                deletedReason: 'e2e_test'
+            };
+
+            // 2. Adicionar ao DataStore
+            if (DataStore && DataStore.addToCollection) {
+                DataStore.addToCollection('orders', fid, order);
+                s('DataStore.addToCollection OK', true);
+            } else {
+                throw new Error('DataStore.addToCollection não disponível');
+            }
+
+            // 3. Verificar leitura local
+            var all = DataStore.getCollection('orders', fid) || [];
+            var found = all.find(function (o) { return o.id === order.id; });
+            if (!found) throw new Error('Pedido teste não encontrado no local');
+            s('Pedido visível no local (' + all.length + ' total)', true);
+
+            // 4. Verificar Firestore (await 1s pra sync)
+            await new Promise(function (r) { setTimeout(r, 1500); });
+            try {
+                var snap = await firebase.firestore().collection('datastore').doc('orders_' + fid).get();
+                if (snap.exists) {
+                    var cloudOrders = JSON.parse(snap.data().value || '[]');
+                    var cloudFound = cloudOrders.find(function (o) { return o.id === order.id; });
+                    s('Pedido sincronizado no Firestore' + (cloudFound ? ' (' + cloudOrders.length + ' total)' : ' (NÃO APARECEU)'), !!cloudFound);
+                } else {
+                    s('Doc orders_' + fid + ' não existe no Firestore', false);
+                }
+            } catch (e) {
+                s('Falha leitura Firestore: ' + e.message, false);
+            }
+
+            alert('🧪 Teste E2E concluído:\n\n' + steps.join('\n'));
+        } catch (e) {
+            alert('❌ E2E falhou: ' + e.message + '\n\nPassos:\n' + steps.join('\n'));
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '🧪 Testar pedido teste end-to-end';
+        }
+    };
+
+    // ====== DUMP MODAL / CLOUD SNAPSHOT ======
+    function buildDump() {
+        var s = null; try { s = Auth.getSession(); } catch (e) {}
+        var fbUser = typeof firebase !== 'undefined' && firebase.auth ? firebase.auth().currentUser : null;
+        var fid = getFid();
+        var orders = [];
+        try { orders = (DataStore && DataStore.getCollection ? DataStore.getCollection('orders', fid) : []) || []; } catch (e) {}
+
+        return {
+            url: location.href,
+            ts: new Date().toISOString(),
+            tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            ua: navigator.userAgent,
+            viewport: window.innerWidth + 'x' + window.innerHeight,
+            online: navigator.onLine,
+            session: s ? { email: s.email, franchiseId: s.franchiseId, role: s.role } : null,
+            firebaseUser: fbUser ? { email: fbUser.email, uid: fbUser.uid, anon: fbUser.isAnonymous } : null,
+            franchiseId: fid,
+            kpis: state.kpis,
+            health: computeOverallHealth(),
+            checks: state.checks,
+            smoke: state.smoke,
+            datastore: typeof DataStore === 'undefined' ? null : {
+                ready: !!DataStore._ready,
+                db: !!DataStore._db,
+                realtime: !!DataStore._realtimeListenerAttached,
+                poll: !!DataStore._pollFallbackId,
+                syncDone: !!DataStore._syncDone,
+                pendingWrites: (DataStore._pendingWrites || []).length
+            },
+            sw: navigator.serviceWorker && navigator.serviceWorker.controller ? {
+                controlled: true,
+                scriptURL: navigator.serviceWorker.controller.scriptURL
+            } : { controlled: false },
+            storage: {
+                localStorageEntries: (function () { try { return Object.keys(localStorage).length; } catch (e) { return null; } })()
+            },
+            orders: {
+                total: orders.length,
+                lastSeq: orders.length ? orders[orders.length - 1].dailySeq : null
+            },
+            recentErrors: state.errors.slice(-15)
+        };
+    }
+
+    window.openDumpModal = function () {
+        var dump = buildDump();
+        $('dumpJson').textContent = JSON.stringify(dump, null, 2);
+        $('dumpModal').classList.add('show');
+    };
+    window.closeDumpModal = function () { $('dumpModal').classList.remove('show'); };
+    window.copyDump = function () {
+        var txt = $('dumpJson').textContent;
+        try {
+            navigator.clipboard.writeText(txt).then(function () { alert('✅ Copiado. Cola na conversa com a IA.'); });
+        } catch (e) { prompt('Copia manual:', txt); }
+    };
+
+    window.saveCloudSnapshot = async function () {
+        var btn = $('btnSnap');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Salvando…';
+        try {
+            var dump = buildDump();
+            var sessionId = 'saude_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            await firebase.firestore().collection('datastore').doc('saude_snap_' + sessionId).set({
+                value: JSON.stringify(dump),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            var sharable = location.origin + location.pathname + '?snap=' + sessionId;
+            if (state.publicToken) sharable += '&token=' + encodeURIComponent(state.publicToken);
+            prompt('☁️ Snapshot salvo. Cola esse link na conversa com a IA:', sharable);
+        } catch (e) {
+            alert('❌ Falha: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '☁️ Salvar snapshot na nuvem';
+        }
+    };
+
+    // ====== LOAD SNAPSHOT (se ?snap=XXX) ======
+    async function maybeLoadSnapshot() {
+        var url = new URL(location.href);
+        var snap = url.searchParams.get('snap');
+        if (!snap) return false;
+        try {
+            var doc = await firebase.firestore().collection('datastore').doc('saude_snap_' + snap).get();
+            if (!doc.exists) { alert('Snapshot ' + snap + ' não existe.'); return false; }
+            var data = JSON.parse(doc.data().value);
+            $('heroSubtitle').textContent = '📸 Visualizando snapshot ' + snap + ' (estado em ' + data.ts + ')';
+            $('dumpJson').textContent = JSON.stringify(data, null, 2);
+            openDumpModal();
+            return true;
+        } catch (e) {
+            alert('Falha lendo snapshot: ' + e.message);
+            return false;
+        }
+    }
+
+    // ====== MAIN LOOP ======
+    async function runAllChecks() {
+        $('btnRefresh').disabled = true;
+        $('btnRefresh').innerHTML = '<span class="spinner"></span> Atualizando…';
+        try {
+            // External (paralelo)
+            var ext = await Promise.all([
+                checkFirebaseAuth(),
+                checkFirestoreLatency(),
+                checkBelinhaAPI(),
+                checkWhatsAppActivity(),
+                checkPagamentoPix()
+            ]);
+            state.checks.external = ext;
+            renderChecks('externalChecks', ext, 'extCount');
+
+            // Client (síncrono mostly)
+            var cli = await Promise.all([
+                Promise.resolve(checkServiceWorker()),
+                checkSWCache(),
+                Promise.resolve(checkLocalStorage()),
+                Promise.resolve(checkDataStore()),
+                Promise.resolve(checkAuth()),
+                Promise.resolve(checkOnline()),
+                checkImpressora()
+            ]);
+            state.checks.client = cli;
+            renderChecks('clientChecks', cli, 'cliCount');
+
+            // Flow
+            var flow = await Promise.all([
+                checkCardapioPublico(),
+                Promise.resolve(checkCatalogoLoja()),
+                Promise.resolve(checkPedidosOnline()),
+                Promise.resolve(checkPDV())
+            ]);
+            state.checks.flow = flow;
+            renderChecks('flowChecks', flow, 'flowCount');
+
+            renderKPIs();
+            renderHero();
+            renderActOrders();
+            renderActBelinha();
+            renderActErrors();
+
+            $('lastUpdate').textContent = '🕐 Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+        } catch (e) {
+            console.error('runAllChecks error', e);
+        } finally {
+            $('btnRefresh').disabled = false;
+            $('btnRefresh').innerHTML = '🔄 Atualizar';
+        }
+    }
+    window.runAllChecks = runAllChecks;
+
+    function setupAutoRefresh() {
+        if (state.intervalId) clearInterval(state.intervalId);
+        if ($('autoRefresh').checked) {
+            state.intervalId = setInterval(runAllChecks, 30000);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        $('autoRefresh').addEventListener('change', setupAutoRefresh);
+    });
+
+    // ====== FOOTER ======
+    async function fillFooter() {
+        try {
+            if ('caches' in window) {
+                var keys = await caches.keys();
+                var cur = keys.find(function (k) { return k.indexOf('milkypot-') === 0; });
+                if (cur) $('swVer').textContent = cur;
+            }
+        } catch (e) {}
+        $('buildDate').textContent = new Date().toLocaleDateString('pt-BR');
+    }
+
+    // ====== BOOT ======
+    function init() {
+        detectPublicMode();
+
+        // Esconde botões destrutivos em modo público
+        if (state.publicMode) {
+            var btnE2E = $('btnE2E');
+            if (btnE2E) { btnE2E.disabled = true; btnE2E.title = 'Bloqueado em modo público'; }
+        }
+
+        // Aguarda Firebase init
+        function waitDeps(retries) {
+            if (typeof firebase === 'undefined' || !firebase.apps.length) {
+                if (retries > 0) return setTimeout(function () { waitDeps(retries - 1); }, 200);
+                $('heroSubtitle').textContent = '❌ Falha: Firebase não inicializou';
+                return;
+            }
+            renderTokenBar();
+            fillFooter();
+
+            maybeLoadSnapshot().then(function (loaded) {
+                if (loaded) return; // se é snapshot view, não roda checks live
+                runAllChecks();
+                setupAutoRefresh();
+            });
+        }
+        waitDeps(20);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+
+<!-- Sidebar e SW (no fim) -->
+<script src="../js/core/register-sw.js?v=mp-v311" defer></script>
+<script src="../js/core/sidebar-menu.js?v=mp-v311" defer></script>
+
+</body>
+</html>
